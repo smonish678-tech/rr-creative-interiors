@@ -1,0 +1,1 @@
+Real client/brand logos only. Do not add invented client relationships.

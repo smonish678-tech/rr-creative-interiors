@@ -1,0 +1,1 @@
+Future RR project photography. Use one folder per project once real shoots are available.

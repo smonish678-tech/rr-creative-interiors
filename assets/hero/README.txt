@@ -1,0 +1,1 @@
+Place RR's strongest real interior photography here later. Recommended: 3–6 landscape images, 2200px+ wide.
