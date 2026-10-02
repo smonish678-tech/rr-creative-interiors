@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { ArrowUpRight, ChevronRight, Menu, Phone, X } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
@@ -157,10 +157,21 @@ function Nav() {
 
 function ContactForm() {
   const [sent, setSent] = useState(false);
-  const [values, setValues] = useState({ name: "", phone: "", email: "", type: "", budget: "", message: "" });
+  const [values, setValues] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    type: "",
+    budget: "",
+    message: ""
+  });
+
+  const update = (key: keyof typeof values, value: string) =>
+    setValues((current) => ({ ...current, [key]: value }));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+
     const text = [
       "Hello RR Creative Interiors,",
       "Name: " + values.name,
@@ -170,49 +181,134 @@ function ContactForm() {
       "Budget: " + values.budget,
       "Message: " + values.message
     ].join("\n");
-    window.open("https://wa.me/919901592929?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
+
+    window.open(
+      "https://wa.me/919901592929?text=" + encodeURIComponent(text),
+      "_blank",
+      "noopener,noreferrer"
+    );
     setSent(true);
   };
 
+  const budgetOptions = ["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"];
+
   return (
-    <form onSubmit={submit} className="grid gap-5 md:grid-cols-2">
-      {[
-        ["name", "Your name", "text"],
-        ["phone", "Phone number", "tel"],
-        ["email", "Email", "email"],
-        ["budget", "Approx. budget", "text"]
-      ].map(([key, label, type]) => (
-        <label key={key} className="border-b border-[#1c1511]/18 py-2">
-          <span className="mb-2 block text-[9px] uppercase tracking-[0.18em] text-[#7a6b5e]">{label}</span>
-          <input
-            required={key === "name" || key === "phone"}
-            type={type}
-            value={values[key as keyof typeof values]}
-            onChange={(e) => setValues({ ...values, [key]: e.target.value })}
-            className="w-full bg-transparent py-2 outline-none"
+    <div className="rr-enquiry-shell">
+      <div className="rr-contact-rail">
+        <a className="rr-contact-action" href="tel:+919901592929">
+          <span className="rr-contact-icon"><Phone size={16} /></span>
+          <span><small>Call the studio</small><strong>+91 99015 92929</strong></span>
+          <ArrowUpRight size={15} />
+        </a>
+        <a className="rr-contact-action" href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer">
+          <span className="rr-contact-icon rr-whatsapp"><MessageCircle size={16} /></span>
+          <span><small>WhatsApp</small><strong>Start a quick enquiry</strong></span>
+          <ArrowUpRight size={15} />
+        </a>
+        <a className="rr-contact-action" href="mailto:sales@rrcreativeinteriors.in">
+          <span className="rr-contact-icon"><Mail size={16} /></span>
+          <span><small>Email</small><strong>sales@rrcreativeinteriors.in</strong></span>
+          <ArrowUpRight size={15} />
+        </a>
+      </div>
+
+      <form onSubmit={submit} className="rr-enquiry-card">
+        <div className="rr-form-head">
+          <div>
+            <span>Tell us where you're starting</span>
+            <h3>A little context.<br /><em>Then we take it from there.</em></h3>
+          </div>
+          <div className="rr-form-mark">RR<span>↗</span></div>
+        </div>
+
+        <div className="rr-field-grid">
+          <label className="rr-field">
+            <span>01 · Name</span>
+            <input
+              required
+              value={values.name}
+              onChange={(e) => update("name", e.target.value)}
+              placeholder="Your name"
+            />
+          </label>
+          <label className="rr-field">
+            <span>02 · Phone</span>
+            <input
+              required
+              type="tel"
+              value={values.phone}
+              onChange={(e) => update("phone", e.target.value)}
+              placeholder="+91"
+            />
+          </label>
+          <label className="rr-field">
+            <span>03 · Email</span>
+            <input
+              type="email"
+              value={values.email}
+              onChange={(e) => update("email", e.target.value)}
+              placeholder="you@email.com"
+            />
+          </label>
+          <label className="rr-field">
+            <span>04 · Project</span>
+            <select value={values.type} onChange={(e) => update("type", e.target.value)}>
+              <option value="">Choose a direction</option>
+              <option>Residential interior</option>
+              <option>Turnkey interior</option>
+              <option>Commercial interior</option>
+              <option>Corporate interior</option>
+              <option>Renovation</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="rr-budget">
+          <div className="rr-budget-label"><span>05 · Indicative budget</span><strong>{values.budget || "Choose a range"}</strong></div>
+          <div className="rr-budget-grid">
+            {budgetOptions.map((item) => (
+              <button
+                type="button"
+                key={item}
+                className={values.budget === item ? "rr-budget-chip is-selected" : "rr-budget-chip"}
+                onClick={() => update("budget", item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="rr-field rr-field-message">
+          <span>06 · Tell us about the space</span>
+          <textarea
+            required
+            rows={4}
+            value={values.message}
+            onChange={(e) => update("message", e.target.value)}
+            placeholder="Property, approximate size, what you are planning, and when you'd like to begin."
           />
         </label>
-      ))}
-      <label className="border-b border-[#1c1511]/18 py-2 md:col-span-2">
-        <span className="mb-2 block text-[9px] uppercase tracking-[0.18em] text-[#7a6b5e]">Project type</span>
-        <select value={values.type} onChange={(e) => setValues({ ...values, type: e.target.value })} className="w-full bg-transparent py-2 outline-none">
-          <option value="">Choose one</option>
-          <option>Residential interior</option>
-          <option>Turnkey interior</option>
-          <option>Commercial interior</option>
-          <option>Corporate interior</option>
-          <option>Renovation</option>
-        </select>
-      </label>
-      <label className="border-b border-[#1c1511]/18 py-2 md:col-span-2">
-        <span className="mb-2 block text-[9px] uppercase tracking-[0.18em] text-[#7a6b5e]">Tell us about the space</span>
-        <textarea required value={values.message} onChange={(e) => setValues({ ...values, message: e.target.value })} rows={4} className="w-full resize-none bg-transparent py-2 outline-none" />
-      </label>
-      <button type="submit" className="inline-flex h-14 items-center justify-center gap-3 border border-[#1c1511] bg-[#1c1511] px-8 text-[10px] uppercase tracking-[0.18em] text-white transition hover:bg-[#c89a49] hover:text-[#1c1511] md:col-span-2 md:w-fit">
-        Send enquiry on WhatsApp <ArrowUpRight size={16} />
-      </button>
-      {sent && <p className="text-[10px] uppercase tracking-[0.14em] text-[#8e6d42] md:col-span-2">WhatsApp enquiry prepared — complete the send in the new tab.</p>}
-    </form>
+
+        <div className="rr-form-foot">
+          <div className="rr-form-note">
+            <span className="rr-signal"></span>
+            Usually easier to begin on WhatsApp — this form prepares the enquiry for you.
+          </div>
+          <button type="submit" className="rr-form-submit">
+            <span>Send enquiry</span>
+            <MessageCircle size={18} />
+            <ArrowUpRight size={16} />
+          </button>
+        </div>
+
+        {sent && (
+          <p className="rr-form-success">
+            Your WhatsApp enquiry is ready in a new tab.
+          </p>
+        )}
+      </form>
+    </div>
   );
 }
 
