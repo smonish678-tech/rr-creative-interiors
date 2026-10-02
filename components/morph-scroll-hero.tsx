@@ -19,7 +19,7 @@ const SCENES: Scene[] = [
     side: "A point of view before a floor plan."
   },
   {
-    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/Interior%20Inspiration.jpg",
+    src: "/rr-media/hero/Interior%20Inspiration.jpg",
     kicker: "02 · THE FIRST IMPRESSION",
     title: "Enter|with intention.",
     body: "The first room sets the emotional grammar for everything after it. We shape arrival, movement and atmosphere before the eye starts collecting details.",
@@ -33,7 +33,7 @@ const SCENES: Scene[] = [
     side: "Function is part of the aesthetic."
   },
   {
-    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/download.jpg",
+    src: "/rr-media/hero/download.jpg",
     kicker: "04 · THE SPATIAL LINE",
     title: "Let the room|breathe.",
     body: "Negative space is not empty. It is what allows furniture, light and architecture to read as one composition.",
@@ -47,7 +47,7 @@ const SCENES: Scene[] = [
     side: "The smallest decisions shape the room."
   },
   {
-    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/%23modern%20%23reception%20%23interior.jpg",
+    src: "/rr-media/hero/%23modern%20%23reception%20%23interior.jpg",
     kicker: "06 · THE POINT OF VIEW",
     title: "Character|over trends.",
     body: "We use contemporary references as a vocabulary, not a template. The goal is a space with a point of view that still feels personal years later.",
@@ -61,7 +61,7 @@ const SCENES: Scene[] = [
     side: "Luxury is how a space makes you feel."
   },
   {
-    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/download%20%281%29.jpg",
+    src: "/rr-media/hero/download%20%281%29.jpg",
     kicker: "08 · BEYOND",
     title: "A space that|stays with you.",
     body: "The best interior is not the loudest one. It is the one you still notice in small ways long after the first impression has passed.",
