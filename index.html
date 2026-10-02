@@ -168,6 +168,47 @@ footer{padding:65px 0 28px;background:#0e0907}.footer-top{display:flex;justify-c
 <footer><div class="wrap"><div class="footer-top"><div><div class="footer-name">RR Creative Interiors</div><div class="footer-tag">Beyond The Ordinary</div></div><div class="footer-note">Modern, functional and elegant interior design solutions for homes, businesses and complete turnkey spaces in Bangalore and beyond.</div><div class="footer-links"><a href="#about">About</a><a href="#services">Services</a><a href="#contact">Contact</a><a href="https://wa.me/919901592929" target="_blank" rel="noopener">WhatsApp</a></div></div><div class="footer-bottom"><span>© <span id="year"></span> RR Creative Interiors</span><span>Interior Designers · Bangalore · Karnataka</span></div></div></footer>
 
 <script>
+(function(){
+  const canvas=document.getElementById('morphCanvas');
+  const fallback=document.getElementById('morphFallback');
+  const prev=document.getElementById('morphPrev');
+  const nextBtn=document.getElementById('morphNext');
+  const count=document.getElementById('morphCurrent');
+  if(!canvas||!fallback||!prev||!nextBtn) return;
+  const sources=[
+    'https://images.unsplash.com/photo-1778936317529-9930b680ac58?auto=format&fit=crop&w=2600&q=88',
+    'https://images.unsplash.com/photo-1740759546556-ff8aaf35ecf9?auto=format&fit=crop&w=2600&q=88',
+    'https://images.unsplash.com/photo-1777880305920-e542f575f4e9?auto=format&fit=crop&w=2600&q=88',
+    'https://images.unsplash.com/photo-1774953037913-af0cf688491a?auto=format&fit=crop&w=2600&q=88'
+  ];
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:false});
+  let active=0,from=0,to=0,progress=1,startTime=0,direction=1,raf=0,loaded=false,interval=null;
+  const duration=reduced?0:1850,hold=reduced?999999:5200;
+  const showFallback=i=>[...fallback.images].forEach((img,n)=>img.style.opacity=n===i?'1':'0');
+  const update=()=>{count.textContent=String(active+1).padStart(2,'0')};
+  showFallback(0);update();
+  const resize=()=>{const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));canvas.width=w;canvas.height=h;if(gl)gl.viewport(0,0,w,h)};
+  if(!gl){prev.onclick=()=>{active=(active+sources.length-1)%sources.length;showFallback(active);update()};nextBtn.onclick=()=>{active=(active+1)%sources.length;showFallback(active);update()};return}
+  const V='attribute vec2 a_position;varying vec2 v_uv;void main(){v_uv=a_position*.5+.5;gl_Position=vec4(a_position,0.,1.);}';
+  const F='precision highp float;uniform sampler2D u_from;uniform sampler2D u_to;uniform float u_progress;uniform vec2 u_resolution;uniform float u_fromAspect;uniform float u_toAspect;uniform float u_scale;uniform float u_direction;uniform float u_edge;uniform float u_drift;varying vec2 v_uv;vec3 permute(vec3 x){return mod(((x*34.)+1.)*x,289.);}float snoise(vec2 v){const vec4 C=vec4(.2113248654,.3660254038,-.5773502692,.0243902439);vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);vec2 i1=(x0.x>x0.y)?vec2(1.,0.):vec2(0.,1.);vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod(i,289.);vec3 p=permute(permute(i.y+vec3(0.,i1.y,1.))+i.x+vec3(0.,i1.x,1.));vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);m*=m;m*=m;vec3 x=2.*fract(p*C.www)-1.;vec3 h=abs(x)-.5;vec3 ox=floor(x+.5);vec3 a0=x-ox;m*=1.792842914-.853734721*(a0*a0+h*h);vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.*dot(m,g);}float fbm(vec2 v){float value=0.,amplitude=.5;for(int i=0;i<5;i++){value+=amplitude*snoise(v);v*=2.;amplitude*=.5;}return value;}vec2 mirror(vec2 uv){return 1.-abs(1.-mod(uv,2.));}vec2 coverUV(vec2 uv,float imgAspect){float canvasAspect=u_resolution.x/u_resolution.y;vec2 scale=(canvasAspect>imgAspect)?vec2(1.,imgAspect/canvasAspect):vec2(canvasAspect/imgAspect,1.);return mirror((uv-.5)*scale+.5);}void main(){float adjusted=u_progress*(1.+2.*u_edge)-u_edge;float noise=fbm(v_uv*u_scale+vec2(0.,u_progress*u_direction))*.5+.5;noise=smoothstep(0.,2.,length(texture2D(u_to,coverUV(v_uv,u_toAspect)).rgb)+noise);float mixFactor=1.-smoothstep(adjusted-u_edge,adjusted+u_edge,noise);vec2 fromUV=coverUV(v_uv+vec2(0.,noise*u_progress*u_drift*u_direction),u_fromAspect);vec2 toUV=coverUV(v_uv+vec2(0.,noise*(1.-u_progress)*-.5*u_drift*u_direction),u_toAspect);gl_FragColor=mix(texture2D(u_from,fromUV),texture2D(u_to,toUV),mixFactor);}';
+  const compile=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s};
+  const program=gl.createProgram();gl.attachShader(program,compile(gl,gl.VERTEX_SHADER,V));gl.attachShader(program,compile(gl,gl.FRAGMENT_SHADER,F));gl.linkProgram(program);gl.useProgram(program);
+  const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(program,'a_position');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  const u={from:gl.getUniformLocation(program,'u_from'),to:gl.getUniformLocation(program,'u_to'),progress:gl.getUniformLocation(program,'u_progress'),resolution:gl.getUniformLocation(program,'u_resolution'),fromAspect:gl.getUniformLocation(program,'u_fromAspect'),toAspect:gl.getUniformLocation(program,'u_toAspect'),scale:gl.getUniformLocation(program,'u_scale'),direction:gl.getUniformLocation(program,'u_direction'),edge:gl.getUniformLocation(program,'u_edge'),drift:gl.getUniformLocation(program,'u_drift')};
+  const tex=[],aspects=[];
+  const images=sources.map(src=>{const img=new Image();img.crossOrigin='anonymous';img.decoding='async';img.src=src;return img});
+  const ready=images.map((img,i)=>new Promise(resolve=>{img.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);tex[i]=t;aspects[i]=img.naturalWidth/Math.max(img.naturalHeight,1);resolve(true)};img.onerror=()=>resolve(false)}));
+  const pick=i=>tex[i]||tex.find(Boolean),ease=t=>t<.5?16*Math.pow(t,5):1-Math.pow(-2*t+2,5)/2;
+  const draw=now=>{if(progress<1)progress=ease(Math.min((now-startTime)/Math.max(duration,1),1));const a=pick(from),b=pick(to);if(loaded&&a&&b){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,a);gl.uniform1i(u.from,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,b);gl.uniform1i(u.to,1);gl.uniform1f(u.progress,progress);gl.uniform2f(u.resolution,canvas.width,canvas.height);gl.uniform1f(u.fromAspect,aspects[from]||1);gl.uniform1f(u.toAspect,aspects[to]||1);gl.uniform1f(u.scale,3.5);gl.uniform1f(u.direction,direction);gl.uniform1f(u.edge,.15);gl.uniform1f(u.drift,.5);gl.drawArrays(gl.TRIANGLE_STRIP,0,4)}raf=requestAnimationFrame(draw)};
+  const advance=step=>{from=active;active=(active+step+sources.length)%sources.length;to=active;direction=step>=0?1:-1;progress=duration?0:1;startTime=performance.now();update();if(!loaded)showFallback(active)};
+  Promise.all(ready).then(ok=>{loaded=ok.some(Boolean);if(loaded){resize();new ResizeObserver(resize).observe(canvas);canvas.style.opacity='1';raf=requestAnimationFrame(draw);if(duration){interval=setInterval(()=>{if(!document.hidden)advance(1)},duration+hold)}}});
+  prev.onclick=()=>advance(-1);nextBtn.onclick=()=>advance(1);
+  document.addEventListener('visibilitychange',()=>{if(!duration)return;if(document.hidden&&interval){clearInterval(interval);interval=null}else if(!document.hidden&&!interval){interval=setInterval(()=>advance(1),duration+hold)}});
+})();
+</script>
+<script>
 const $$=s=>[...document.querySelectorAll(s)],$=s=>document.querySelector(s);
 const nav=$('#nav'),progress=$('#progress'),menu=$('#menu'),mobile=$('#mobileMenu'),cursor=$('#cursor');
 window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',scrollY>40);progress.style.width=(scrollY/(document.documentElement.scrollHeight-innerHeight)*100)+'%'});
