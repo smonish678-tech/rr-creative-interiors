@@ -1,0 +1,33 @@
+name: Fix footer logo
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace footer logo reference and remove temporary workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('app/page.tsx')
+          s = p.read_text()
+          old = 'https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png'
+          new = '/rr-media/logo/rr%205.png'
+          if old in s:
+              p.write_text(s.replace(old, new))
+          w = Path('.github/workflows/footer-logo-fix.yml')
+          if w.exists(): w.unlink()
+          PY
+          if git diff --quiet -- app/page.tsx && git diff --quiet -- .github/workflows/footer-logo-fix.yml; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/page.tsx .github/workflows/footer-logo-fix.yml
+          git commit -m 'Replace footer logo with RR logo'
+          git push
