@@ -7,8 +7,8 @@ import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
 
-const RR_LOGO = "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/logo/rr%205.png";
-const RR_EMBLEM = "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
+const RR_LOGO = "/rr-media/logo/rr%205.png";
+const RR_EMBLEM = "/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
 
 const PORTFOLIO = [
   "p1.png","p2.png","p3.png","p4.png","p5.png","p6.png","p7.png","p8.png","p9.png",
@@ -16,7 +16,7 @@ const PORTFOLIO = [
   "Industrial Metal & Wood TV Consoles.jpg","Modern Modular Kitchen Ideas _ Stylish U-Shaped Kitchen Design.jpg","download (2).jpg"
 ].map((name) => ({
   name,
-  src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/portfolio/" + encodeURIComponent(name)
+  src: "/rr-media/portfolio/" + encodeURIComponent(name)
 }));
 
 const IMG = {
@@ -435,7 +435,7 @@ export default function Page() {
         <section id="eye" className="relative overflow-hidden bg-[#16100d] text-white">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">07 · The designer's eye</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">08 · The designer's eye</p>
               <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">We see the<br /><em className="text-[#e3bd71]">quiet decisions.</em></h2>
               <p className="mt-8 max-w-md text-sm leading-7 text-white/48">A premium room rarely announces why it works. The proportion, the visual axis, the light, the edge of a material — those are the decisions we want you to notice only after you feel them.</p>
             </Reveal>
@@ -465,7 +465,7 @@ export default function Page() {
         <section id="philosophy" className="bg-[#e9dfd2] text-[#1d1713]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.7fr_1.3fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">08 · Philosophy</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">09 · Philosophy</p>
               <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">The room before the room.</h2>
             </Reveal>
             <Reveal delay={0.08}>
@@ -486,7 +486,7 @@ export default function Page() {
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
-                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">09 · Services</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Everything beneath the surface.</h2></div>
+                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">10 · Services</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Everything beneath the surface.</h2></div>
                 <p className="hidden max-w-md text-sm leading-7 text-white/45 md:block">A complete design and execution vocabulary — without forcing every project into the same mould.</p>
               </div>
             </Reveal>
@@ -510,7 +510,7 @@ export default function Page() {
         <section id="process" className="bg-[#eee5d9] text-[#1d1713]">
           <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.62fr_1.38fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">10 · Process</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">11 · Process</p>
               <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Clear enough to trust.</h2>
               <p className="mt-7 max-w-md text-sm leading-7 text-[#695d53]">The goal is not to make the process feel complicated. It is to make complex work feel calm from the outside.</p>
             </Reveal>
@@ -529,7 +529,7 @@ export default function Page() {
         <section className="bg-[#16100d] text-white">
           <div className="mx-auto grid max-w-[1380px] gap-8 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">11 · Material study</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">12 · Material study</p>
               <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Texture is where the design becomes physical.</h2>
             </Reveal>
             <Reveal delay={0.08} className="relative min-h-[540px] overflow-hidden">
@@ -546,7 +546,7 @@ export default function Page() {
         <section id="journal" className="bg-[#e8ded1] text-[#1d1713]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">12 · Journal</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">13 · Journal</p>
               <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">Ideas worth living with.</h2>
             </Reveal>
             <div className="mt-14 grid gap-0 border-t border-[#1d1713]/15 md:grid-cols-3">
@@ -565,7 +565,7 @@ export default function Page() {
         <section id="contact" className="bg-[#f1e9dc] text-[#1d1713]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.82fr_1.18fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">13 · Start a project</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">14 · Start a project</p>
               <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Let's make room for what matters.</h2>
               <p className="mt-8 max-w-xl text-lg leading-8 text-[#695d53]">Tell us about the home, office, retail space or turnkey project you have in mind.</p>
               <div className="mt-10 grid gap-3 text-sm">
