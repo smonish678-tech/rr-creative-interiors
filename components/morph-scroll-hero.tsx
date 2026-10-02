@@ -282,7 +282,8 @@ export default function MorphScrollHero() {
 
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section) return;
+    const canvas = canvasRef.current;
+    if (!section || !canvas) return;
 
     const render = () => {
       const runtime = runtimeRef.current;
@@ -361,11 +362,7 @@ export default function MorphScrollHero() {
           <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(0,0,0,.36)]" />
         </div>
 
-        <div className="absolute left-6 right-6 top-6 z-20 flex items-center justify-between md:left-10 md:right-10 md:top-8">
-          <div className="flex items-center gap-3 text-[9px] uppercase tracking-[0.28em] text-white/70">
-            <span className="h-px w-9 bg-[#dcbf7a]" />
-            RR Creative Interiors · Bangalore
-          </div>
+        <div className="absolute right-6 top-[96px] z-20 md:right-[6.4vw] md:top-[102px]">
           <div className="font-serif text-2xl text-white md:text-3xl">
             <span>{String(sceneIndex + 1).padStart(2, "0")}</span>
             <span className="mx-2 text-white/30">/</span>
@@ -373,19 +370,19 @@ export default function MorphScrollHero() {
           </div>
         </div>
 
-        <div className="absolute bottom-20 left-6 z-20 w-[min(720px,calc(100%-48px))] md:bottom-24 md:left-10">
+        <div className="absolute bottom-20 left-6 z-20 w-[min(980px,calc(100%-48px))] md:bottom-[13vh] md:left-[6.4vw]">
           <div className="mb-4 text-[10px] uppercase tracking-[0.28em] text-[#e8c983]">
             {SCENES[sceneIndex].kicker}
           </div>
-          <h1 className="max-w-[1000px] font-serif text-[17vw] font-normal leading-[.78] tracking-[-0.06em] text-[#f5eee4] md:text-[9.5vw]">
+          <h1 className="max-w-[1180px] font-serif text-[13vw] font-normal leading-[.82] tracking-[-0.055em] text-[#f5eee4] md:text-[7.2vw] lg:text-[6.9vw]">
             <span className="block">{titleLines[0]}</span>
-            <span className="block pl-[6vw] italic text-[#e3bd71]">{titleLines[1]}</span>
+            <span className="block whitespace-nowrap pl-[5vw] italic text-[#e3bd71]">{titleLines[1]}</span>
           </h1>
-          <p className="mt-8 max-w-[570px] text-[13px] leading-7 text-white/72 md:text-[15px] md:leading-8">
+          <p className="mt-7 max-w-[610px] text-[13px] leading-7 text-white/72 md:text-[15px] md:leading-8">
             {SCENES[sceneIndex].body}
           </p>
           <a href="#contact" className="mt-7 inline-flex items-center gap-3 border-b border-[#e4c27b] pb-2 text-[10px] uppercase tracking-[0.18em] text-white">
-            Start a conversation <span className="text-[#e4c27b]">↗</span>
+            Explore the studio <span className="text-[#e4c27b]">↗</span>
           </a>
         </div>
 

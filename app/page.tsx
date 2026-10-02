@@ -2,8 +2,9 @@
 
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight, ChevronRight, Menu, Phone, X } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
+import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
 
 const IMG = {
@@ -55,43 +56,102 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
 
 function Nav() {
   const [open, setOpen] = useState(false);
-  const { scrollY, scrollYProgress } = useScroll();
-  const bg = useTransform(scrollY, [0, 120], ["rgba(13,9,7,0)", "rgba(13,9,7,.86)"]);
-  const blur = useTransform(scrollY, [0, 120], ["blur(0px)", "blur(16px)"]);
-  const border = useTransform(scrollY, [0, 120], ["rgba(255,255,255,0)", "rgba(255,255,255,.1)"]);
+  const [active, setActive] = useState("Home");
+  const { scrollYProgress } = useScroll();
+
+  const navigation = [
+    { name: "Home", href: "#top", id: "top" },
+    { name: "About", href: "#about", id: "about" },
+    { name: "Spaces", href: "#spaces", id: "spaces" },
+    { name: "The Eye", href: "#eye", id: "eye" },
+    { name: "Services", href: "#services", id: "services" },
+    { name: "Process", href: "#process", id: "process" },
+    { name: "Journal", href: "#journal", id: "journal" },
+    { name: "Contact", href: "#contact", id: "contact" }
+  ];
+
+  useEffect(() => {
+    const targets = navigation
+      .filter((item) => item.id !== "top")
+      .map((item) => document.getElementById(item.id))
+      .filter((node): node is HTMLElement => Boolean(node));
+
+    if (!targets.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visible?.target?.id) {
+          const item = navigation.find((navItem) => navItem.id === visible.target.id);
+          if (item) setActive(item.name);
+        }
+      },
+      { rootMargin: "-28% 0px -58% 0px", threshold: [0.1, 0.25, 0.5] }
+    );
+
+    targets.forEach((target) => observer.observe(target));
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <motion.header className="fixed inset-x-0 top-0 z-50 border-b" style={{ backgroundColor: bg, backdropFilter: blur, borderColor: border }}>
-      <div className="mx-auto flex h-[84px] w-[calc(100%-32px)] max-w-[1380px] items-center justify-between">
-        <a href="#top" className="flex items-center gap-3">
-          <img src="https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png" alt="RR Creative Interiors" className="h-11 w-auto object-contain brightness-110" />
+    <motion.header className="rr-header fixed inset-x-0 top-0 z-50">
+      <div className="rr-header-inner">
+        <a href="#top" className="rr-brand" aria-label="RR Creative Interiors home" onClick={() => setActive("Home")}>
+          <img
+            src="https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png"
+            alt="RR Creative Interiors"
+          />
         </a>
-        <nav className="hidden items-center gap-7 md:flex">
-          {["About", "Spaces", "The Eye", "Philosophy", "Services", "Process", "Journal", "Contact"].map((item) => (
-            <a key={item} href={"#" + (item === "The Eye" ? "eye" : item.toLowerCase())} className="text-[9px] uppercase tracking-[0.19em] text-white/80 transition hover:text-[#e4c27b]">
-              {item}
-            </a>
-          ))}
-        </nav>
-        <a href="#contact" className="hidden border border-[#e4c27b]/70 bg-black/10 px-5 py-3 text-[9px] uppercase tracking-[0.18em] text-white transition hover:bg-[#e4c27b] hover:text-[#1a120e] sm:inline-flex">
+
+        <div className="rr-desktop-nav">
+          <SquigglyUnderline
+            items={navigation.map(({ name, href }) => ({ name, href }))}
+            active={active}
+            onSelect={setActive}
+          />
+        </div>
+
+        <a href="#contact" className="rr-nav-cta" onClick={() => setActive("Contact")}>
           Start a project
+          <ArrowUpRight size={14} />
         </a>
-        <button className="grid h-11 w-11 place-items-center border border-white/15 text-white md:hidden" onClick={() => setOpen(!open)} aria-label="Open menu">
+
+        <button
+          className="rr-mobile-toggle"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+        >
           {open ? <X size={19} /> : <Menu size={19} />}
         </button>
       </div>
+
+      <motion.div className="rr-header-progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
+
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="border-t border-white/10 bg-[#150d0b]/96 px-5 py-5 backdrop-blur-xl md:hidden">
-            {["About", "Spaces", "Philosophy", "Services", "Process", "Journal", "Contact"].map((item) => (
-              <a key={item} href={"#" + item.toLowerCase()} onClick={() => setOpen(false)} className="flex items-center justify-between border-b border-white/10 py-4 text-sm uppercase tracking-[0.16em] text-white">
-                {item}<ArrowUpRight size={16} />
+          <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="rr-mobile-nav">
+            {navigation.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className={item.name === active ? "is-active" : ""}
+                onClick={() => {
+                  setActive(item.name);
+                  setOpen(false);
+                }}
+              >
+                <span>{item.name}</span>
+                <ArrowUpRight size={15} />
               </a>
             ))}
           </motion.div>
         )}
       </AnimatePresence>
-    <motion.div className="absolute bottom-0 left-0 h-px w-full origin-left bg-[#e0bd72]" style={{ scaleX: scrollYProgress }} />\n    </motion.header>
+    </motion.header>
   );
 }
 
@@ -372,13 +432,58 @@ export default function Page() {
         </section>
       </main>
 
-      <footer className="bg-[#100b09] text-white">
+      <footer className="rr-footer">
+        <section className="rr-footer-cta">
+          <div className="rr-footer-cta-glow" aria-hidden="true" />
+          <div className="rr-footer-cta-inner">
+            <div>
+              <p className="rr-footer-kicker">13 · Start something worth keeping</p>
+              <h2>Give your space<br /><em>a point of view.</em></h2>
+            </div>
+            <a href="#contact" className="rr-footer-cta-orbit" aria-label="Start a project">
+              <span>START<br />A PROJECT</span>
+              <ArrowUpRight size={22} />
+            </a>
+          </div>
+          <div className="rr-footer-cta-line">
+            <span>Residential · Commercial · Turnkey</span>
+            <span>Bangalore · Karnataka</span>
+          </div>
+        </section>
+
         <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-16 md:px-10 md:grid-cols-[1.2fr_.8fr_.8fr]">
-          <div><img src="https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png" alt="RR Creative Interiors" className="h-14 w-auto brightness-110" /><p className="mt-6 max-w-md text-sm leading-7 text-white/42">Beyond The Ordinary — interior environments shaped around how people actually live.</p></div>
-          <div><p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Explore</p><div className="mt-5 grid gap-3 text-sm text-white/62"><a href="#spaces">Spaces</a><a href="#eye">The Eye</a><a href="#services">Services</a><a href="#process">Process</a><a href="#journal">Journal</a></div></div>
-          <div><p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Contact</p><div className="mt-5 grid gap-3 text-sm text-white/62"><a href="tel:+919901592929">+91 99015 92929</a><a href="mailto:sales@rrcreativeinteriors.in">sales@rrcreativeinteriors.in</a><a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Instagram ↗</a></div></div>
+          <div>
+            <img
+              src="https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png"
+              alt="RR Creative Interiors"
+              className="h-14 w-auto brightness-110"
+            />
+            <p className="mt-6 max-w-md text-sm leading-7 text-white/42">
+              Beyond The Ordinary — interior environments shaped around how people actually live.
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Explore</p>
+            <div className="mt-5 grid gap-3 text-sm text-white/62">
+              <a href="#spaces">Spaces</a>
+              <a href="#eye">The Eye</a>
+              <a href="#services">Services</a>
+              <a href="#process">Process</a>
+              <a href="#journal">Journal</a>
+            </div>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Contact</p>
+            <div className="mt-5 grid gap-3 text-sm text-white/62">
+              <a href="tel:+919901592929">+91 99015 92929</a>
+              <a href="mailto:sales@rrcreativeinteriors.in">sales@rrcreativeinteriors.in</a>
+              <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
+            </div>
+          </div>
         </div>
-        <div className="border-t border-white/10 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-white/25 md:px-10">© 2026 RR Creative Interiors · Bangalore · Demo experience — replace visual references with real RR work before launch</div>
+        <div className="border-t border-white/10 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-white/25 md:px-10">
+          © 2026 RR Creative Interiors · Bangalore · Demo experience — replace visual references with real RR work before launch
+        </div>
       </footer>
     </>
   );
