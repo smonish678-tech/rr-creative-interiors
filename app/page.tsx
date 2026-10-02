@@ -7,6 +7,18 @@ import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
 
+const RR_LOGO = "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/logo/rr%205.png";
+const RR_EMBLEM = "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
+
+const PORTFOLIO = [
+  "p1.png","p2.png","p3.png","p4.png","p5.png","p6.png","p7.png","p8.png","p9.png",
+  "p10.png","p11.png","p12.png","p13.png","p14.png","p15.png","p16.png","17.png","p18.png",
+  "Industrial Metal & Wood TV Consoles.jpg","Modern Modular Kitchen Ideas _ Stylish U-Shaped Kitchen Design.jpg","download (2).jpg"
+].map((name) => ({
+  name,
+  src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/portfolio/" + encodeURIComponent(name)
+}));
+
 const IMG = {
   living: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=84",
   lounge: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=84",
@@ -63,6 +75,7 @@ function Nav() {
     { name: "Home", href: "#top", id: "top" },
     { name: "About", href: "#about", id: "about" },
     { name: "Spaces", href: "#spaces", id: "spaces" },
+    { name: "Portfolio", href: "#portfolio", id: "portfolio" },
     { name: "The Eye", href: "#eye", id: "eye" },
     { name: "Services", href: "#services", id: "services" },
     { name: "Process", href: "#process", id: "process" },
@@ -101,7 +114,7 @@ function Nav() {
       <div className="rr-header-inner">
         <a href="#top" className="rr-brand" aria-label="RR Creative Interiors home" onClick={() => setActive("Home")}>
           <img
-            src="https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png"
+            src={RR_LOGO}
             alt="RR Creative Interiors"
           />
         </a>
@@ -379,6 +392,45 @@ export default function Page() {
           </div>
         </section>
 
+
+        <section id="portfolio" className="relative overflow-hidden bg-[#e8ded1] text-[#1d1713]">
+          <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-40">
+            <Reveal>
+              <div className="flex items-end justify-between gap-10">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">07 · Portfolio studies</p>
+                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">A growing library of<br /><em className="text-[#9d1714]">spaces, details & ideas.</em></h2>
+                </div>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#685b51] md:block">Your uploaded RR reference images are blended into the experience without removing the existing editorial photography.</p>
+              </div>
+            </Reveal>
+
+            <div className="mt-16 columns-1 gap-5 md:columns-2 xl:columns-3">
+              {PORTFOLIO.map((item, i) => (
+                <Reveal key={item.name} delay={(i % 3) * .03} className="group mb-5 break-inside-avoid">
+                  <figure className="relative overflow-hidden bg-[#dcd0c1]">
+                    <img
+                      src={item.src}
+                      alt={`RR Creative Interiors visual study ${i + 1}`}
+                      loading="lazy"
+                      className="block h-auto w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+                    <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+                      <span className="text-[8px] uppercase tracking-[.18em] text-white">RR visual reference</span>
+                      <ArrowUpRight size={14} className="text-[#edca83]" />
+                    </div>
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
+
+            <div className="mt-12 flex items-center justify-between border-t border-[#1d1713]/15 pt-5">
+              <span className="text-[8px] uppercase tracking-[.18em] text-[#8c6f4f]">21 uploaded visual references</span>
+              <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
+            </div>
+          </div>
+        </section>
 
         <section id="eye" className="relative overflow-hidden bg-[#16100d] text-white">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
