@@ -613,7 +613,7 @@ export default function Page() {
         <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-16 md:px-10 md:grid-cols-[1.2fr_.8fr_.8fr]">
           <div>
             <img
-              src="https://rrcreativeinteriors.in/wp-content/uploads/2026/01/logo-landscape-1.png"
+              src="/rr-media/logo/rr%205.png"
               alt="RR Creative Interiors"
               className="h-14 w-auto brightness-110"
             />
