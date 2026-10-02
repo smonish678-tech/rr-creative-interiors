@@ -19,25 +19,53 @@ const SCENES: Scene[] = [
     side: "A point of view before a floor plan."
   },
   {
+    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/Interior%20Inspiration.jpg",
+    kicker: "02 · THE FIRST IMPRESSION",
+    title: "Enter|with intention.",
+    body: "The first room sets the emotional grammar for everything after it. We shape arrival, movement and atmosphere before the eye starts collecting details.",
+    side: "Arrival is part of the architecture."
+  },
+  {
     src: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2600&q=88",
-    kicker: "02 · HOW WE THINK",
+    kicker: "03 · HOW WE THINK",
     title: "We design|for living.",
     body: "Layouts, light, circulation and storage are solved before decoration. The space has to work beautifully before it can look beautiful.",
     side: "Function is part of the aesthetic."
   },
   {
+    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/download.jpg",
+    kicker: "04 · THE SPATIAL LINE",
+    title: "Let the room|breathe.",
+    body: "Negative space is not empty. It is what allows furniture, light and architecture to read as one composition.",
+    side: "Restraint creates room for feeling."
+  },
+  {
     src: "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=2600&q=88",
-    kicker: "03 · HOW WE BUILD",
+    kicker: "05 · HOW WE BUILD",
     title: "Every detail|has a reason.",
     body: "Materials, proportions, hardware, lighting and execution carry the same design intent from the first drawing to the final handover.",
     side: "The smallest decisions shape the room."
   },
   {
+    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/%23modern%20%23reception%20%23interior.jpg",
+    kicker: "06 · THE POINT OF VIEW",
+    title: "Character|over trends.",
+    body: "We use contemporary references as a vocabulary, not a template. The goal is a space with a point of view that still feels personal years later.",
+    side: "Good design outlives the trend."
+  },
+  {
     src: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=2600&q=88",
-    kicker: "04 · THE FEELING",
+    kicker: "07 · THE FEELING",
     title: "Make room|for what matters.",
-    body: "We want the finished space to feel personal rather than over-designed — calm, tactile, memorable and completely at home.",
+    body: "The finished space should feel personal rather than over-designed — calm, tactile, memorable and completely at home.",
     side: "Luxury is how a space makes you feel."
+  },
+  {
+    src: "https://raw.githubusercontent.com/smonish678-tech/rr-creative-interiors/main/hero/download%20%281%29.jpg",
+    kicker: "08 · BEYOND",
+    title: "A space that|stays with you.",
+    body: "The best interior is not the loudest one. It is the one you still notice in small ways long after the first impression has passed.",
+    side: "Beyond the visual. Into the everyday."
   }
 ];
 
@@ -336,7 +364,7 @@ export default function MorphScrollHero() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-[480vh] bg-[#0e0b09]">
+    <section ref={sectionRef} className="relative h-[860vh] bg-[#0e0b09]">
       <div className="sticky top-0 h-screen overflow-hidden bg-[#0e0b09]">
         <div className="absolute inset-0">
           {SCENES.map((scene, index) => (
@@ -378,15 +406,15 @@ export default function MorphScrollHero() {
           </div>
         </div>
 
-        <div className="absolute bottom-20 left-6 z-20 w-[min(980px,calc(100%-48px))] md:bottom-[13vh] md:left-[6.4vw]">
+        <div className="absolute bottom-20 left-6 z-20 w-[min(1040px,calc(100%-48px))] md:bottom-[12.5vh] md:left-[6.4vw]">
           <div className="mb-4 text-[10px] uppercase tracking-[0.28em] text-[#e8c983]">
             {SCENES[sceneIndex].kicker}
           </div>
-          <h1 className="max-w-[1180px] font-serif text-[13vw] font-normal leading-[.82] tracking-[-0.055em] text-[#f5eee4] md:text-[7.2vw] lg:text-[6.9vw]">
+          <h1 className="max-w-[1200px] font-serif text-[12vw] font-normal leading-[.84] tracking-[-0.055em] text-[#f5eee4] md:text-[7vw] lg:text-[6.65vw]">
             <span className="block">{titleLines[0]}</span>
-            <span className="block whitespace-nowrap pl-[5vw] italic text-[#e3bd71]">{titleLines[1]}</span>
+            <span className="block whitespace-nowrap pl-[4.6vw] italic text-[#e3bd71]">{titleLines[1]}</span>
           </h1>
-          <p className="mt-7 max-w-[610px] text-[13px] leading-7 text-white/72 md:text-[15px] md:leading-8">
+          <p className="mt-6 max-w-[610px] text-[13px] leading-7 text-white/72 md:text-[15px] md:leading-8">
             {SCENES[sceneIndex].body}
           </p>
           <a href="#contact" className="mt-7 inline-flex items-center gap-3 border-b border-[#e4c27b] pb-2 text-[10px] uppercase tracking-[0.18em] text-white">
@@ -394,7 +422,7 @@ export default function MorphScrollHero() {
           </a>
         </div>
 
-        <div className="absolute bottom-24 right-7 z-20 hidden flex-col items-end gap-5 md:flex">
+        <div className="absolute bottom-24 right-7 z-20 hidden flex-col items-end gap-4 md:flex">
           <div className="writing-vertical rotate-180 text-[8px] uppercase tracking-[0.22em] text-white/38">
             {SCENES[sceneIndex].side}
           </div>
