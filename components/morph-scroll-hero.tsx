@@ -360,6 +360,14 @@ export default function MorphScrollHero() {
           />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,5,4,.87)_0%,rgba(8,5,4,.52)_38%,rgba(8,5,4,.08)_72%,rgba(8,5,4,.34)_100%),linear-gradient(180deg,rgba(8,5,4,.42),transparent_35%,rgba(8,5,4,.80)_100%)]" />
           <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(0,0,0,.36)]" />
+          <div className="rr-glaze-line" aria-hidden="true" />
+          <div className="rr-spark-field" aria-hidden="true">
+            <i className="rr-spark" />
+            <i className="rr-spark" />
+            <i className="rr-spark" />
+            <i className="rr-spark" />
+            <i className="rr-spark" />
+          </div>
         </div>
 
         <div className="absolute right-6 top-[96px] z-20 md:right-[6.4vw] md:top-[102px]">
