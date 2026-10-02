@@ -65,10 +65,10 @@ footer{padding:65px 0 28px;background:#0e0907}.footer-top{display:flex;justify-c
 <section class="hero morph-hero" id="hero">
   <div class="morph-media" id="morphMedia">
     <div class="morph-fallback" id="morphFallback">
-      <img src="https://images.unsplash.com/photo-1778936317529-9930b680ac58?auto=format&fit=crop&w=2600&q=88" alt="Elegant contemporary living room interior">
-      <img src="https://images.unsplash.com/photo-1740759546556-ff8aaf35ecf9?auto=format&fit=crop&w=2600&q=88" alt="Warm sophisticated dining interior">
-      <img src="https://images.unsplash.com/photo-1777880305920-e542f575f4e9?auto=format&fit=crop&w=2600&q=88" alt="Contemporary bedroom interior">
-      <img src="https://images.unsplash.com/photo-1774953037913-af0cf688491a?auto=format&fit=crop&w=2600&q=88" alt="High-end modern office interior">
+      <img src="https://images.unsplash.com/photo-1776362355123-ca966d36e29c?auto=format&fit=crop&fm=jpg&q=80&w=3000" alt="Luxury double-height living room interior">
+      <img src="https://images.unsplash.com/photo-1758448755952-42b404bc6f39?auto=format&fit=crop&fm=jpg&q=80&w=3000" alt="Warm contemporary living room interior">
+      <img src="https://images.unsplash.com/photo-1758448500596-ce0e0239f1be?auto=format&fit=crop&fm=jpg&q=80&w=3000" alt="Refined marble living room interior">
+      <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=3000&q=85" alt="Bright modern living room interior">
     </div>
     <canvas id="morphCanvas" class="morph-canvas" aria-hidden="true"></canvas>
   </div>
@@ -172,40 +172,335 @@ footer{padding:65px 0 28px;background:#0e0907}.footer-top{display:flex;justify-c
   const canvas=document.getElementById('morphCanvas');
   const fallback=document.getElementById('morphFallback');
   const prev=document.getElementById('morphPrev');
-  const nextBtn=document.getElementById('morphNext');
+  const next=document.getElementById('morphNext');
   const count=document.getElementById('morphCurrent');
-  if(!canvas||!fallback||!prev||!nextBtn) return;
-  const sources=[
-    'https://images.unsplash.com/photo-1778936317529-9930b680ac58?auto=format&fit=crop&w=2600&q=88',
-    'https://images.unsplash.com/photo-1740759546556-ff8aaf35ecf9?auto=format&fit=crop&w=2600&q=88',
-    'https://images.unsplash.com/photo-1777880305920-e542f575f4e9?auto=format&fit=crop&w=2600&q=88',
-    'https://images.unsplash.com/photo-1774953037913-af0cf688491a?auto=format&fit=crop&w=2600&q=88'
+  if(!canvas||!fallback) return;
+
+  const items=[
+    {src:'https://images.unsplash.com/photo-1776362355123-ca966d36e29c?auto=format&fit=crop&fm=jpg&q=80&w=3000',alt:'Luxury double-height living room interior'},
+    {src:'https://images.unsplash.com/photo-1758448755952-42b404bc6f39?auto=format&fit=crop&fm=jpg&q=80&w=3000',alt:'Warm contemporary living room interior'},
+    {src:'https://images.unsplash.com/photo-1758448500596-ce0e0239f1be?auto=format&fit=crop&fm=jpg&q=80&w=3000',alt:'Refined marble living room interior'},
+    {src:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=3000&q=85',alt:'Bright modern living room interior'}
   ];
+
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const gl=canvas.getContext('webgl',{alpha:false,antialias:false});
-  let active=0,from=0,to=0,progress=1,startTime=0,direction=1,raf=0,loaded=false,interval=null;
-  const duration=reduced?0:1850,hold=reduced?999999:5200;
-  const showFallback=i=>[...fallback.images].forEach((img,n)=>img.style.opacity=n===i?'1':'0');
-  const update=()=>{count.textContent=String(active+1).padStart(2,'0')};
-  showFallback(0);update();
-  const resize=()=>{const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));canvas.width=w;canvas.height=h;if(gl)gl.viewport(0,0,w,h)};
-  if(!gl){prev.onclick=()=>{active=(active+sources.length-1)%sources.length;showFallback(active);update()};nextBtn.onclick=()=>{active=(active+1)%sources.length;showFallback(active);update()};return}
-  const V='attribute vec2 a_position;varying vec2 v_uv;void main(){v_uv=a_position*.5+.5;gl_Position=vec4(a_position,0.,1.);}';
-  const F='precision highp float;uniform sampler2D u_from;uniform sampler2D u_to;uniform float u_progress;uniform vec2 u_resolution;uniform float u_fromAspect;uniform float u_toAspect;uniform float u_scale;uniform float u_direction;uniform float u_edge;uniform float u_drift;varying vec2 v_uv;vec3 permute(vec3 x){return mod(((x*34.)+1.)*x,289.);}float snoise(vec2 v){const vec4 C=vec4(.2113248654,.3660254038,-.5773502692,.0243902439);vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);vec2 i1=(x0.x>x0.y)?vec2(1.,0.):vec2(0.,1.);vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod(i,289.);vec3 p=permute(permute(i.y+vec3(0.,i1.y,1.))+i.x+vec3(0.,i1.x,1.));vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);m*=m;m*=m;vec3 x=2.*fract(p*C.www)-1.;vec3 h=abs(x)-.5;vec3 ox=floor(x+.5);vec3 a0=x-ox;m*=1.792842914-.853734721*(a0*a0+h*h);vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.*dot(m,g);}float fbm(vec2 v){float value=0.,amplitude=.5;for(int i=0;i<5;i++){value+=amplitude*snoise(v);v*=2.;amplitude*=.5;}return value;}vec2 mirror(vec2 uv){return 1.-abs(1.-mod(uv,2.));}vec2 coverUV(vec2 uv,float imgAspect){float canvasAspect=u_resolution.x/u_resolution.y;vec2 scale=(canvasAspect>imgAspect)?vec2(1.,imgAspect/canvasAspect):vec2(canvasAspect/imgAspect,1.);return mirror((uv-.5)*scale+.5);}void main(){float adjusted=u_progress*(1.+2.*u_edge)-u_edge;float noise=fbm(v_uv*u_scale+vec2(0.,u_progress*u_direction))*.5+.5;noise=smoothstep(0.,2.,length(texture2D(u_to,coverUV(v_uv,u_toAspect)).rgb)+noise);float mixFactor=1.-smoothstep(adjusted-u_edge,adjusted+u_edge,noise);vec2 fromUV=coverUV(v_uv+vec2(0.,noise*u_progress*u_drift*u_direction),u_fromAspect);vec2 toUV=coverUV(v_uv+vec2(0.,noise*(1.-u_progress)*-.5*u_drift*u_direction),u_toAspect);gl_FragColor=mix(texture2D(u_from,fromUV),texture2D(u_to,toUV),mixFactor);}';
-  const compile=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s};
-  const program=gl.createProgram();gl.attachShader(program,compile(gl,gl.VERTEX_SHADER,V));gl.attachShader(program,compile(gl,gl.FRAGMENT_SHADER,F));gl.linkProgram(program);gl.useProgram(program);
-  const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-  const pos=gl.getAttribLocation(program,'a_position');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
-  const u={from:gl.getUniformLocation(program,'u_from'),to:gl.getUniformLocation(program,'u_to'),progress:gl.getUniformLocation(program,'u_progress'),resolution:gl.getUniformLocation(program,'u_resolution'),fromAspect:gl.getUniformLocation(program,'u_fromAspect'),toAspect:gl.getUniformLocation(program,'u_toAspect'),scale:gl.getUniformLocation(program,'u_scale'),direction:gl.getUniformLocation(program,'u_direction'),edge:gl.getUniformLocation(program,'u_edge'),drift:gl.getUniformLocation(program,'u_drift')};
-  const tex=[],aspects=[];
-  const images=sources.map(src=>{const img=new Image();img.crossOrigin='anonymous';img.decoding='async';img.src=src;return img});
-  const ready=images.map((img,i)=>new Promise(resolve=>{img.onload=()=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);tex[i]=t;aspects[i]=img.naturalWidth/Math.max(img.naturalHeight,1);resolve(true)};img.onerror=()=>resolve(false)}));
-  const pick=i=>tex[i]||tex.find(Boolean),ease=t=>t<.5?16*Math.pow(t,5):1-Math.pow(-2*t+2,5)/2;
-  const draw=now=>{if(progress<1)progress=ease(Math.min((now-startTime)/Math.max(duration,1),1));const a=pick(from),b=pick(to);if(loaded&&a&&b){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,a);gl.uniform1i(u.from,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,b);gl.uniform1i(u.to,1);gl.uniform1f(u.progress,progress);gl.uniform2f(u.resolution,canvas.width,canvas.height);gl.uniform1f(u.fromAspect,aspects[from]||1);gl.uniform1f(u.toAspect,aspects[to]||1);gl.uniform1f(u.scale,3.5);gl.uniform1f(u.direction,direction);gl.uniform1f(u.edge,.15);gl.uniform1f(u.drift,.5);gl.drawArrays(gl.TRIANGLE_STRIP,0,4)}raf=requestAnimationFrame(draw)};
-  const advance=step=>{from=active;active=(active+step+sources.length)%sources.length;to=active;direction=step>=0?1:-1;progress=duration?0:1;startTime=performance.now();update();if(!loaded)showFallback(active)};
-  Promise.all(ready).then(ok=>{loaded=ok.some(Boolean);if(loaded){resize();new ResizeObserver(resize).observe(canvas);canvas.style.opacity='1';raf=requestAnimationFrame(draw);if(duration){interval=setInterval(()=>{if(!document.hidden)advance(1)},duration+hold)}}});
-  prev.onclick=()=>advance(-1);nextBtn.onclick=()=>advance(1);
-  document.addEventListener('visibilitychange',()=>{if(!duration)return;if(document.hidden&&interval){clearInterval(interval);interval=null}else if(!document.hidden&&!interval){interval=setInterval(()=>advance(1),duration+hold)}});
+  const duration=reduced?0:1500;
+  const autoplay=reduced?0:5200;
+  const noiseScale=3.5;
+  const edge=0.15;
+  const drift=0.5;
+  const loop=true;
+
+  const wrapIndex=(i,n,shouldLoop)=>{
+    if(n<=0) return 0;
+    return shouldLoop ? ((i%n)+n)%n : Math.min(Math.max(i,0),n-1);
+  };
+  const easeInOutQuint=t=>{
+    const x=Math.min(Math.max(t,0),1);
+    return x<0.5?16*x**5:1-(-2*x+2)**5/2;
+  };
+
+  let active=0;
+  let uncontrolled=0;
+  let reducedMotion=reduced;
+  let paused=false;
+  let ready=false;
+  let failed=false;
+  let raf=0;
+  let autoplayId=0;
+  let request=null;
+  let previous=0;
+  let textures=[];
+  let aspects=[];
+  let program=null;
+  let buffer=null;
+  let uniforms={};
+
+  const fallbackImages=[...fallback.querySelectorAll('img')];
+  const showFallback=i=>{
+    fallbackImages.forEach((img,n)=>{
+      img.style.opacity=n===i?'1':'0';
+      img.setAttribute('aria-hidden',n===i?'false':'true');
+    });
+  };
+  const updateCount=()=>{if(count) count.textContent=String(active+1).padStart(2,'0')};
+  showFallback(active);
+  updateCount();
+
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:false}) || canvas.getContext('experimental-webgl');
+  if(!gl){
+    failed=true;
+    canvas.style.display='none';
+    if(prev)prev.onclick=()=>{active=wrapIndex(active-1,items.length,loop);showFallback(active);updateCount()};
+    if(next)next.onclick=()=>{active=wrapIndex(active+1,items.length,loop);showFallback(active);updateCount()};
+    return;
+  }
+
+  const VERT=`
+attribute vec2 a_position;
+varying vec2 v_uv;
+void main() {
+  v_uv = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`;
+
+  const FRAG=`
+precision highp float;
+
+uniform sampler2D u_from;
+uniform sampler2D u_to;
+uniform float u_progress;
+uniform vec2 u_resolution;
+uniform float u_fromAspect;
+uniform float u_toAspect;
+uniform float u_scale;
+uniform float u_direction;
+uniform float u_edge;
+uniform float u_drift;
+
+varying vec2 v_uv;
+
+vec3 permute(vec3 x) {
+  return mod(((x * 34.0) + 1.0) * x, 289.0);
+}
+
+float snoise(vec2 v) {
+  const vec4 C = vec4(
+    0.211324865405187,
+    0.366025403784439,
+   -0.577350269189626,
+    0.024390243902439
+  );
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute(
+    permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0)
+  );
+  vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
+  m = m * m;
+  m = m * m;
+  vec3 x  = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h  = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+float fbm(vec2 v) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  for (int i = 0; i < 5; i++) {
+    value += amplitude * snoise(v);
+    v *= 2.0;
+    amplitude *= 0.5;
+  }
+  return value;
+}
+
+vec2 mirror(vec2 uv) {
+  return 1.0 - abs(1.0 - mod(uv, 2.0));
+}
+
+vec2 coverUV(vec2 uv, float imgAspect) {
+  float canvasAspect = u_resolution.x / u_resolution.y;
+  vec2 scale = (canvasAspect > imgAspect)
+    ? vec2(1.0, imgAspect / canvasAspect)
+    : vec2(canvasAspect / imgAspect, 1.0);
+  return mirror((uv - 0.5) * scale + 0.5);
+}
+
+void main() {
+  float adjusted = u_progress * (1.0 + 2.0 * u_edge) - u_edge;
+
+  float noise = fbm(v_uv * u_scale + vec2(0.0, u_progress * u_direction)) * 0.5 + 0.5;
+
+  noise = smoothstep(
+    0.0,
+    2.0,
+    length(texture2D(u_to, coverUV(v_uv, u_toAspect)).rgb) + noise
+  );
+
+  float mixFactor = 1.0 - smoothstep(adjusted - u_edge, adjusted + u_edge, noise);
+
+  vec2 fromUV = coverUV(
+    v_uv + vec2(0.0, noise * u_progress * u_drift * u_direction),
+    u_fromAspect
+  );
+  vec2 toUV = coverUV(
+    v_uv + vec2(0.0, noise * (1.0 - u_progress) * -0.5 * u_drift * u_direction),
+    u_toAspect
+  );
+
+  gl_FragColor = mix(texture2D(u_from, fromUV), texture2D(u_to, toUV), mixFactor);
+}
+`;
+
+  const compile=(glCtx,type,src)=>{
+    const shader=glCtx.createShader(type);
+    if(!shader) throw new Error('could not create shader');
+    glCtx.shaderSource(shader,src);
+    glCtx.compileShader(shader);
+    if(!glCtx.getShaderParameter(shader,glCtx.COMPILE_STATUS)){
+      const log=glCtx.getShaderInfoLog(shader);
+      glCtx.deleteShader(shader);
+      throw new Error('shader compile failed: '+log);
+    }
+    return shader;
+  };
+  const link=(glCtx,vertSrc,fragSrc)=>{
+    const vert=compile(glCtx,glCtx.VERTEX_SHADER,vertSrc);
+    const frag=compile(glCtx,glCtx.FRAGMENT_SHADER,fragSrc);
+    const p=glCtx.createProgram();
+    if(!p) throw new Error('could not create program');
+    glCtx.attachShader(p,vert);glCtx.attachShader(p,frag);
+    glCtx.linkProgram(p);
+    glCtx.deleteShader(vert);glCtx.deleteShader(frag);
+    if(!glCtx.getProgramParameter(p,glCtx.LINK_STATUS)){
+      const log=glCtx.getProgramInfoLog(p);
+      glCtx.deleteProgram(p);
+      throw new Error('program link failed: '+log);
+    }
+    return p;
+  };
+  const loadImage=src=>new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.decoding='async';
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error('could not load '+src));
+    img.src=src;
+  });
+
+  try{
+    program=link(gl,VERT,FRAG);
+    gl.useProgram(program);
+
+    buffer=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    const loc=gl.getAttribLocation(program,'a_position');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+    ['from','to','progress','resolution','fromAspect','toAspect','scale','direction','edge','drift'].forEach(name=>{
+      uniforms[name]=gl.getUniformLocation(program,'u_'+name);
+    });
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+
+    textures=items.map(()=>null);
+    aspects=items.map(()=>1);
+
+    const resize=()=>{
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      const w=Math.round(canvas.clientWidth*dpr);
+      const h=Math.round(canvas.clientHeight*dpr);
+      if(!w||!h)return;
+      if(canvas.width!==w||canvas.height!==h){
+        canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);
+      }
+    };
+    const observer=new ResizeObserver(resize);
+    observer.observe(canvas);
+
+    let from=active;
+    let to=active;
+    let progress=1;
+    let startedAt=0;
+    let direction=1;
+    let running=false;
+    let refused=0;
+    let disposed=false;
+
+    const onLost=e=>{e.preventDefault();cancelAnimationFrame(raf)};
+    canvas.addEventListener('webglcontextlost',onLost);
+
+    const pick=i=>textures[i]||textures.find(t=>t)||null;
+
+    const draw=()=>{
+      if(disposed)return;
+      const pending=request;
+      if(pending){
+        request=null;
+        if(pending.from!==pending.to){
+          from=pending.from;to=pending.to;progress=0;startedAt=performance.now();
+          const n=items.length;
+          const forward=loop?((pending.to-pending.from+n)%n)*2<=n:pending.to>pending.from;
+          direction=forward?1:-1;
+        }
+      }
+      if(progress<1){
+        const span=reducedMotion?0:Math.max(duration,1);
+        const elapsed=performance.now()-startedAt;
+        progress=span===0?1:easeInOutQuint(Math.min(elapsed/span,1));
+      }
+      const fromTex=pick(from),toTex=pick(to);
+      if(!fromTex||!toTex){raf=requestAnimationFrame(draw);return;}
+      gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,fromTex);gl.uniform1i(uniforms.from,0);
+      gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,toTex);gl.uniform1i(uniforms.to,1);
+      gl.uniform1f(uniforms.progress,progress);
+      gl.uniform2f(uniforms.resolution,canvas.width,canvas.height);
+      gl.uniform1f(uniforms.fromAspect,aspects[from]||1);
+      gl.uniform1f(uniforms.toAspect,aspects[to]||1);
+      gl.uniform1f(uniforms.scale,noiseScale);
+      gl.uniform1f(uniforms.direction,direction);
+      gl.uniform1f(uniforms.edge,Math.max(edge,0.001));
+      gl.uniform1f(uniforms.drift,drift);
+      gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+      raf=requestAnimationFrame(draw);
+    };
+
+    const frame=()=>{draw()};
+    const go=nextIndex=>{
+      const wrapped=wrapIndex(nextIndex,items.length,loop);
+      if(active!==wrapped){previous=active;active=wrapped;request={from:previous,to:active};updateCount()}
+    };
+
+    const start=async()=>{
+      try{
+        await Promise.all(items.map((item,i)=>loadImage(item.src).then(img=>{
+          if(disposed)return;
+          const tex=gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D,tex);
+          gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+          textures[i]=tex;aspects[i]=img.naturalWidth/Math.max(img.naturalHeight,1);
+          if(!running){running=true;resize();ready=true;canvas.style.opacity='1';raf=requestAnimationFrame(frame)}
+        }).catch(()=>{refused+=1;if(refused===items.length) {failed=true;canvas.style.display='none';showFallback(active)}}));
+      }catch{failed=true;canvas.style.display='none';showFallback(active)}
+    };
+
+    start();
+
+    if(prev)prev.addEventListener('click',()=>go(active-1));
+    if(next)next.addEventListener('click',()=>go(active+1));
+
+    const visibility=()=>{paused=document.hidden};
+    document.addEventListener('visibilitychange',visibility);
+
+    if(autoplay&&!reducedMotion){
+      autoplayId=window.setInterval(()=>{if(!paused)go(active+1)},autoplay);
+    }
+
+    window.addEventListener('resize',resize);
+
+  }catch(error){
+    failed=true;
+    canvas.style.display='none';
+    showFallback(active);
+  }
 })();
 </script>
 <script>
