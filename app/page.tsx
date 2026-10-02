@@ -528,6 +528,17 @@ export default function Page() {
         </section>
       </main>
 
+      <div className="rr-floating-contact" aria-label="Quick contact">
+        <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer" className="rr-float rr-float-wa">
+          <MessageCircle size={17} />
+          <span>WhatsApp</span>
+        </a>
+        <a href="tel:+919901592929" className="rr-float">
+          <Phone size={16} />
+          <span>Call</span>
+        </a>
+      </div>
+
       <footer className="rr-footer">
         <section className="rr-footer-cta">
           <div className="rr-footer-cta-glow" aria-hidden="true" />
