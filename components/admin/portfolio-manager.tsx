@@ -42,8 +42,8 @@ export default function PortfolioManager() {
   const inputRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     try {
       const response = await fetch("/api/admin/portfolio", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
@@ -62,7 +62,28 @@ export default function PortfolioManager() {
     }
   }, []);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/portfolio", { cache: "no-store" })
+      .then(async (response) => ({ response, data: await response.json().catch(() => ({})) }))
+      .then(({ response, data }) => {
+        if (!active) return;
+        if (!response.ok) {
+          setItems([]);
+          setStorageHelp(response.status === 503);
+          setError(data.error || "The portfolio library could not be loaded.");
+          return;
+        }
+        setItems(Array.isArray(data.items) ? data.items : []);
+        setStorageHelp(false);
+        setError("");
+      })
+      .catch((cause) => {
+        if (active) setError(cause instanceof Error ? cause.message : "The portfolio library could not be loaded.");
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   async function onUpload(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -249,7 +270,7 @@ export default function PortfolioManager() {
 
       <div className="rr-library-heading">
         <div><h2>Project media</h2><p>Your published work and drafts, in one place.</p></div>
-        <button className="rr-secondary" type="button" onClick={() => void refresh()} disabled={loading}><RefreshCw size={15} /> Refresh library</button>
+        <button className="rr-secondary" type="button" onClick={() => void refresh(true)} disabled={loading}><RefreshCw size={15} /> Refresh library</button>
       </div>
       {loading ? (
         <div className="rr-library-empty"><LoaderCircle className="rr-spinning" size={21} /><span>Loading your portfolio…</span></div>
