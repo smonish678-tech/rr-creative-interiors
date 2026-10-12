@@ -500,3 +500,12 @@ button,input,select,textarea{font:inherit}
   .rr-admin *, .rr-admin *::before, .rr-admin *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .rr-admin .rr-stat:hover { transform: none; }
 }
+
+
+.rr-save-status{display:inline-flex;align-items:center;gap:7px;color:#998b79;font-size:9px;white-space:nowrap}
+.rr-save-status i{display:block;width:6px;height:6px;border-radius:50%;background:#8ca47b;box-shadow:0 0 0 3px rgba(140,164,123,.12)}
+.rr-save-status i.loading,.rr-save-status i.saving{background:#c59c55;box-shadow:0 0 0 3px rgba(197,156,85,.12);animation:rr-save-pulse 1.15s ease-in-out infinite}
+.rr-save-status i.error{background:#b96355;box-shadow:0 0 0 3px rgba(185,99,85,.12)}
+@keyframes rr-save-pulse{50%{opacity:.38;transform:scale(.86)}}
+@media(max-width:760px){.rr-save-status{font-size:8px;gap:5px}.rr-save-status i{width:5px;height:5px}}
+@media(prefers-reduced-motion:reduce){.rr-save-status i.loading,.rr-save-status i.saving{animation:none}}
