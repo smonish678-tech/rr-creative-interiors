@@ -1,16 +1,17 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion, useScroll } from "framer-motion";
 import { ArrowUpRight, ChevronRight, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
 
 const RR_LOGO = "/rr-media/logo/rr%205.png";
-const RR_EMBLEM = "/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
 
-const PORTFOLIO = [
+type PortfolioCard = { name: string; src: string; kind?: "image" | "video"; title?: string; project?: string; description?: string; id?: string };
+
+const PORTFOLIO: PortfolioCard[] = [
   "p1.png","p2.png","p3.png","p4.png","p5.png","p6.png","p7.png","p8.png","p9.png",
   "p10.png","p11.png","p12.png","p13.png","p14.png","p15.png","p16.png","17.png","p18.png",
   "Industrial Metal & Wood TV Consoles.jpg","Modern Modular Kitchen Ideas _ Stylish U-Shaped Kitchen Design.jpg","download (2).jpg"
@@ -228,7 +229,7 @@ function ContactForm() {
       <form onSubmit={submit} className="rr-enquiry-card">
         <div className="rr-form-head">
           <div>
-            <span>Tell us where you're starting</span>
+            <span>Tell us where you&apos;re starting</span>
             <h3>A little context.<br /><em>Then we take it from there.</em></h3>
           </div>
           <div className="rr-form-mark">RR<span>↗</span></div>
@@ -326,6 +327,31 @@ function ContactForm() {
 }
 
 export default function Page() {
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioCard[]>(PORTFOLIO);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/portfolio", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!active || !Array.isArray(data?.items) || data.items.length === 0) return;
+        const uploaded: PortfolioCard[] = data.items
+          .filter((item: { url?: unknown; kind?: unknown }) => typeof item.url === "string" && (item.kind === "image" || item.kind === "video"))
+          .map((item: { id?: string; url: string; kind: "image" | "video"; title?: string; project?: string; description?: string }) => ({
+            id: item.id,
+            name: item.title || item.project || "RR project",
+            src: item.url,
+            kind: item.kind,
+            title: item.title,
+            project: item.project,
+            description: item.description,
+          }));
+        setPortfolioItems([...uploaded, ...PORTFOLIO]);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://rrcreativeinteriors.in/#website","url":"https://rrcreativeinteriors.in/","name":"RR Creative Interiors","alternateName":"RR Interiors","description":"RR Creative Interiors — Beyond The Ordinary. Interior design studio in Bangalore.","inLanguage":"en-IN"},{"@type":"Organization","@id":"https://rrcreativeinteriors.in/#organization","name":"RR Creative Interiors","alternateName":"RR Interiors","url":"https://rrcreativeinteriors.in/","logo":{"@type":"ImageObject","url":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png","contentUrl":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png"},"telephone":["+919901592929","+919110241957"],"email":"sales@rrcreativeinteriors.in","address":{"@type":"PostalAddress","streetAddress":"32, 2nd Cross Rd, KNB Aaradya layout, Kommaghatta","addressLocality":"Bengaluru","addressRegion":"Karnataka","postalCode":"560060","addressCountry":"IN"},"areaServed":{"@type":"City","name":"Bengaluru"},"description":"Interior design studio in Bangalore offering residential, commercial and turnkey interior design services.","knowsAbout":["Residential interior design","Commercial interior design","Turnkey interiors","Modular kitchens","Wardrobes and storage","Lighting and ceiling design"]}]})}} />
@@ -406,18 +432,29 @@ export default function Page() {
             </Reveal>
 
             <div className="mt-16 columns-1 gap-5 md:columns-2 xl:columns-3">
-              {PORTFOLIO.map((item, i) => (
+              {portfolioItems.map((item, i) => (
                 <Reveal key={item.name} delay={(i % 3) * .03} className="group mb-5 break-inside-avoid">
                   <figure className="relative overflow-hidden bg-[#dcd0c1]">
-                    <img
-                      src={item.src}
-                      alt={`RR Creative Interiors visual study ${i + 1}`}
-                      loading="lazy"
-                      className="block h-auto w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
-                    />
+                    {item.kind === "video" ? (
+                      <video
+                        src={item.src}
+                        aria-label={item.title || item.project || `RR project video ${i + 1}`}
+                        controls
+                        preload="metadata"
+                        playsInline
+                        className="block aspect-[4/5] w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                      />
+                    ) : (
+                      <img
+                        src={item.src}
+                        alt={item.title || item.project || `RR Creative Interiors visual study ${i + 1}`}
+                        loading="lazy"
+                        className="block h-auto w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                      />
+                    )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
                     <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                      <span className="text-[8px] uppercase tracking-[.18em] text-white">RR visual reference</span>
+                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.project ? `${item.project}${item.title ? ` · ${item.title}` : ""}` : "RR visual reference"}</span>
                       <ArrowUpRight size={14} className="text-[#edca83]" />
                     </div>
                   </figure>
@@ -435,7 +472,7 @@ export default function Page() {
         <section id="eye" className="relative overflow-hidden bg-[#16100d] text-white">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">08 · The designer's eye</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">08 · The designer&apos;s eye</p>
               <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">We see the<br /><em className="text-[#e3bd71]">quiet decisions.</em></h2>
               <p className="mt-8 max-w-md text-sm leading-7 text-white/48">A premium room rarely announces why it works. The proportion, the visual axis, the light, the edge of a material — those are the decisions we want you to notice only after you feel them.</p>
             </Reveal>
@@ -536,7 +573,7 @@ export default function Page() {
               <img src="https://i.pinimg.com/originals/2e/9f/ef/2e9fefb451405b618d9028b79f2cf94c.png" alt="Luxury materials moodboard visual reference" className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
               <div className="absolute bottom-7 left-7 right-7 flex items-end justify-between">
-                <div><p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Marble · timber · brass · stone</p><p className="mt-2 max-w-md text-sm leading-6 text-white/70">Temporary moodboard reference. The live site can later use RR's actual material library and site photography.</p></div>
+                <div><p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Marble · timber · brass · stone</p><p className="mt-2 max-w-md text-sm leading-6 text-white/70">Temporary moodboard reference. The live site can later use RR&apos;s actual material library and site photography.</p></div>
                 <span className="font-serif text-5xl text-white/35">RR</span>
               </div>
             </Reveal>
@@ -566,7 +603,7 @@ export default function Page() {
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.82fr_1.18fr]">
             <Reveal>
               <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">14 · Start a project</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Let's make room for what matters.</h2>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Let&apos;s make room for what matters.</h2>
               <p className="mt-8 max-w-xl text-lg leading-8 text-[#695d53]">Tell us about the home, office, retail space or turnkey project you have in mind.</p>
               <div className="mt-10 grid gap-3 text-sm">
                 <a href="tel:+919901592929" className="inline-flex items-center gap-3"><Phone size={16} /> +91 99015 92929</a>
