@@ -1,4 +1,4 @@
-import { del, list, put } from "@vercel/blob";
+import { del, get, list, put } from "@vercel/blob";
 
 export type PortfolioAsset = {
   id: string;
@@ -16,23 +16,38 @@ export type PortfolioAsset = {
 
 const MANIFEST_PATH = "rr-creative-interiors/portfolio/manifest.json";
 
-function blobToken(): string {
+function publicMediaToken(): string {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
-    throw new Error("Portfolio storage is not configured. Create a Vercel Blob store and add BLOB_READ_WRITE_TOKEN to this project's environment variables.");
+    throw new Error("Public portfolio media storage is not configured. Connect a public Vercel Blob store and set BLOB_READ_WRITE_TOKEN.");
+  }
+  return token;
+}
+
+function privateManifestToken(): string {
+  const token = process.env.RR_PORTFOLIO_MANIFEST_BLOB_TOKEN;
+  if (!token) {
+    throw new Error("Private portfolio metadata storage is not configured. Create a separate private Vercel Blob store and set RR_PORTFOLIO_MANIFEST_BLOB_TOKEN.");
   }
   return token;
 }
 
 export async function loadPortfolio(): Promise<PortfolioAsset[]> {
-  const token = blobToken();
+  const token = privateManifestToken();
   const result = await list({ prefix: MANIFEST_PATH, token });
   const manifest = result.blobs.find((blob) => blob.pathname === MANIFEST_PATH);
   if (!manifest) return [];
 
-  const response = await fetch(manifest.url, { cache: "no-store" });
-  if (!response.ok) throw new Error("Could not read the portfolio library.");
-  const data: unknown = await response.json();
+  const manifestData = await get(manifest.url, {
+    access: "private",
+    token,
+    useCache: false,
+  });
+  if (!manifestData || manifestData.statusCode !== 200) {
+    throw new Error("Could not read the private portfolio library manifest.");
+  }
+
+  const data: unknown = await new Response(manifestData.stream).json();
   if (!Array.isArray(data)) return [];
   return data.filter((item): item is PortfolioAsset => {
     return Boolean(
@@ -46,9 +61,9 @@ export async function loadPortfolio(): Promise<PortfolioAsset[]> {
 }
 
 export async function savePortfolio(items: PortfolioAsset[]): Promise<void> {
-  const token = blobToken();
+  const token = privateManifestToken();
   await put(MANIFEST_PATH, JSON.stringify(items), {
-    access: "public",
+    access: "private",
     token,
     contentType: "application/json",
     addRandomSuffix: false,
@@ -57,5 +72,5 @@ export async function savePortfolio(items: PortfolioAsset[]): Promise<void> {
 }
 
 export async function deletePortfolioBlob(url: string): Promise<void> {
-  await del(url, { token: blobToken() });
+  await del(url, { token: publicMediaToken() });
 }

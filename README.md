@@ -1,50 +1,32 @@
 # RR Creative Interiors — Beyond The Ordinary
 
-Premium, conversion-focused static website for RR Creative Interiors.
+Premium, conversion-focused website and admin workspace for RR Creative Interiors.
 
 ## Current implementation
-- Full-screen shader morph hero using remote Unsplash imagery.
-- Three.js abstract 3D "RR Standard" section.
-- Responsive desktop/tablet/mobile navigation.
-- Scroll reveal, subtle tilt, progress indicator and reduced-motion support.
+- Cinematic/morphing hero, scroll reveal and restrained hover depth.
+- Responsive desktop/tablet/mobile navigation and reduced-motion support.
 - Services, process, testimonials, journal, contact and local-business SEO.
-- Real contact details sourced from the official RR Creative Interiors website.
+- Admin overview, lead pipeline, invoice/cash receipt UI and portfolio media manager.
 
-## Replace the temporary visual references
-The current interior photography is visual reference material, not RR project photography.
+## Sahya Greens motion references
+The RR site retains its own RR visual language while using the same interaction vocabulary as the Sahya Greens source: Lenis smooth scrolling, composed staged reveals, subtle image depth, responsive buttons, and reduced-motion behavior. The existing RR hero remains the centerpiece.
 
-When RR project photography is ready:
-- Hero: replace the URLs in the heroImgs array inside index.html.
-- Space gallery: replace the three img source URLs in the spaces section.
-- Keep the "Visual Reference" labels only until real RR work replaces the imagery.
-
-Suggested asset folders for future migration:
-- /assets/hero/
-- /assets/projects/
-- /assets/services/
-- /assets/studio/
-- /assets/clients/
-- /assets/brand/
-
-## SEO
-The site includes:
-- title/description/keywords/canonical
-- Open Graph/Twitter metadata
-- robots.txt
-- sitemap.xml
-- InteriorDesigner JSON-LD with the current RR business contact information
-
-Ranking for a query such as "best interiors in Bangalore" cannot be guaranteed by code alone. The implementation gives Google the basic technical and local signals; continued content, citations, links, reviews and a strong Google Business Profile are still required.
-
-
-## Admin workspace — media uploads
+## Admin workspace and portfolio uploads
 
 The portfolio manager is available at `/admin`. It supports multi-file photo/video uploads, project metadata, draft/publish controls, and delete. Published items appear in the website portfolio feed.
 
-Before enabling the admin on production, configure these server-side Vercel environment variables for both Preview and Production:
+### Configure before production
+
+Connect **two Vercel Blob stores** to the project:
+
+1. **Public media store** — use its read/write token as `BLOB_READ_WRITE_TOKEN`. Photo/video assets in this store can be delivered directly to site visitors once published; upload URLs use random suffixes.
+2. **Private metadata store** — create a separate **private** Blob store, then save its read/write token as `RR_PORTFOLIO_MANIFEST_BLOB_TOKEN`. The JSON manifest is kept here so the draft list and publication metadata are not exposed as a public URL.
+
+Also set these server-side environment variables for both Preview and Production:
 - `ADMIN_EMAIL` — the administrator login email.
 - `ADMIN_PASSWORD` — a strong administrator password.
 - `ADMIN_SESSION_SECRET` — a unique, high-entropy value used to sign secure HttpOnly sessions.
-- `BLOB_READ_WRITE_TOKEN` — created by connecting a Vercel Blob store to the project.
+- `BLOB_READ_WRITE_TOKEN` — token for the public media store.
+- `RR_PORTFOLIO_MANIFEST_BLOB_TOKEN` — token for the private metadata store.
 
-Do not use `NEXT_PUBLIC_` prefixes for credentials or session secrets. The media library persists metadata in a JSON manifest in Vercel Blob and stores image/video files in the same Blob store. Public portfolio URLs are public by design once an item is published.
+Never use `NEXT_PUBLIC_` prefixes for credentials or session secrets. Do not commit actual secrets. The admin route is not ready for real use until these Vercel environment variables and both Blob stores are configured.

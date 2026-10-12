@@ -215,7 +215,7 @@ export default function PortfolioManager() {
           <AlertCircle size={19} />
           <div>
             <b>Connect the media library once in Vercel</b>
-            <p>Create a Blob store for this project and add its server-side <code>BLOB_READ_WRITE_TOKEN</code> to Preview and Production. Also configure <code>ADMIN_EMAIL</code>, <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code>. Do not use <code>NEXT_PUBLIC_</code> prefixes for these secrets.</p>
+            <p>Create a public Blob store for media and a separate private Blob store for the manifest. Set <code>BLOB_READ_WRITE_TOKEN</code> and <code>RR_PORTFOLIO_MANIFEST_BLOB_TOKEN</code>, plus <code>ADMIN_EMAIL</code>, <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code>, in Preview and Production. Never use <code>NEXT_PUBLIC_</code> prefixes for secrets.</p>
           </div>
         </div>
       )}
