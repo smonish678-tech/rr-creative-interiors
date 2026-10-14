@@ -161,11 +161,12 @@ function transitionLead(leadId:string,targetStageId:string){
  const target=pipelineStages.find(stage=>stage.id===targetStageId);
  if(!lead||!target)return;
  const currentStage=stageForLead(lead,pipelineStages);
+ if(target.id===currentStage?.id)return;
  if(target.id!==currentStage?.id&&!target.active){setNotice("That stage is inactive. Activate it in Pipeline setup before moving leads into it.");return;}
  const candidate:Lead={...lead,stageId:target.id,status:target.name,nextAction:target.defaultNextAction||lead.nextAction||"",nextFollowUpDate:dateAfterDays(target.followUpDays)};
  const missing=missingPipelineFields(candidate,target);
  if(missing.length){
-  setSelectedLead(candidate);setSelectedLeadError(`Cannot move to “${target.name}” yet. Complete: ${missing.map(fieldLabel).join(", ")}.`);
+  setSelectedLead(lead);setSelectedLeadError(`Cannot move to “${target.name}” yet. Complete: ${missing.map(fieldLabel).join(", ")}.`);
   return;
  }
  setLeads(current=>current.map(item=>item.id===leadId?candidate:item));
@@ -194,8 +195,8 @@ function updatePipelineStage(id:string,patch:Partial<SalesPipelineStage>){
  let next=pipelineStages.map(stage=>stage.id===id?proposed:stage);
  if(patch.isInitial===true)next=next.map(stage=>({...stage,isInitial:stage.id===id}));
  if(patch.isInitial===false&&current.isInitial){setNotice("Select a new starting stage before removing the starting-stage flag.");return;}
- if(patch.kind && current.kind==="won" && patch.kind!=="won" && pipelineStages.filter(stage=>stage.active&&stage.kind==="won").length<=1){setNotice("Keep at least one active Won stage.");return;}
- if(patch.kind && (current.kind==="lost"||current.kind==="disqualified") && patch.kind!=="lost" && patch.kind!=="disqualified" && pipelineStages.filter(stage=>stage.active&&(stage.kind==="lost"||stage.kind==="disqualified")).length<=1){setNotice("Keep at least one active Lost or Disqualified stage.");return;}
+ if(next.filter(stage=>stage.active&&stage.kind==="won").length<1){setNotice("Keep at least one active Won stage.");return;}
+ if(next.filter(stage=>stage.active&&(stage.kind==="lost"||stage.kind==="disqualified")).length<1){setNotice("Keep at least one active Lost or Disqualified stage.");return;}
  setPipelineStages(next);
  setNotice("Pipeline setting updated. Changes are saving automatically.");
 }
