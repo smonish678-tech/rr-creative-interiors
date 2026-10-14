@@ -475,7 +475,23 @@ function addBill(e:FormEvent){
    nextCustomers=[...nextCustomers,customer];
   }
  }
+ if(receipt&&!sourceInvoice&&billForm.linkedInvoiceId!=="__none__"&&customer){
+  const outstandingInvoices=nextInvoices.filter(item=>item.type==="Invoice"&&item.clientId===customer!.id&&total(item)>item.paid);
+  const projectMatches=outstandingInvoices.filter(item=>item.project.trim().toLocaleLowerCase()===billForm.project.trim().toLocaleLowerCase());
+  if(projectMatches.length>1){setBillFormError("More than one outstanding invoice has this customer and project. Select the exact invoice to apply the receipt.");return;}
+  if(projectMatches.length===1)sourceInvoice=projectMatches[0];
+  else if(outstandingInvoices.length>0){setBillFormError("This customer has outstanding invoices, but none matches the receipt project. Select the exact invoice above or choose Unapplied receipt.");return;}
+ }
+ if(sourceInvoice&&customer&&sourceInvoice.clientId&&sourceInvoice.clientId!==customer.id){setBillFormError("The selected invoice belongs to a different customer than the contact matched. Correct the contact or select the right CRM customer.");return;}
+ if(sourceInvoice&&sourceInvoice.project.trim().toLocaleLowerCase()!==billForm.project.trim().toLocaleLowerCase()){setBillFormError("The receipt project must match the invoice project. Select the invoice again to copy its details.");return;}
+ if(sourceInvoice&&sourceInvoice.leadId){
+  const invoiceLead=leads.find(item=>item.id===sourceInvoice!.leadId);
+  if(invoiceLead&&linkedLead&&invoiceLead.id!==linkedLead.id){setBillFormError("The receipt invoice is linked to a different CRM opportunity. Select its matching invoice or lead.");return;}
+  if(invoiceLead)linkedLead=invoiceLead;
+ }
  if(sourceInvoice){
+  const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid);
+  if(amount>balance+0.009){setBillFormError(`This receipt exceeds the linked invoice balance of ${money(balance)}.`);return;}
   const updatedPaid=Math.min(total(sourceInvoice),sourceInvoice.paid+amount);
   const updatedSource:Invoice={...sourceInvoice,paid:updatedPaid,status:updatedPaid>=total(sourceInvoice)?"Paid":updatedPaid>0?"Partially paid":"Draft"};
   nextInvoices=nextInvoices.map(item=>item.id===sourceInvoice!.id?updatedSource:item);
@@ -487,8 +503,8 @@ function addBill(e:FormEvent){
  let updatedLead:Lead|undefined;
  if(linkedLead){
   updatedLead=linkedLead;
-  if(receipt||paid>0){updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
-  if(!receipt){updatedLead=applyPipelineTrigger(updatedLead,"invoice_saved");if(paid>0)updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
+  if(receipt){updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
+  else {updatedLead=applyPipelineTrigger(updatedLead,"invoice_saved");if(paid>0)updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
  }
  setClients(nextCustomers);
  setInvoices(nextInvoices);
