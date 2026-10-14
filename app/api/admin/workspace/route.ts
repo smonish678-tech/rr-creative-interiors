@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { isSalesPipelineStageList, normalizeSalesPipeline } from "@/lib/sales-pipeline";
 import { loadOperationsWorkspace, saveOperationsWorkspace, type OperationsWorkspace } from "@/lib/workspace-store";
 
 export const runtime = "nodejs";
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Workspace data is invalid." }, { status: 400 });
     }
 
-    const { leads, invoices, studioName, studioEmail } = body;
+    const { leads, invoices, studioName, studioEmail, pipelineStages } = body;
     if (
       !Array.isArray(leads) ||
       !Array.isArray(invoices) ||
@@ -44,16 +45,19 @@ export async function POST(request: Request) {
       typeof studioEmail !== "string" ||
       !studioName.trim() ||
       studioName.length > 140 ||
-      studioEmail.length > 254
+      studioEmail.length > 254 ||
+      (pipelineStages !== undefined && !isSalesPipelineStageList(pipelineStages))
     ) {
       return NextResponse.json({ error: "Workspace data failed validation." }, { status: 400 });
     }
 
+    const existingWorkspace = await loadOperationsWorkspace();
     const workspace: OperationsWorkspace = {
       leads,
       invoices,
       studioName: studioName.trim(),
       studioEmail: studioEmail.trim(),
+      pipelineStages: pipelineStages === undefined ? existingWorkspace.pipelineStages : normalizeSalesPipeline(pipelineStages),
     };
     await saveOperationsWorkspace(workspace);
     return NextResponse.json({ saved: true }, { headers: { "Cache-Control": "no-store" } });
