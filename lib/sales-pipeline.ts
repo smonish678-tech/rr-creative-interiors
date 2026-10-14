@@ -75,6 +75,8 @@ export function isSalesPipelineStageList(value: unknown): value is SalesPipeline
   const names = new Set<string>();
   let activeInitialCount = 0;
   let activeOpenCount = 0;
+  let activeWonCount = 0;
+  let activeLossCount = 0;
 
   for (const item of stages) {
     if (!item || typeof item !== "object" || Array.isArray(item)) return false;
@@ -84,7 +86,7 @@ export function isSalesPipelineStageList(value: unknown): value is SalesPipeline
       typeof stage.name !== "string" || !stage.name.trim() || stage.name.length > 70 ||
       !stage.kind || !VALID_KINDS.includes(stage.kind) ||
       !stage.tone || !VALID_TONES.includes(stage.tone) ||
-      !(stage.followUpDays === null || (Number.isInteger(stage.followUpDays) && stage.followUpDays >= 0 && stage.followUpDays <= MAX_FOLLOW_UP_DAYS)) ||
+      !(stage.followUpDays === null || (typeof stage.followUpDays === "number" && Number.isInteger(stage.followUpDays) && stage.followUpDays >= 0 && stage.followUpDays <= MAX_FOLLOW_UP_DAYS)) ||
       typeof stage.defaultNextAction !== "string" || stage.defaultNextAction.length > 180 ||
       !Array.isArray(stage.requiredFields) || !stage.requiredFields.every((field) => typeof field === "string" && VALID_FIELDS.includes(field as PipelineField)) ||
       typeof stage.active !== "boolean" || typeof stage.isInitial !== "boolean"
@@ -96,9 +98,11 @@ export function isSalesPipelineStageList(value: unknown): value is SalesPipeline
     names.add(normalizedName);
     if (stage.active && stage.isInitial && stage.kind === "open") activeInitialCount += 1;
     if (stage.active && stage.kind === "open") activeOpenCount += 1;
+    if (stage.active && stage.kind === "won") activeWonCount += 1;
+    if (stage.active && (stage.kind === "lost" || stage.kind === "disqualified")) activeLossCount += 1;
   }
 
-  return activeInitialCount === 1 && activeOpenCount >= 1;
+  return activeInitialCount === 1 && activeOpenCount >= 1 && activeWonCount >= 1 && activeLossCount >= 1;
 }
 
 export function normalizeSalesPipeline(value: unknown): SalesPipelineStage[] {
