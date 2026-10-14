@@ -422,7 +422,7 @@ function chooseReceiptInvoice(invoiceId:string){
  if(!invoice)return;
  const lead=leads.find(item=>item.id===invoice.leadId);
  const customer=clients.find(item=>item.id===invoice.clientId)||(lead?clients.find(item=>item.id===lead.clientId):undefined);
- setBillForm({...billForm,linkedInvoiceId:invoice.id,leadId:lead?.id||"__none__",client:customer?.name||invoice.client,email:customer?.email||invoice.email,phone:customer?.phone||invoice.phone||"",project:invoice.project});
+ setBillForm({...billForm,linkedInvoiceId:invoice.id,leadId:lead?.id||"",client:customer?.name||invoice.client,email:customer?.email||invoice.email,phone:customer?.phone||invoice.phone||"",project:invoice.project});
  setBillFormError("");
 }
 function addBill(e:FormEvent){
