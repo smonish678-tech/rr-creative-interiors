@@ -453,6 +453,8 @@ function addBill(e:FormEvent){
   if(!customer){setBillFormError("The selected lead has no customer record yet. Open and save the lead profile first so RR can repair its customer link.");return;}
   if(normalizeCustomerEmail(billForm.email)&&normalizeCustomerEmail(customer.email)&&normalizeCustomerEmail(billForm.email)!==normalizeCustomerEmail(customer.email)){setBillFormError("The email differs from the selected CRM customer. Update the customer contact in the CRM first, or select the correct lead.");return;}
   if(normalizeCustomerPhone(billForm.phone)&&normalizeCustomerPhone(customer.phone)&&normalizeCustomerPhone(billForm.phone)!==normalizeCustomerPhone(customer.phone)){setBillFormError("The phone differs from the selected CRM customer. Update the customer contact in the CRM first, or select the correct lead.");return;}
+  customer={...customer,email:customer.email||billForm.email,phone:customer.phone||billForm.phone,updatedAt:new Date().toISOString()};
+  nextCustomers=nextCustomers.map(item=>item.id===customer!.id?customer!:item);
   if(billForm.project.trim().toLocaleLowerCase()!==linkedLead.project.trim().toLocaleLowerCase()){setBillFormError(`The selected CRM project is “${linkedLead.project}”, but the document project is “${billForm.project}”. Select the right lead or update the project in the CRM first.`);return;}
  }else{
   const match=resolveCustomerIdentity(nextCustomers,billForm.email,billForm.phone);
@@ -493,7 +495,7 @@ function addBill(e:FormEvent){
   const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid);
   if(amount>balance+0.009){setBillFormError(`This receipt exceeds the linked invoice balance of ${money(balance)}.`);return;}
   const updatedPaid=Math.min(total(sourceInvoice),sourceInvoice.paid+amount);
-  const updatedSource:Invoice={...sourceInvoice,paid:updatedPaid,status:updatedPaid>=total(sourceInvoice)?"Paid":updatedPaid>0?"Partially paid":"Draft"};
+  const updatedSource:Invoice={...sourceInvoice,clientId:customer.id,leadId:sourceInvoice.leadId||linkedLead?.id,paid:updatedPaid,status:updatedPaid>=total(sourceInvoice)?"Paid":updatedPaid>0?"Partially paid":"Draft"};
   nextInvoices=nextInvoices.map(item=>item.id===sourceInvoice!.id?updatedSource:item);
  }
  const year=new Date().getFullYear();
