@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { get, list, put } from "@vercel/blob";
+import { DEFAULT_SALES_PIPELINE, normalizeSalesPipeline, type SalesPipelineStage } from "@/lib/sales-pipeline";
 
 export type WorkspaceRecord = Record<string, unknown>;
 
@@ -8,6 +9,7 @@ export type OperationsWorkspace = {
   invoices: WorkspaceRecord[];
   studioName: string;
   studioEmail: string;
+  pipelineStages: SalesPipelineStage[];
 };
 
 const WORKSPACE_PATH = "rr-creative-interiors/workspace/operations.enc";
@@ -73,6 +75,7 @@ function decryptWorkspace(serialized: string, token: string): OperationsWorkspac
     invoices: Array.isArray(data.invoices) ? data.invoices.filter(isRecord) : [],
     studioName: typeof data.studioName === "string" ? data.studioName : "RR Creative Interiors",
     studioEmail: typeof data.studioEmail === "string" ? data.studioEmail : "accounts@rrcreativeinteriors.in",
+    pipelineStages: normalizeSalesPipeline(data.pipelineStages),
   };
 }
 
@@ -90,6 +93,7 @@ export async function loadOperationsWorkspace(): Promise<OperationsWorkspace> {
       invoices: [],
       studioName: "RR Creative Interiors",
       studioEmail: "accounts@rrcreativeinteriors.in",
+      pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields] })),
     };
   }
 
