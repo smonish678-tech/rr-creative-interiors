@@ -104,6 +104,8 @@ export function isSalesPipelineStageList(value: unknown): value is SalesPipeline
     names.add(normalizedName);
     for (const trigger of stage.automationTriggers || []) {
       if (assignedTriggers.has(trigger)) return false;
+      if (trigger === "invoice_saved" && stage.kind !== "open") return false;
+      if (trigger === "receipt_saved" && stage.kind !== "won") return false;
       assignedTriggers.add(trigger);
     }
     if (stage.active && stage.isInitial && stage.kind === "open") activeInitialCount += 1;
