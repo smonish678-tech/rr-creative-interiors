@@ -255,7 +255,10 @@ function maybePromoteLeadToWon(lead:Lead):Lead{
 function applyPipelineTrigger(lead:Lead,trigger:PipelineAutomationTrigger):Lead{
  const updated:Lead=trigger==="receipt_saved"?{...lead,advanceStatus:"received"}:lead;
  const current=stageForLead(updated,pipelineStages);
- if(current?.kind==="won"||current?.kind==="lost"||current?.kind==="disqualified")return updated;
+ // An explicit invoice on a previously lost/disqualified opportunity is a deliberate reactivation.
+ // Keep already-won projects won when another milestone invoice is issued.
+ if(current?.kind==="won")return updated;
+ if((current?.kind==="lost"||current?.kind==="disqualified")&&trigger!=="invoice_saved"&&updated.agreementStatus!=="signed")return updated;
  const target=pipelineStages.find(stage=>stage.active&&(stage.automationTriggers||[]).includes(trigger));
  if(!target)return updated;
  const candidate:Lead={...updated,stageId:target.id,status:target.name,nextAction:target.defaultNextAction||updated.nextAction||"",nextFollowUpDate:dateAfterDays(target.followUpDays)};
