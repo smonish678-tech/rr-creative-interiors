@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Workspace data is invalid." }, { status: 400 });
     }
 
-    const { leads, invoices, studioName, studioEmail, pipelineStages } = body;
+    const { leads, invoices, clients, studioName, studioEmail, pipelineStages } = body;
     if (
       !Array.isArray(leads) ||
       !Array.isArray(invoices) ||
@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       invoices.length > 5000 ||
       !leads.every(isRecord) ||
       !invoices.every(isRecord) ||
+      (clients !== undefined && (!Array.isArray(clients) || clients.length > 5000 || !clients.every(isRecord))) ||
       typeof studioName !== "string" ||
       typeof studioEmail !== "string" ||
       !studioName.trim() ||
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     const workspace: OperationsWorkspace = {
       leads,
       invoices,
+      clients: clients === undefined ? existingWorkspace.clients : clients,
       studioName: studioName.trim(),
       studioEmail: studioEmail.trim(),
       pipelineStages: pipelineStages === undefined ? existingWorkspace.pipelineStages : normalizeSalesPipeline(pipelineStages),
