@@ -204,7 +204,7 @@ useEffect(()=>{
     const known=loadedStages.find(stage=>stage.id===lead.stageId)||loadedStages.find(stage=>stage.name===lead.status);
     if(!known&&lead.status?.trim()&&!usedLegacyNames.has(lead.status.toLocaleLowerCase())){
      const legacyId=lead.stageId||`legacy-${lead.status.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)}`;
-     loadedStages=[...loadedStages,{id:legacyId,name:lead.status,kind:"open",tone:"stone",followUpDays:null,defaultNextAction:lead.nextAction||"Review existing lead",requiredFields:[],active:false,isInitial:false}];
+     loadedStages=[...loadedStages,{id:legacyId,name:lead.status,kind:"open",tone:"stone",followUpDays:null,defaultNextAction:lead.nextAction||"Review existing lead",requiredFields:[],active:false,isInitial:false,automationTriggers:[]}];
      usedLegacyNames.add(lead.status.toLocaleLowerCase());
     }
    }
