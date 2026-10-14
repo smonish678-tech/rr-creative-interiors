@@ -162,7 +162,7 @@ const emailUrl=(to:string,subject:string,body:string)=>`https://mail.google.com/
 function printDocument(i:Invoice){const grand=total(i),balance=Math.max(0,grand-i.paid);const html=`<!doctype html><html><head><meta charset="utf-8"><title>${i.id}</title><style>@page{size:A4;margin:18mm}body{font:14px Arial;color:#251d17}.top{display:flex;justify-content:space-between;border-bottom:3px solid #b18a4c;padding-bottom:18px}.brand{font:700 23px Georgia;letter-spacing:1px}.sub{font-size:10px;letter-spacing:2px;color:#927444}.kind{font:24px Georgia;color:#9d793e;text-align:right}.muted{color:#83766a;font-size:12px}.meta{display:flex;gap:5%;margin:28px 0}.box{background:#f7f3ed;padding:15px;width:47%;line-height:1.8}table{width:100%;border-collapse:collapse;margin-top:22px}th{background:#241a14;color:white;text-align:left;padding:12px}td{padding:13px 12px;border-bottom:1px solid #e5ddd2}th:last-child,td:last-child{text-align:right}.totals{margin:23px 0 0 auto;width:48%;line-height:2}.grand{display:flex;justify-content:space-between;background:#f2e7d3;padding:12px;font-size:17px;font-weight:bold}.stamp{display:inline-block;border:2px solid #47765b;color:#47765b;padding:7px 12px;font-weight:bold;margin-top:20px}.foot{border-top:1px solid #ded4c8;margin-top:55px;padding-top:15px;color:#8b7b6a;font-size:11px}</style></head><body><div class="top"><div><div class="brand">RR CREATIVE INTERIORS</div><div class="sub">BEYOND THE ORDINARY</div><p class="muted">Bengaluru, Karnataka, India<br>www.rrcreativeinteriors.in</p></div><div><div class="kind">${i.type.toUpperCase()}</div><p style="text-align:right;line-height:1.7"><b>${i.id}</b><br><span class="muted">Issued: ${i.date}<br>Due: ${i.due}</span></p></div></div><div class="meta"><div class="box"><b>BILL TO</b><br>${i.client}<br>${i.email}<br><span class="muted">Project: ${i.project}</span></div><div class="box"><b>PAYMENT SUMMARY</b><br>Total: <b>${money(grand)}</b><br>Received: ${money(i.paid)}<br>Balance: <b>${money(balance)}</b></div></div><table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody><tr><td>${i.description}</td><td>1</td><td>${money(i.amount)}</td><td>${money(i.amount)}</td></tr></tbody></table><div class="totals"><div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(i.amount)}</b></div><div style="display:flex;justify-content:space-between"><span>Tax (${i.tax}%)</span><b>${money(grand-i.amount)}</b></div><div class="grand"><span>Total</span><span>${money(grand)}</span></div><div style="display:flex;justify-content:space-between"><span>Amount received</span><b>${money(i.paid)}</b></div><div style="display:flex;justify-content:space-between"><span>Balance due</span><b>${money(balance)}</b></div></div>${i.type==="Cash receipt"||i.status==="Paid"?'<div class="stamp">PAYMENT RECEIVED</div>':''}<p>Thank you for choosing RR Creative Interiors.</p><p class="muted">Please retain this document for your records.</p><div class="foot">RR Creative Interiors · Bengaluru · www.rrcreativeinteriors.in<br>Generated ${new Date().toLocaleDateString("en-IN")}</div><script>window.onload=()=>setTimeout(()=>window.print(),250)</script></body></html>`;const w=window.open("about:blank","_blank");if(w){w.document.open();w.document.write(html);w.document.close();}else{const url=URL.createObjectURL(new Blob([html],{type:"text/html"}));const a=document.createElement("a");a.href=url;a.download=`${i.id}.html`;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}}
 export default function AdminPage(){
 const [logged,setLogged]=useState(false),[loginEmail,setLoginEmail]=useState(""),[loginPass,setLoginPass]=useState(""),[loginError,setLoginError]=useState("");
-const [section,setSection]=useState("Overview"),[leads,setLeads]=useState<Lead[]>([]),[invoices,setInvoices]=useState<Invoice[]>([]);
+const [section,setSection]=useState("Overview"),[leads,setLeads]=useState<Lead[]>([]),[invoices,setInvoices]=useState<Invoice[]>([]),[clients,setClients]=useState<CustomerRecord[]>([]);
 const [pipelineStages,setPipelineStages]=useState<SalesPipelineStage[]>(DEFAULT_SALES_PIPELINE.map(stage=>({...stage,requiredFields:[...stage.requiredFields]})));
 const [search,setSearch]=useState(""),[stageFilter,setStageFilter]=useState("All stages"),[leadModal,setLeadModal]=useState(false),[invoiceModal,setInvoiceModal]=useState(false);
 const [selectedLead,setSelectedLead]=useState<Lead|null>(null),[selectedInvoice,setSelectedInvoice]=useState<Invoice|null>(null),[selectedLeadError,setSelectedLeadError]=useState(""),[leadFormError,setLeadFormError]=useState(""),[notice,setNotice]=useState("");
@@ -170,10 +170,12 @@ const [studioName,setStudioName]=useState("RR Creative Interiors"),[studioEmail,
 const [workspaceLoaded,setWorkspaceLoaded]=useState(false),[workspaceStatus,setWorkspaceStatus]=useState("loading");
 const saveQueueRef=useRef<Promise<void>>(Promise.resolve());
 const [leadForm,setLeadForm]=useState({name:"",email:"",phone:"",project:"",serviceType:"",location:"",area:"",timeline:"",source:"Website enquiry",budget:"",notes:"",nextAction:""});
-const [billForm,setBillForm]=useState({client:"",email:"",project:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice" as "Invoice"|"Cash receipt"});
+const [billForm,setBillForm]=useState({client:"",email:"",phone:"",project:"",leadId:"",linkedInvoiceId:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice" as "Invoice"|"Cash receipt"});const [billFormError,setBillFormError]=useState("");
 const activeStages = useMemo(()=>pipelineStages.filter(stage=>stage.active || leads.some(lead=>lead.stageId===stage.id || lead.status===stage.name)),[pipelineStages,leads]);
 const initialStage = useMemo(()=>pipelineStages.find(stage=>stage.active&&stage.isInitial&&stage.kind==="open") || pipelineStages.find(stage=>stage.active&&stage.kind==="open") || DEFAULT_SALES_PIPELINE[0],[pipelineStages]);
 const stageLeadCounts = useMemo(()=>pipelineStages.reduce<Record<string,number>>((counts,stage)=>{counts[stage.id]=leads.filter(lead=>stageForLead(lead,pipelineStages)?.id===stage.id).length;return counts;},{}),[pipelineStages,leads]);
+const billIdentityMatch = useMemo(()=>resolveCustomerIdentity(clients,billForm.email,billForm.phone),[clients,billForm.email,billForm.phone]);
+const billIdentityLeads = useMemo(()=>billIdentityMatch.status==="matched"?leads.filter(lead=>lead.clientId===billIdentityMatch.customer.id&&!["Won","Lost","Disqualified"].includes(stageForLead(lead,pipelineStages)?.name||lead.status)):[],[billIdentityMatch,leads,pipelineStages]);
 const visibleLeads=useMemo(()=>leads.filter(l=>{
 const stage=stageForLead(l,pipelineStages);
 const matchesStage=stageFilter==="All stages"||stage?.id===stageFilter||l.status===stageFilter;
@@ -194,8 +196,11 @@ useEffect(()=>{
   if(workspace){
    let loadedStages=normalizeSalesPipeline(workspace.pipelineStages);
    const rawLeads=Array.isArray(workspace.leads)?workspace.leads as Lead[]:[];
+   const rawInvoices=Array.isArray(workspace.invoices)?workspace.invoices as Invoice[]:[];
+   const rawCustomers=Array.isArray(workspace.clients)?workspace.clients as CustomerRecord[]:[];
+   const linkedWorkspace=migrateCustomerLinks(rawLeads,rawInvoices,rawCustomers);
    const usedLegacyNames=new Set(loadedStages.map(stage=>stage.name.toLocaleLowerCase()));
-   for(const lead of rawLeads){
+   for(const lead of linkedWorkspace.leads){
     const known=loadedStages.find(stage=>stage.id===lead.stageId)||loadedStages.find(stage=>stage.name===lead.status);
     if(!known&&lead.status?.trim()&&!usedLegacyNames.has(lead.status.toLocaleLowerCase())){
      const legacyId=lead.stageId||`legacy-${lead.status.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)}`;
@@ -204,11 +209,12 @@ useEffect(()=>{
     }
    }
    setPipelineStages(loadedStages);
-   setLeads(rawLeads.map(lead=>{
+   setClients(linkedWorkspace.customers);
+   setLeads(linkedWorkspace.leads.map(lead=>{
     const stage=loadedStages.find(item=>item.id===lead.stageId)||loadedStages.find(item=>item.name===lead.status)||loadedStages.find(item=>item.isInitial)||loadedStages[0];
-    return {...lead,stageId:stage.id,status:stage.name,serviceType:lead.serviceType||"",location:lead.location||"",area:lead.area||"",timeline:lead.timeline||"",nextAction:lead.nextAction||stage.defaultNextAction||"",nextFollowUpDate:lead.nextFollowUpDate||"",agreementStatus:lead.agreementStatus||"not-started",advanceStatus:lead.advanceStatus||"not-requested",advanceExceptionReason:lead.advanceExceptionReason||"",lostReason:lead.lostReason||""};
+    return {...lead,clientId:lead.clientId,stageId:stage.id,status:stage.name,serviceType:lead.serviceType||"",location:lead.location||"",area:lead.area||"",timeline:lead.timeline||"",nextAction:lead.nextAction||stage.defaultNextAction||"",nextFollowUpDate:lead.nextFollowUpDate||"",agreementStatus:lead.agreementStatus||"not-started",advanceStatus:lead.advanceStatus||"not-requested",advanceExceptionReason:lead.advanceExceptionReason||"",lostReason:lead.lostReason||""};
    }));
-   setInvoices(Array.isArray(workspace.invoices)?workspace.invoices as Invoice[]:[]);
+   setInvoices(linkedWorkspace.invoices);
    if(typeof workspace.studioName==="string")setStudioName(workspace.studioName);
    if(typeof workspace.studioEmail==="string")setStudioEmail(workspace.studioEmail);
   }
@@ -222,7 +228,7 @@ useEffect(()=>{
 },[logged]);
 useEffect(()=>{
  if(!logged||!workspaceLoaded)return;
- const payload={leads,invoices,studioName,studioEmail,pipelineStages};
+ const payload={leads,invoices,clients,studioName,studioEmail,pipelineStages};
  const timer=window.setTimeout(()=>{
   setWorkspaceStatus("saving");
   saveQueueRef.current=saveQueueRef.current.then(async()=>{
@@ -235,7 +241,7 @@ useEffect(()=>{
   });
  },700);
  return()=>window.clearTimeout(timer);
-},[logged,workspaceLoaded,leads,invoices,studioName,studioEmail,pipelineStages]);
+},[logged,workspaceLoaded,leads,invoices,clients,studioName,studioEmail,pipelineStages]);
 async function login(e:FormEvent){e.preventDefault();setLoginError("");try{const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:loginEmail,password:loginPass})});const data=await response.json().catch(()=>({}));if(!response.ok){setLoginError(data.error||"Unable to sign in.");return;}setWorkspaceLoaded(false);setWorkspaceStatus("loading");setLogged(true);setLoginPass("");}catch{setLoginError("Unable to reach the sign-in service. Please try again.");}}
 function openLeadModal(){setLeadFormError("");setLeadModal(true);}
 function updateSelectedLeadField<K extends keyof Lead>(field:K,value:Lead[K]){
