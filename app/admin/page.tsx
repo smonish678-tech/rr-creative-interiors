@@ -4,21 +4,93 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PortfolioManager from "@/components/admin/portfolio-manager";
+import PipelineConfigurator from "@/components/admin/pipeline-configurator";
+import { DEFAULT_SALES_PIPELINE, PIPELINE_FIELD_OPTIONS, normalizeSalesPipeline, type PipelineField, type SalesPipelineStage } from "@/lib/sales-pipeline";
 import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Filter, LayoutDashboard, LogOut, Mail, Plus, Search, Settings, Users, Wallet, X, FolderOpen } from "lucide-react";
 
-type Stage = "New enquiry" | "Contacted" | "Site visit" | "Proposal sent" | "Negotiation" | "Won" | "Lost";
-type Lead = { id:string; name:string; email:string; phone:string; project:string; source:string; budget:string; status:Stage; date:string; notes:string };
+type Stage = string;
+type AgreementStatus = "not-started" | "sent" | "signed";
+type AdvanceStatus = "not-requested" | "due" | "received" | "waived";
+type Lead = {
+  id:string; name:string; email:string; phone:string; project:string; source:string; budget:string; status:Stage; date:string; notes:string;
+  stageId?:string; serviceType?:string; location?:string; area?:string; timeline?:string; nextAction?:string; nextFollowUpDate?:string;
+  lostReason?:string; agreementStatus?:AgreementStatus; advanceStatus?:AdvanceStatus; advanceExceptionReason?:string;
+};
 type Invoice = { id:string; client:string; email:string; project:string; date:string; due:string; description:string; amount:number; tax:number; paid:number; type:"Invoice"|"Cash receipt"; status:"Draft"|"Partially paid"|"Paid" };
-const stages:Stage[]=["New enquiry","Contacted","Site visit","Proposal sent","Negotiation","Won","Lost"];
-const money=(n:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n);
-const total=(i:Invoice)=>i.amount*(1+i.tax/100);
-const emailUrl=(to:string,subject:string,body:string)=>`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-const stageClass:Record<Stage,string>={"New enquiry":"new","Contacted":"contacted","Site visit":"visit","Proposal sent":"proposal","Negotiation":"negotiation","Won":"won","Lost":"lost"};
+
+function localDateValue(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateAfterDays(days: number | null): string {
+  if (days === null) return "";
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return localDateValue(date);
+}
+
+function stageForLead(lead: Lead, pipeline: SalesPipelineStage[]): SalesPipelineStage | undefined {
+  return pipeline.find((stage) => stage.id === lead.stageId) || pipeline.find((stage) => stage.name === lead.status);
+}
+
+function pipelineTone(lead: Lead, pipeline: SalesPipelineStage[]): string {
+  return stageForLead(lead, pipeline)?.tone || "stone";
+}
+
+function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineField[] {
+  return stage.requiredFields.filter((field) => {
+    switch (field) {
+      case "name": return !lead.name?.trim();
+      case "contact": return !(lead.phone?.trim() || lead.email?.trim());
+      case "project": return !lead.project?.trim();
+      case "serviceType": return !lead.serviceType?.trim();
+      case "location": return !lead.location?.trim();
+      case "area": return !lead.area?.trim();
+      case "budget": return !lead.budget?.trim();
+      case "timeline": return !lead.timeline?.trim();
+      case "nextAction": return !lead.nextAction?.trim();
+      case "email": return !lead.email?.trim();
+      case "phone": return !lead.phone?.trim();
+      case "notes": return !lead.notes?.trim();
+      case "lostReason": return !lead.lostReason?.trim();
+      case "agreementSigned": return lead.agreementStatus !== "signed";
+      case "advanceConfirmed":
+        return lead.advanceStatus !== "received" &&
+          !(lead.advanceStatus === "waived" && Boolean(lead.advanceExceptionReason?.trim()));
+      default: return false;
+    }
+  });
+}
+
+function fieldLabel(field: PipelineField): string {
+  return PIPELINE_FIELD_OPTIONS.find((option) => option.key === field)?.label || field;
+}
+
 function printDocument(i:Invoice){const grand=total(i),balance=Math.max(0,grand-i.paid);const html=`<!doctype html><html><head><meta charset="utf-8"><title>${i.id}</title><style>@page{size:A4;margin:18mm}body{font:14px Arial;color:#251d17}.top{display:flex;justify-content:space-between;border-bottom:3px solid #b18a4c;padding-bottom:18px}.brand{font:700 23px Georgia;letter-spacing:1px}.sub{font-size:10px;letter-spacing:2px;color:#927444}.kind{font:24px Georgia;color:#9d793e;text-align:right}.muted{color:#83766a;font-size:12px}.meta{display:flex;gap:5%;margin:28px 0}.box{background:#f7f3ed;padding:15px;width:47%;line-height:1.8}table{width:100%;border-collapse:collapse;margin-top:22px}th{background:#241a14;color:white;text-align:left;padding:12px}td{padding:13px 12px;border-bottom:1px solid #e5ddd2}th:last-child,td:last-child{text-align:right}.totals{margin:23px 0 0 auto;width:48%;line-height:2}.grand{display:flex;justify-content:space-between;background:#f2e7d3;padding:12px;font-size:17px;font-weight:bold}.stamp{display:inline-block;border:2px solid #47765b;color:#47765b;padding:7px 12px;font-weight:bold;margin-top:20px}.foot{border-top:1px solid #ded4c8;margin-top:55px;padding-top:15px;color:#8b7b6a;font-size:11px}</style></head><body><div class="top"><div><div class="brand">RR CREATIVE INTERIORS</div><div class="sub">BEYOND THE ORDINARY</div><p class="muted">Bengaluru, Karnataka, India<br>www.rrcreativeinteriors.in</p></div><div><div class="kind">${i.type.toUpperCase()}</div><p style="text-align:right;line-height:1.7"><b>${i.id}</b><br><span class="muted">Issued: ${i.date}<br>Due: ${i.due}</span></p></div></div><div class="meta"><div class="box"><b>BILL TO</b><br>${i.client}<br>${i.email}<br><span class="muted">Project: ${i.project}</span></div><div class="box"><b>PAYMENT SUMMARY</b><br>Total: <b>${money(grand)}</b><br>Received: ${money(i.paid)}<br>Balance: <b>${money(balance)}</b></div></div><table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody><tr><td>${i.description}</td><td>1</td><td>${money(i.amount)}</td><td>${money(i.amount)}</td></tr></tbody></table><div class="totals"><div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(i.amount)}</b></div><div style="display:flex;justify-content:space-between"><span>Tax (${i.tax}%)</span><b>${money(grand-i.amount)}</b></div><div class="grand"><span>Total</span><span>${money(grand)}</span></div><div style="display:flex;justify-content:space-between"><span>Amount received</span><b>${money(i.paid)}</b></div><div style="display:flex;justify-content:space-between"><span>Balance due</span><b>${money(balance)}</b></div></div>${i.type==="Cash receipt"||i.status==="Paid"?'<div class="stamp">PAYMENT RECEIVED</div>':''}<p>Thank you for choosing RR Creative Interiors.</p><p class="muted">Please retain this document for your records.</p><div class="foot">RR Creative Interiors · Bengaluru · www.rrcreativeinteriors.in<br>Generated ${new Date().toLocaleDateString("en-IN")}</div><script>window.onload=()=>setTimeout(()=>window.print(),250)</script></body></html>`;const w=window.open("about:blank","_blank");if(w){w.document.open();w.document.write(html);w.document.close();}else{const url=URL.createObjectURL(new Blob([html],{type:"text/html"}));const a=document.createElement("a");a.href=url;a.download=`${i.id}.html`;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}}
 export default function AdminPage(){
-const [logged,setLogged]=useState(false),[loginEmail,setLoginEmail]=useState(""),[loginPass,setLoginPass]=useState(""),[loginError,setLoginError]=useState("");const [section,setSection]=useState("Overview"),[leads,setLeads]=useState<Lead[]>([]),[invoices,setInvoices]=useState<Invoice[]>([]),[search,setSearch]=useState(""),[stageFilter,setStageFilter]=useState("All stages"),[leadModal,setLeadModal]=useState(false),[invoiceModal,setInvoiceModal]=useState(false),[selectedLead,setSelectedLead]=useState<Lead|null>(null),[selectedInvoice,setSelectedInvoice]=useState<Invoice|null>(null),[notice,setNotice]=useState("");const [studioName,setStudioName]=useState("RR Creative Interiors"),[studioEmail,setStudioEmail]=useState("accounts@rrcreativeinteriors.in");const [workspaceLoaded,setWorkspaceLoaded]=useState(false),[workspaceStatus,setWorkspaceStatus]=useState("loading");const saveQueueRef=useRef<Promise<void>>(Promise.resolve());
-const [leadForm,setLeadForm]=useState({name:"",email:"",phone:"",project:"",source:"Website enquiry",budget:"",status:"New enquiry" as Stage,notes:""});const [billForm,setBillForm]=useState({client:"",email:"",project:"",date:"2026-10-12",due:"2026-10-19",description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice" as "Invoice"|"Cash receipt"});
-const visibleLeads=useMemo(()=>leads.filter(l=>(stageFilter==="All stages"||l.status===stageFilter)&&`${l.name} ${l.email} ${l.project} ${l.id}`.toLowerCase().includes(search.toLowerCase())),[leads,stageFilter,search]);const visibleInvoices=useMemo(()=>invoices.filter(i=>`${i.id} ${i.client} ${i.project}`.toLowerCase().includes(search.toLowerCase())),[invoices,search]);const received=invoices.reduce((s,i)=>s+i.paid,0),outstanding=invoices.reduce((s,i)=>s+Math.max(0,total(i)-i.paid),0);
+const [logged,setLogged]=useState(false),[loginEmail,setLoginEmail]=useState(""),[loginPass,setLoginPass]=useState(""),[loginError,setLoginError]=useState("");
+const [section,setSection]=useState("Overview"),[leads,setLeads]=useState<Lead[]>([]),[invoices,setInvoices]=useState<Invoice[]>([]);
+const [pipelineStages,setPipelineStages]=useState<SalesPipelineStage[]>(DEFAULT_SALES_PIPELINE.map(stage=>({...stage,requiredFields:[...stage.requiredFields]})));
+const [search,setSearch]=useState(""),[stageFilter,setStageFilter]=useState("All stages"),[leadModal,setLeadModal]=useState(false),[invoiceModal,setInvoiceModal]=useState(false);
+const [selectedLead,setSelectedLead]=useState<Lead|null>(null),[selectedInvoice,setSelectedInvoice]=useState<Invoice|null>(null),[selectedLeadError,setSelectedLeadError]=useState(""),[leadFormError,setLeadFormError]=useState(""),[notice,setNotice]=useState("");
+const [studioName,setStudioName]=useState("RR Creative Interiors"),[studioEmail,setStudioEmail]=useState("accounts@rrcreativeinteriors.in");
+const [workspaceLoaded,setWorkspaceLoaded]=useState(false),[workspaceStatus,setWorkspaceStatus]=useState("loading"),[todayLabel,setTodayLabel]=useState("");
+const saveQueueRef=useRef<Promise<void>>(Promise.resolve());
+const [leadForm,setLeadForm]=useState({name:"",email:"",phone:"",project:"",serviceType:"",location:"",area:"",timeline:"",source:"Website enquiry",budget:"",notes:"",nextAction:""});
+const [billForm,setBillForm]=useState({client:"",email:"",project:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice" as "Invoice"|"Cash receipt"});
+const activeStages = useMemo(()=>pipelineStages.filter(stage=>stage.active || leads.some(lead=>lead.stageId===stage.id || lead.status===stage.name)),[pipelineStages,leads]);
+const initialStage = useMemo(()=>pipelineStages.find(stage=>stage.active&&stage.isInitial&&stage.kind==="open") || pipelineStages.find(stage=>stage.active&&stage.kind==="open") || DEFAULT_SALES_PIPELINE[0],[pipelineStages]);
+const stageLeadCounts = useMemo(()=>pipelineStages.reduce<Record<string,number>>((counts,stage)=>{counts[stage.id]=leads.filter(lead=>stageForLead(lead,pipelineStages)?.id===stage.id).length;return counts;},{}),[pipelineStages,leads]);
+const visibleLeads=useMemo(()=>leads.filter(l=>{
+const stage=stageForLead(l,pipelineStages);
+const matchesStage=stageFilter==="All stages"||stage?.id===stageFilter||l.status===stageFilter;
+return matchesStage&&`${l.name} ${l.email} ${l.phone} ${l.project} ${l.serviceType||""} ${l.location||""} ${l.source} ${l.id} ${l.nextAction||""}`.toLowerCase().includes(search.toLowerCase());
+}),[leads,stageFilter,search,pipelineStages]);const visibleInvoices=useMemo(()=>invoices.filter(i=>`${i.id} ${i.client} ${i.project}`.toLowerCase().includes(search.toLowerCase())),[invoices,search]);const received=invoices.reduce((s,i)=>s+i.paid,0),outstanding=invoices.reduce((s,i)=>s+Math.max(0,total(i)-i.paid),0);
+useEffect(()=>{setTodayLabel(new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date()));},[]);
 useEffect(()=>{let active=true;fetch("/api/admin/session",{cache:"no-store"}).then(async r=>r.ok?r.json():null).then(data=>{if(active&&data?.authenticated===true)setLogged(true);}).catch(()=>{});return()=>{active=false;};},[]);
 useEffect(()=>{
  if(!logged){setWorkspaceLoaded(false);setWorkspaceStatus("loading");return;}
@@ -32,7 +104,22 @@ useEffect(()=>{
   if(!active)return;
   const workspace=data.workspace;
   if(workspace){
-   setLeads(Array.isArray(workspace.leads)?workspace.leads as Lead[]:[]);
+   let loadedStages=normalizeSalesPipeline(workspace.pipelineStages);
+   const rawLeads=Array.isArray(workspace.leads)?workspace.leads as Lead[]:[];
+   const usedLegacyNames=new Set(loadedStages.map(stage=>stage.name.toLocaleLowerCase()));
+   for(const lead of rawLeads){
+    const known=loadedStages.find(stage=>stage.id===lead.stageId)||loadedStages.find(stage=>stage.name===lead.status);
+    if(!known&&lead.status?.trim()&&!usedLegacyNames.has(lead.status.toLocaleLowerCase())){
+     const legacyId=lead.stageId||`legacy-${lead.status.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)}`;
+     loadedStages=[...loadedStages,{id:legacyId,name:lead.status,kind:"open",tone:"stone",followUpDays:null,defaultNextAction:lead.nextAction||"Review existing lead",requiredFields:[],active:false,isInitial:false}];
+     usedLegacyNames.add(lead.status.toLocaleLowerCase());
+    }
+   }
+   setPipelineStages(loadedStages);
+   setLeads(rawLeads.map(lead=>{
+    const stage=loadedStages.find(item=>item.id===lead.stageId)||loadedStages.find(item=>item.name===lead.status)||loadedStages.find(item=>item.isInitial)||loadedStages[0];
+    return {...lead,stageId:stage.id,status:stage.name,serviceType:lead.serviceType||"",location:lead.location||"",area:lead.area||"",timeline:lead.timeline||"",nextAction:lead.nextAction||stage.defaultNextAction||"",nextFollowUpDate:lead.nextFollowUpDate||"",agreementStatus:lead.agreementStatus||"not-started",advanceStatus:lead.advanceStatus||"not-requested",advanceExceptionReason:lead.advanceExceptionReason||"",lostReason:lead.lostReason||""};
+   }));
    setInvoices(Array.isArray(workspace.invoices)?workspace.invoices as Invoice[]:[]);
    if(typeof workspace.studioName==="string")setStudioName(workspace.studioName);
    if(typeof workspace.studioEmail==="string")setStudioEmail(workspace.studioEmail);
@@ -47,7 +134,7 @@ useEffect(()=>{
 },[logged]);
 useEffect(()=>{
  if(!logged||!workspaceLoaded)return;
- const payload={leads,invoices,studioName,studioEmail};
+ const payload={leads,invoices,studioName,studioEmail,pipelineStages};
  const timer=window.setTimeout(()=>{
   setWorkspaceStatus("saving");
   saveQueueRef.current=saveQueueRef.current.then(async()=>{
@@ -60,9 +147,98 @@ useEffect(()=>{
   });
  },700);
  return()=>window.clearTimeout(timer);
-},[logged,workspaceLoaded,leads,invoices,studioName,studioEmail]);
+},[logged,workspaceLoaded,leads,invoices,studioName,studioEmail,pipelineStages]);
 async function login(e:FormEvent){e.preventDefault();setLoginError("");try{const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:loginEmail,password:loginPass})});const data=await response.json().catch(()=>({}));if(!response.ok){setLoginError(data.error||"Unable to sign in.");return;}setLogged(true);setLoginPass("");}catch{setLoginError("Unable to reach the sign-in service. Please try again.");}}
-function addLead(e:FormEvent){e.preventDefault();setLeads(p=>[{...leadForm,id:`LD-${Date.now().toString().slice(-6)}`,date:new Date().toISOString().slice(0,10)},...p]);setLeadModal(false);setLeadForm({name:"",email:"",phone:"",project:"",source:"Website enquiry",budget:"",status:"New enquiry",notes:""});setNotice("Lead added to the operations workspace.");}
+function updateSelectedLeadField<K extends keyof Lead>(field:K,value:Lead[K]){
+ if(!selectedLead)return;
+ const updated={...selectedLead,[field]:value};
+ setSelectedLead(updated);setSelectedLeadError("");
+ setLeads(current=>current.map(lead=>lead.id===selectedLead.id?updated:lead));
+}
+function transitionLead(leadId:string,targetStageId:string){
+ const lead=leads.find(item=>item.id===leadId);
+ const target=pipelineStages.find(stage=>stage.id===targetStageId);
+ if(!lead||!target)return;
+ const currentStage=stageForLead(lead,pipelineStages);
+ if(target.id!==currentStage?.id&&!target.active){setNotice("That stage is inactive. Activate it in Pipeline setup before moving leads into it.");return;}
+ const candidate:Lead={...lead,stageId:target.id,status:target.name,nextAction:target.defaultNextAction||lead.nextAction||"",nextFollowUpDate:dateAfterDays(target.followUpDays)};
+ const missing=missingPipelineFields(candidate,target);
+ if(missing.length){
+  setSelectedLead(candidate);setSelectedLeadError(`Cannot move to “${target.name}” yet. Complete: ${missing.map(fieldLabel).join(", ")}.`);
+  return;
+ }
+ setLeads(current=>current.map(item=>item.id===leadId?candidate:item));
+ if(selectedLead?.id===leadId){setSelectedLead(candidate);setSelectedLeadError("");}
+ setNotice(`Lead moved to ${target.name}. Next action: ${candidate.nextAction||"Review this lead"}.`);
+}
+function addLead(e:FormEvent){
+ e.preventDefault();setLeadFormError("");
+ const target=initialStage;
+ const lead:Lead={...leadForm,id:`LD-${Date.now().toString().slice(-6)}`,date:localDateValue(),stageId:target.id,status:target.name,nextAction:leadForm.nextAction.trim()||target.defaultNextAction,nextFollowUpDate:dateAfterDays(target.followUpDays),agreementStatus:"not-started",advanceStatus:"not-requested",lostReason:"",advanceExceptionReason:""};
+ const missing=missingPipelineFields(lead,target);
+ if(missing.length){setLeadFormError(`This pipeline's starting stage requires: ${missing.map(fieldLabel).join(", ")}.`);return;}
+ setLeads(current=>[lead,...current]);setLeadModal(false);
+ setLeadForm({name:"",email:"",phone:"",project:"",serviceType:"",location:"",area:"",timeline:"",source:"Website enquiry",budget:"",notes:"",nextAction:""});
+ setNotice(`Lead saved in “${target.name}”. The next action is due ${lead.nextFollowUpDate||"when required"}.`);
+}
+function updatePipelineStage(id:string,patch:Partial<SalesPipelineStage>){
+ const current=pipelineStages.find(stage=>stage.id===id);
+ if(!current)return;
+ if(current.isInitial&&patch.kind&&patch.kind!=="open"){setNotice("The starting stage must remain an active opportunity stage.");return;}
+ if(current.isInitial&&patch.active===false){setNotice("Choose another starting stage before deactivating this stage.");return;}
+ if(patch.isInitial===true&&(patch.active===false||patch.kind&&patch.kind!=="open")){setNotice("The starting stage must be active and use Active opportunity behaviour.");return;}
+ if(patch.active===false&&current.kind==="open"&&current.active&&pipelineStages.filter(stage=>stage.active&&stage.kind==="open").length<=1){setNotice("Keep at least one active opportunity stage.");return;}
+ const proposed={...current,...patch};
+ if((proposed.kind==="won"||proposed.kind==="lost"||proposed.kind==="disqualified")&&proposed.followUpDays!==null){proposed.followUpDays=null;}
+ if(proposed.kind==="won"||proposed.kind==="lost"||proposed.kind==="disqualified"){
+  if(!patch.followUpDays===false && patch.followUpDays!==undefined && patch.followUpDays!==null)proposed.followUpDays=patch.followUpDays;
+ }
+ let next=pipelineStages.map(stage=>stage.id===id?proposed:stage);
+ if(patch.isInitial===true)next=next.map(stage=>({...stage,isInitial:stage.id===id}));
+ if(patch.isInitial===false&&current.isInitial){setNotice("Select a new starting stage before removing the starting-stage flag.");return;}
+ if(patch.kind && current.kind==="won" && patch.kind!=="won" && pipelineStages.filter(stage=>stage.active&&stage.kind==="won").length<=1){setNotice("Keep at least one active Won stage.");return;}
+ if(patch.kind && (current.kind==="lost"||current.kind==="disqualified") && patch.kind!=="lost" && patch.kind!=="disqualified" && pipelineStages.filter(stage=>stage.active&&(stage.kind==="lost"||stage.kind==="disqualified")).length<=1){setNotice("Keep at least one active Lost or Disqualified stage.");return;}
+ setPipelineStages(next);
+ setNotice("Pipeline setting updated. Changes are saving automatically.");
+}
+function renamePipelineStage(id:string,nextName:string){
+ const current=pipelineStages.find(stage=>stage.id===id);
+ const name=nextName.trim();
+ if(!current||!name||name===current.name)return;
+ if(pipelineStages.some(stage=>stage.id!==id&&stage.name.trim().toLocaleLowerCase()===name.toLocaleLowerCase())){setNotice("Each pipeline stage needs a unique name.");return;}
+ setPipelineStages(previous=>previous.map(stage=>stage.id===id?{...stage,name}:stage));
+ setLeads(previous=>previous.map(lead=>(lead.stageId===id||(!lead.stageId&&lead.status===current.name))?{...lead,stageId:id,status:name}:lead));
+ if(stageFilter===current.id||stageFilter===current.name)setStageFilter(id);
+ if(selectedLead&&(selectedLead.stageId===id||selectedLead.status===current.name))setSelectedLead(previous=>previous?{...previous,stageId:id,status:name}:previous);
+ setNotice(`Stage renamed to “${name}”. Existing leads remain in this stage.`);
+}
+function movePipelineStage(id:string,direction:-1|1){
+ const from=pipelineStages.findIndex(stage=>stage.id===id),to=from+direction;
+ if(from<0||to<0||to>=pipelineStages.length)return;
+ const reordered=[...pipelineStages];[reordered[from],reordered[to]]=[reordered[to],reordered[from]];
+ setPipelineStages(reordered);setNotice("Pipeline stage order updated.");
+}
+function addPipelineStage(){
+ if(pipelineStages.length>=30){setNotice("You can configure up to 30 pipeline stages.");return;}
+ let suffix=1,name="New stage";
+ while(pipelineStages.some(stage=>stage.name.toLocaleLowerCase()===name.toLocaleLowerCase())){suffix+=1;name=`New stage ${suffix}`;}
+ const stage:SalesPipelineStage={id:`custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,kind:"open",tone:"gold",followUpDays:2,defaultNextAction:"Define the next action",requiredFields:[],active:true,isInitial:false};
+ const firstOutcome=pipelineStages.findIndex(item=>item.kind==="won"||item.kind==="nurture"||item.kind==="lost"||item.kind==="disqualified");
+ const next=[...pipelineStages];next.splice(firstOutcome<0?next.length:firstOutcome,0,stage);
+ setPipelineStages(next);setNotice("New stage added. Configure its name, entry requirements and next action.");
+}
+function removePipelineStage(id:string){
+ const stage=pipelineStages.find(item=>item.id===id);
+ if(!stage)return;
+ if(stage.isInitial){setNotice("Choose another starting stage before removing this stage.");return;}
+ if(stageLeadCounts[id]>0){setNotice(`Move the ${stageLeadCounts[id]} lead(s) out of “${stage.name}” before removing it.`);return;}
+ if(stage.active&&stage.kind==="open"&&pipelineStages.filter(item=>item.active&&item.kind==="open").length<=1){setNotice("Keep at least one active opportunity stage.");return;}
+ if(stage.active&&stage.kind==="won"&&pipelineStages.filter(item=>item.active&&item.kind==="won").length<=1){setNotice("Keep at least one active Won stage.");return;}
+ if(stage.active&&(stage.kind==="lost"||stage.kind==="disqualified")&&pipelineStages.filter(item=>item.active&&(item.kind==="lost"||item.kind==="disqualified")).length<=1){setNotice("Keep at least one active Lost or Disqualified stage.");return;}
+ if(!window.confirm(`Remove “${stage.name}” from the pipeline? This cannot be undone.`))return;
+ setPipelineStages(current=>current.filter(item=>item.id!==id));setNotice(`Removed stage “${stage.name}”.`);
+}
+}
 function addBill(e:FormEvent){e.preventDefault();const amount=Number(billForm.amount);if(amount<=0)return;const receipt=billForm.type==="Cash receipt",tax=receipt?0:Number(billForm.tax),paid=receipt?amount:Number(billForm.paid),grand=amount*(1+tax/100);const i:Invoice={id:`RR-${receipt?"REC":"INV"}-${new Date().getFullYear()}-${String(invoices.filter(x=>x.type===billForm.type).length+1).padStart(3,"0")}`,client:billForm.client,email:billForm.email,project:billForm.project,date:billForm.date,due:billForm.due,description:billForm.description,amount,tax,paid,type:billForm.type,status:receipt||paid>=grand?"Paid":paid>0?"Partially paid":"Draft"};setInvoices(p=>[i,...p]);setInvoiceModal(false);setSelectedInvoice(i);setNotice("Document created. Use Print / PDF, then attach the saved file to the drafted email.");}
 function draftEmail(i:Invoice){const subject=`${i.type} ${i.id} — ${i.project}`,body=`Dear ${i.client},\n\nPlease find the ${i.type.toLowerCase()} details for your project with ${studioName}.\n\nDocument: ${i.id}\nProject: ${i.project}\nTotal: ${money(total(i))}\nAmount received: ${money(i.paid)}\nBalance: ${money(Math.max(0,total(i)-i.paid))}\n\nPlease attach the downloaded PDF before sending.\n\nWarm regards,\n${studioName}\n${studioEmail}`;window.open(emailUrl(i.email,subject,body),"_blank","noopener,noreferrer");}
 if(!logged)return <main className="rr-login"><div className="rr-login-art"><div className="rr-login-mark">RR<span> / </span>CI</div><div className="rr-login-copy"><span className="rr-eyebrow">PRIVATE WORKSPACE</span><h1>Good spaces<br/><i>start with clarity.</i></h1><p>Leads, projects and accounts — thoughtfully brought together.</p></div><div className="rr-login-foot">RR CREATIVE INTERIORS <span>·</span> BEYOND THE ORDINARY</div></div><div className="rr-login-panel"><Link className="rr-back" href="/"><ArrowLeft size={16}/> Back to website</Link><div className="rr-login-form"><div className="rr-monogram">RR</div><span className="rr-eyebrow">ADMINISTRATION</span><h2>Welcome back.</h2><p>Sign in to manage your workspace.</p><form onSubmit={login}><label>Admin email</label><input type="email" autoComplete="username" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} placeholder="you@rrcreativeinteriors.in" required/><label>Password</label><input type="password" autoComplete="current-password" value={loginPass} onChange={e=>setLoginPass(e.target.value)} placeholder="Enter your password" required/>{loginError&&<div className="rr-login-error">{loginError}</div>}<button className="rr-primary rr-login-submit" type="submit">Sign in <ChevronDown size={16}/></button></form><div className="rr-secure-note"><span/> Private access only. Credentials are not stored in the browser.</div></div></div></main>;
