@@ -509,3 +509,101 @@ button,input,select,textarea{font:inherit}
 @keyframes rr-save-pulse{50%{opacity:.38;transform:scale(.86)}}
 @media(max-width:760px){.rr-save-status{font-size:8px;gap:5px}.rr-save-status i{width:5px;height:5px}}
 @media(prefers-reduced-motion:reduce){.rr-save-status i.loading,.rr-save-status i.saving{animation:none}}
+
+
+/* RR sales pipeline setup — editable stages, guardrails and clear follow-up ownership */
+.rr-page-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.rr-next-action-cell{min-width:150px;max-width:240px;white-space:normal!important}
+.rr-next-action-cell b{display:block;max-width:240px;color:#51402d;font-size:10px;font-weight:600;line-height:1.5}
+.rr-next-action-cell small{display:block;margin-top:4px;color:#9c8e7e;font-size:8px;line-height:1.5}
+.rr-follow-up{display:inline-flex;align-items:center;gap:5px;max-width:160px;padding:5px 7px;border:1px solid #e8dfd3;border-radius:5px;background:#f8f5ef;color:#887762;font-size:8px;font-weight:600;white-space:nowrap}
+.rr-follow-up.is-overdue{border-color:#efd1c9;background:#fae9e5;color:#a35346}
+.rr-follow-up.is-today{border-color:#ead9b9;background:#fbf1dd;color:#956d2e}
+.rr-follow-up.is-future{border-color:#e6dfd4;background:#f7f4ee;color:#897a67}
+.rr-status.status-gold{border-color:#ebdfc8;background:#f6ecda;color:#96713b}
+.rr-status.status-blue{border-color:#d7dfea;background:#e9edf5;color:#596f92}
+.rr-status.status-green{border-color:#d5e4d0;background:#e6f0e4;color:#4b7753}
+.rr-status.status-red{border-color:#edd9d0;background:#f7e9e3;color:#985746}
+.rr-status.status-stone{border-color:#e4ddd4;background:#efebe5;color:#7f7468}
+.rr-status-select.status-gold{border-color:#e6d5b4;background:#fbf2e1;color:#8b682f}
+.rr-status-select.status-blue{border-color:#d5deeb;background:#f0f3f8;color:#506687}
+.rr-status-select.status-green{border-color:#d1e1cb;background:#edf4e9;color:#4b7651}
+.rr-status-select.status-red{border-color:#ead1c9;background:#fbefec;color:#985747}
+.rr-status-select.status-stone{border-color:#e4ddd4;background:#f7f4ee;color:#786e63}
+.rr-stage-start-note{display:flex;align-items:flex-start;gap:10px;padding:12px 13px;margin:16px 0 2px;border:1px solid #e9ddc9;border-radius:6px;background:#f8f1e6;color:#987844}
+.rr-stage-start-note>svg{flex:0 0 auto;margin-top:1px}
+.rr-stage-start-note span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rr-stage-start-note b{color:#5e482b;font-size:10px;font-weight:700}
+.rr-stage-start-note small{color:#8c7a61;font-size:9px;line-height:1.7}
+.rr-pipeline-configurator{min-width:0}
+.rr-pipeline-configurator .rr-page-heading{margin-bottom:18px}
+.rr-pipeline-configurator .rr-page-heading h1{margin:8px 0}
+.rr-pipeline-config-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rr-pipeline-config-help{padding:15px 17px;margin:0 0 18px;border:1px solid #e8ddca;border-radius:7px;background:linear-gradient(135deg,#faf3e8,#fffdf9);color:#7f6e55}
+.rr-pipeline-config-help>b{display:block;color:#493722;font-size:11px}
+.rr-pipeline-config-help p{margin:7px 0 0;font-size:10px;line-height:1.75}
+.rr-pipeline-config-help strong{color:#594126}
+.rr-stage-config-list{display:grid;gap:12px}
+.rr-stage-config-card{min-width:0;padding:16px 17px 0;border:1px solid #e6ddd0;border-radius:8px;background:rgba(255,253,249,.92);box-shadow:0 7px 22px rgba(41,30,22,.025);transition:border-color .2s ease,box-shadow .2s ease}
+.rr-stage-config-card:focus-within{border-color:#cbb48c;box-shadow:0 8px 25px rgba(41,30,22,.05)}
+.rr-stage-config-top{display:grid;grid-template-columns:34px minmax(160px,1fr) auto auto;align-items:end;gap:12px}
+.rr-stage-order{display:grid;place-items:center;align-self:end;width:31px;height:34px;border:1px solid #eee1cc;border-radius:5px;background:#f8f0e3;color:#9b793f;font:400 11px "DM Sans",Arial,sans-serif}
+.rr-stage-name-field,.rr-stage-config-fields label,.rr-stage-next-action{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rr-stage-configurator label>span,.rr-stage-name-field>label,.rr-stage-config-fields label>span,.rr-stage-next-action>span{color:#897966;font-size:8px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.rr-stage-name-field input,.rr-stage-config-fields select,.rr-stage-next-action input{width:100%;min-width:0;min-height:35px;padding:8px 10px;border:1px solid #e4dacb;border-radius:5px;outline-color:#b08d52;background:#fffefa;color:#392b1e;font-size:10px}
+.rr-stage-name-field input{font-weight:700}
+.rr-stage-count{display:flex;align-items:center;justify-content:center;flex-direction:column;min-width:44px;padding:1px 8px 4px;border-left:1px solid #eee6db}
+.rr-stage-count b{color:#473522;font:400 19px "Playfair Display",Georgia,serif}
+.rr-stage-count small{color:#a09383;font-size:8px}
+.rr-stage-reorder{display:flex;gap:5px;align-self:end}
+.rr-stage-reorder .rr-icon-link{background:#fffefa}
+.rr-stage-reorder button:disabled{opacity:.3;cursor:not-allowed}
+.rr-stage-config-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:15px}
+.rr-stage-next-action{margin-top:12px}
+.rr-stage-config-options{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:13px 0;margin-top:13px;border-top:1px solid #f0e8dd}
+.rr-stage-check{display:flex;align-items:flex-start;gap:8px;min-width:180px;cursor:pointer}
+.rr-stage-check>input{flex:0 0 auto;margin-top:3px;accent-color:#9b793f}
+.rr-stage-check>span{display:flex;flex-direction:column;gap:3px}
+.rr-stage-check b{color:#51412e;font-size:9px;font-weight:700}
+.rr-stage-check small{color:#a09585;font-size:8px;line-height:1.5}
+.rr-stage-delete{display:inline-flex;align-items:center;gap:6px;min-height:31px;padding:6px 9px;margin-left:auto;border:1px solid #ecddd7;border-radius:5px;background:#fff9f7;color:#a15d51;font-size:9px;cursor:pointer}
+.rr-stage-delete:hover{border-color:#d3a59a;background:#f9eae6}
+.rr-stage-requirements{padding:11px 0 13px;border-top:1px solid #f0e8dd}
+.rr-stage-requirements summary{display:flex;align-items:center;gap:8px;color:#8a6b3c;font-size:10px;font-weight:700;cursor:pointer;list-style:none}
+.rr-stage-requirements summary::-webkit-details-marker{display:none}
+.rr-stage-requirements summary::after{content:"+";margin-left:auto;color:#ac956f;font-size:17px;font-weight:400}
+.rr-stage-requirements[open] summary::after{content:"−"}
+.rr-stage-requirements summary span{margin-left:auto;padding:3px 6px;border:1px solid #e8dfd2;border-radius:4px;background:#f7f2e9;color:#9b8a75;font-size:8px;font-weight:500}
+.rr-stage-requirements[open] summary span{margin-left:0}
+.rr-stage-requirements>p{margin:10px 0 12px;color:#978877;font-size:9px;line-height:1.65}
+.rr-stage-required-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rr-stage-required-option{display:flex;align-items:flex-start;gap:9px;min-width:0;padding:9px;border:1px solid #eee6db;border-radius:5px;background:#fffefa;cursor:pointer}
+.rr-stage-required-option>input{flex:0 0 auto;margin-top:3px;accent-color:#9b793f}
+.rr-stage-required-option>span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rr-stage-required-option b{color:#5e4c37;font-size:9px;font-weight:600}
+.rr-stage-required-option small{color:#a09585;font-size:8px;line-height:1.45}
+.rr-stage-config-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:17px 0 7px}
+.rr-stage-config-footer>span{color:#a09484;font-size:9px;line-height:1.6}
+.rr-profile-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px;margin-top:12px}
+.rr-profile-field-grid label{display:flex;flex-direction:column;gap:6px;min-width:0;margin:10px 0 2px;color:#70604d;font-size:9px;font-weight:700}
+.rr-profile-field-grid input,.rr-profile-field-grid select,.rr-profile-field-grid textarea{width:100%;min-width:0;padding:10px 11px;border:1px solid #e5dbcc;border-radius:5px;background:#fffefa;color:#38291e;font-size:10px;outline-color:#b08d52}
+.rr-profile-field-grid textarea{resize:vertical;line-height:1.65}
+.rr-profile-full{grid-column:1/-1}
+.rr-profile-field-grid input[type=date]{min-height:36px}
+@media(max-width:1100px){.rr-stage-config-top{grid-template-columns:31px minmax(130px,1fr) auto}.rr-stage-reorder{grid-column:3;grid-row:1}.rr-stage-count{display:none}.rr-stage-config-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.rr-stage-required-grid{grid-template-columns:1fr}}
+@media(max-width:760px){
+ .rr-page-actions{width:100%}.rr-page-actions button{flex:1}
+ .rr-pipeline-config-summary{grid-template-columns:1fr}
+ .rr-stage-config-card{padding:12px 12px 0}
+ .rr-stage-config-top{grid-template-columns:28px minmax(0,1fr) auto;gap:8px}
+ .rr-stage-order{width:27px;height:32px}
+ .rr-stage-name-field input{font-size:10px}
+ .rr-stage-config-fields{grid-template-columns:1fr;gap:10px}
+ .rr-stage-config-options{align-items:flex-start;flex-direction:column;gap:12px}
+ .rr-stage-delete{margin-left:0}
+ .rr-profile-field-grid{grid-template-columns:1fr}
+ .rr-profile-full{grid-column:auto}
+ .rr-stage-config-footer{align-items:flex-start;flex-direction:column}
+ .rr-follow-up{white-space:normal}
+}
+@media(prefers-reduced-motion:reduce){.rr-stage-config-card,.rr-profile-field-grid *,.rr-follow-up{transition:none!important}}
