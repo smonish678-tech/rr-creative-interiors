@@ -244,12 +244,58 @@ useEffect(()=>{
 },[logged,workspaceLoaded,leads,invoices,clients,studioName,studioEmail,pipelineStages]);
 async function login(e:FormEvent){e.preventDefault();setLoginError("");try{const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:loginEmail,password:loginPass})});const data=await response.json().catch(()=>({}));if(!response.ok){setLoginError(data.error||"Unable to sign in.");return;}setWorkspaceLoaded(false);setWorkspaceStatus("loading");setLogged(true);setLoginPass("");}catch{setLoginError("Unable to reach the sign-in service. Please try again.");}}
 function openLeadModal(){setLeadFormError("");setLeadModal(true);}
+function maybePromoteLeadToWon(lead:Lead):Lead{
+ const current=stageForLead(lead,pipelineStages);
+ if(current?.kind==="won"||current?.kind==="lost"||current?.kind==="disqualified")return lead;
+ const wonStage=pipelineStages.find(stage=>stage.active&&stage.kind==="won");
+ if(!wonStage)return lead;
+ const candidate:Lead={...lead,stageId:wonStage.id,status:wonStage.name,nextAction:wonStage.defaultNextAction||"Start project onboarding",nextFollowUpDate:dateAfterDays(wonStage.followUpDays)};
+ return missingPipelineFields(candidate,wonStage).length===0?candidate:lead;
+}
+function applyPipelineTrigger(lead:Lead,trigger:PipelineAutomationTrigger):Lead{
+ let updated:Lead=trigger==="receipt_saved"?{...lead,advanceStatus:"received"}:lead;
+ const current=stageForLead(updated,pipelineStages);
+ if(current?.kind==="won"||current?.kind==="lost"||current?.kind==="disqualified")return updated;
+ const target=pipelineStages.find(stage=>stage.active&&(stage.automationTriggers||[]).includes(trigger));
+ if(!target)return updated;
+ const candidate:Lead={...updated,stageId:target.id,status:target.name,nextAction:target.defaultNextAction||updated.nextAction||"",nextFollowUpDate:dateAfterDays(target.followUpDays)};
+ const missing=missingPipelineFields(candidate,target);
+ if(missing.length){
+  if(trigger==="receipt_saved"&&missing.includes("agreementSigned"))return {...updated,nextAction:"Complete and sign the agreement",nextFollowUpDate:dateAfterDays(1)};
+  return {...updated,nextAction:trigger==="invoice_saved"?target.defaultNextAction:`Complete: ${missing.map(fieldLabel).join(", ")}`,nextFollowUpDate:dateAfterDays(1)};
+ }
+ return candidate;
+}
 function updateSelectedLeadField<K extends keyof Lead>(field:K,value:Lead[K]){
  if(!selectedLead)return;
- const updated={...selectedLead,[field]:value};
- setSelectedLead(updated);setSelectedLeadError("");
- setLeads(current=>current.map(lead=>lead.id===selectedLead.id?updated:lead));
+ const updated={...selectedLead,[field]:value} as Lead;
+ const contactField=field==="name"||field==="email"||field==="phone";
+ if(contactField&&selectedLead.clientId){
+  const customer=clients.find(item=>item.id===selectedLead.clientId);
+  if(customer){
+   if(field==="email"||field==="phone"){
+    const collision=resolveCustomerIdentity(clients.filter(item=>item.id!==customer.id),updated.email,updated.phone);
+    if(collision.status!=="none"){setSelectedLeadError(collision.status==="conflict"?collision.reason:"These contact details already belong to another customer record. Choose the existing CRM customer rather than merging them.");return;}
+   }
+   const nextCustomer:CustomerRecord={...customer,name:updated.name,email:updated.email,phone:updated.phone,updatedAt:new Date().toISOString()};
+   setClients(previous=>previous.map(item=>item.id===customer.id?nextCustomer:item));
+   setLeads(previous=>previous.map(item=>{
+    if(item.clientId===customer.id){
+     const next={...item,name:nextCustomer.name,email:nextCustomer.email,phone:nextCustomer.phone};
+     return item.id===selectedLead.id?{...next,...updated}:next;
+    }
+    return item.id===selectedLead.id?updated:item;
+   }).map(item=>item.id===selectedLead.id&&(field==="agreementStatus"||field==="advanceStatus")?maybePromoteLeadToWon(item):item));
+   const displayUpdated=field==="agreementStatus"||field==="advanceStatus"?maybePromoteLeadToWon(updated):updated;
+   setSelectedLead(displayUpdated);setSelectedLeadError("");
+   return;
+  }
+ }
+ const displayUpdated=field==="agreementStatus"||field==="advanceStatus"?maybePromoteLeadToWon(updated):updated;
+ setSelectedLead(displayUpdated);setSelectedLeadError("");
+ setLeads(current=>current.map(lead=>lead.id===selectedLead.id?displayUpdated:lead));
 }
+
 function transitionLead(leadId:string,targetStageId:string){
  const lead=leads.find(item=>item.id===leadId);
  const target=pipelineStages.find(stage=>stage.id===targetStageId);
@@ -270,12 +316,25 @@ function transitionLead(leadId:string,targetStageId:string){
 function addLead(e:FormEvent){
  e.preventDefault();setLeadFormError("");
  const target=initialStage;
- const lead:Lead={...leadForm,id:`LD-${Date.now().toString().slice(-6)}`,date:localDateValue(),stageId:target.id,status:target.name,nextAction:leadForm.nextAction.trim()||target.defaultNextAction,nextFollowUpDate:dateAfterDays(target.followUpDays),agreementStatus:"not-started",advanceStatus:"not-requested",lostReason:"",advanceExceptionReason:""};
+ const id=`LD-${Date.now().toString().slice(-6)}`;
+ const match=resolveCustomerIdentity(clients,leadForm.email,leadForm.phone);
+ if(match.status==="conflict"){setLeadFormError(match.reason);return;}
+ let customer:CustomerRecord;
+ let nextCustomers=[...clients];
+ if(match.status==="matched"){
+  customer=match.customer;
+  customer={...customer,email:customer.email||leadForm.email,phone:customer.phone||leadForm.phone,updatedAt:new Date().toISOString()};
+  nextCustomers=nextCustomers.map(item=>item.id===customer.id?customer:item);
+ }else{
+  customer=createCustomerRecord(customerIdFor(id,clients),leadForm.name,leadForm.email,leadForm.phone);
+  nextCustomers=[...nextCustomers,customer];
+ }
+ const lead:Lead={...leadForm,id,clientId:customer.id,name:customer.name,email:customer.email||leadForm.email,phone:customer.phone||leadForm.phone,date:localDateValue(),stageId:target.id,status:target.name,nextAction:leadForm.nextAction.trim()||target.defaultNextAction,nextFollowUpDate:dateAfterDays(target.followUpDays),agreementStatus:"not-started",advanceStatus:"not-requested",lostReason:"",advanceExceptionReason:""};
  const missing=missingPipelineFields(lead,target);
- if(missing.length){setLeadFormError(`This pipeline's starting stage requires: ${missing.map(fieldLabel).join(", ")}.`);return;}
- setLeads(current=>[lead,...current]);setLeadModal(false);
+ if(missing.length){setLeadFormError(`The starting stage requires: ${missing.map(fieldLabel).join(", ")}.`);return;}
+ setClients(nextCustomers);setLeads(current=>[lead,...current]);setLeadModal(false);
  setLeadForm({name:"",email:"",phone:"",project:"",serviceType:"",location:"",area:"",timeline:"",source:"Website enquiry",budget:"",notes:"",nextAction:""});
- setNotice(`Lead saved in “${target.name}”. The next action is due ${lead.nextFollowUpDate||"when required"}.`);
+ setNotice(`Lead saved under ${customer.name}. ${match.status==="matched"?"Matched to the existing customer by phone/email. ":""}Next action: ${lead.nextAction}.`);
 }
 function updatePipelineStage(id:string,patch:Partial<SalesPipelineStage>){
  const current=pipelineStages.find(stage=>stage.id===id);
@@ -291,8 +350,14 @@ function updatePipelineStage(id:string,patch:Partial<SalesPipelineStage>){
    ? ["lostReason"]
    : [];
  proposed.requiredFields=[...new Set([...proposed.requiredFields,...mandatoryFields])];
+ proposed.automationTriggers=[...new Set(proposed.automationTriggers||[])];
+ if(proposed.automationTriggers.includes("invoice_saved")&&proposed.kind!=="open"){setNotice("Invoice-saved automation must target an Active opportunity stage.");return;}
+ if(proposed.automationTriggers.includes("receipt_saved")&&proposed.kind!=="won"){setNotice("Receipt-saved automation must target a Won stage.");return;}
  if(proposed.kind==="won"||proposed.kind==="lost"||proposed.kind==="disqualified")proposed.followUpDays=null;
- let next=pipelineStages.map(stage=>stage.id===id?proposed:stage);
+ let next=pipelineStages.map(stage=>{
+  if(stage.id===id)return proposed;
+  return {...stage,automationTriggers:(stage.automationTriggers||[]).filter(trigger=>!proposed.automationTriggers.includes(trigger))};
+ });
  if(patch.isInitial===true)next=next.map(stage=>({...stage,isInitial:stage.id===id}));
  if(patch.isInitial===false&&current.isInitial){setNotice("Select a new starting stage before removing the starting-stage flag.");return;}
  if(next.filter(stage=>stage.active&&stage.kind==="won").length<1){setNotice("Keep at least one active Won stage.");return;}
@@ -321,7 +386,7 @@ function addPipelineStage(){
  if(pipelineStages.length>=30){setNotice("You can configure up to 30 pipeline stages.");return;}
  let suffix=1,name="New stage";
  while(pipelineStages.some(stage=>stage.name.toLocaleLowerCase()===name.toLocaleLowerCase())){suffix+=1;name=`New stage ${suffix}`;}
- const stage:SalesPipelineStage={id:`custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,kind:"open",tone:"gold",followUpDays:2,defaultNextAction:"Define the next action",requiredFields:[],active:true,isInitial:false};
+ const stage:SalesPipelineStage={id:`custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,kind:"open",tone:"gold",followUpDays:2,defaultNextAction:"Define the next action",requiredFields:[],active:true,isInitial:false,automationTriggers:[]};
  const firstOutcome=pipelineStages.findIndex(item=>item.kind==="won"||item.kind==="nurture"||item.kind==="lost"||item.kind==="disqualified");
  const next=[...pipelineStages];next.splice(firstOutcome<0?next.length:firstOutcome,0,stage);
  setPipelineStages(next);setNotice("New stage added. Configure its name, entry requirements and next action.");
