@@ -253,7 +253,7 @@ function maybePromoteLeadToWon(lead:Lead):Lead{
  return missingPipelineFields(candidate,wonStage).length===0?candidate:lead;
 }
 function applyPipelineTrigger(lead:Lead,trigger:PipelineAutomationTrigger):Lead{
- let updated:Lead=trigger==="receipt_saved"?{...lead,advanceStatus:"received"}:lead;
+ const updated:Lead=trigger==="receipt_saved"?{...lead,advanceStatus:"received"}:lead;
  const current=stageForLead(updated,pipelineStages);
  if(current?.kind==="won"||current?.kind==="lost"||current?.kind==="disqualified")return updated;
  const target=pipelineStages.find(stage=>stage.active&&(stage.automationTriggers||[]).includes(trigger));
