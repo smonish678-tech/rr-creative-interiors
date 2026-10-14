@@ -402,7 +402,107 @@ function removePipelineStage(id:string){
  if(!window.confirm(`Remove “${stage.name}” from the pipeline? This cannot be undone.`))return;
  setPipelineStages(current=>current.filter(item=>item.id!==id));setNotice(`Removed stage “${stage.name}”.`);
 }
-function addBill(e:FormEvent){e.preventDefault();const amount=Number(billForm.amount);if(amount<=0)return;const receipt=billForm.type==="Cash receipt",tax=receipt?0:Number(billForm.tax),paid=receipt?amount:Number(billForm.paid),grand=amount*(1+tax/100);const i:Invoice={id:`RR-${receipt?"REC":"INV"}-${new Date().getFullYear()}-${String(invoices.filter(x=>x.type===billForm.type).length+1).padStart(3,"0")}`,client:billForm.client,email:billForm.email,project:billForm.project,date:billForm.date,due:billForm.due,description:billForm.description,amount,tax,paid,type:billForm.type,status:receipt||paid>=grand?"Paid":paid>0?"Partially paid":"Draft"};setInvoices(p=>[i,...p]);setInvoiceModal(false);setSelectedInvoice(i);setNotice("Document created. Use Print / PDF, then attach the saved file to the drafted email.");}
+function openInvoiceModal(){setBillFormError("");setInvoiceModal(true);}
+function chooseBillLead(leadId:string){
+ if(leadId==="__none__"){setBillForm({...billForm,leadId:"__none__",linkedInvoiceId:""});setBillFormError("");return;}
+ if(!leadId){setBillForm({...billForm,leadId:"",linkedInvoiceId:""});setBillFormError("");return;}
+ const lead=leads.find(item=>item.id===leadId);
+ if(!lead)return;
+ const customer=clients.find(item=>item.id===lead.clientId);
+ setBillForm({...billForm,leadId:lead.id,linkedInvoiceId:"",client:customer?.name||lead.name,email:customer?.email||lead.email,phone:customer?.phone||lead.phone,project:lead.project});
+ setBillFormError("");
+}
+function chooseReceiptInvoice(invoiceId:string){
+ if(invoiceId==="__none__"){setBillForm({...billForm,linkedInvoiceId:"__none__"});setBillFormError("");return;}
+ if(!invoiceId){setBillForm({...billForm,linkedInvoiceId:""});setBillFormError("");return;}
+ const invoice=invoices.find(item=>item.id===invoiceId&&item.type==="Invoice");
+ if(!invoice)return;
+ const lead=leads.find(item=>item.id===invoice.leadId);
+ const customer=clients.find(item=>item.id===invoice.clientId)||(lead?clients.find(item=>item.id===lead.clientId):undefined);
+ setBillForm({...billForm,linkedInvoiceId:invoice.id,leadId:lead?.id||"__none__",client:customer?.name||invoice.client,email:customer?.email||invoice.email,phone:customer?.phone||invoice.phone||"",project:invoice.project});
+ setBillFormError("");
+}
+function addBill(e:FormEvent){
+ e.preventDefault();setBillFormError("");
+ const amount=Number(billForm.amount);
+ if(!billForm.client.trim()||!billForm.project.trim()||!billForm.description.trim()){setBillFormError("Enter the customer, project and document description.");return;}
+ if(!billForm.email.trim()&&!billForm.phone.trim()){setBillFormError("Enter at least one contact identifier: email or phone. Names alone are not safe for matching.");return;}
+ if(!Number.isFinite(amount)||amount<=0){setBillFormError("Enter an amount greater than zero.");return;}
+ const receipt=billForm.type==="Cash receipt";
+ const tax=receipt?0:Number(billForm.tax);
+ const paid=receipt?amount:Number(billForm.paid);
+ const grand=amount*(1+tax/100);
+ if(paid<0||paid>grand){setBillFormError("The amount already received cannot be negative or greater than the document total.");return;}
+ let nextInvoices=[...invoices];
+ let sourceInvoice:Invoice|undefined;
+ if(receipt&&billForm.linkedInvoiceId&&billForm.linkedInvoiceId!=="__none__"){
+  sourceInvoice=nextInvoices.find(item=>item.id===billForm.linkedInvoiceId&&item.type==="Invoice");
+  if(!sourceInvoice){setBillFormError("The invoice selected for this receipt no longer exists. Refresh the workspace and select it again.");return;}
+  const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid);
+  if(amount>balance+0.009){setBillFormError(`This receipt exceeds the linked invoice balance of ${money(balance)}.`);return;}
+  if(billForm.leadId&&billForm.leadId!=="__none__"&&sourceInvoice.leadId&&billForm.leadId!==sourceInvoice.leadId){setBillFormError("The receipt invoice and CRM project do not match. Select the invoice again so the receipt remains attached to the correct sale.");return;}
+ }
+ let linkedLead:Lead|undefined;
+ let customer:CustomerRecord|undefined;
+ let nextCustomers=[...clients];
+ const explicitLeadId=sourceInvoice?.leadId||((billForm.leadId&&billForm.leadId!=="__none__")?billForm.leadId:"");
+ if(explicitLeadId){
+  linkedLead=leads.find(item=>item.id===explicitLeadId);
+  if(!linkedLead){setBillFormError("The selected CRM lead no longer exists. Refresh and choose the current lead/project.");return;}
+  customer=nextCustomers.find(item=>item.id===linkedLead?.clientId);
+  if(!customer){setBillFormError("The selected lead has no customer record yet. Open and save the lead profile first so RR can repair its customer link.");return;}
+  if(normalizeCustomerEmail(billForm.email)&&normalizeCustomerEmail(customer.email)&&normalizeCustomerEmail(billForm.email)!==normalizeCustomerEmail(customer.email)){setBillFormError("The email differs from the selected CRM customer. Update the customer contact in the CRM first, or select the correct lead.");return;}
+  if(normalizeCustomerPhone(billForm.phone)&&normalizeCustomerPhone(customer.phone)&&normalizeCustomerPhone(billForm.phone)!==normalizeCustomerPhone(customer.phone)){setBillFormError("The phone differs from the selected CRM customer. Update the customer contact in the CRM first, or select the correct lead.");return;}
+  if(billForm.project.trim().toLocaleLowerCase()!==linkedLead.project.trim().toLocaleLowerCase()){setBillFormError(`The selected CRM project is “${linkedLead.project}”, but the document project is “${billForm.project}”. Select the right lead or update the project in the CRM first.`);return;}
+ }else{
+  const match=resolveCustomerIdentity(nextCustomers,billForm.email,billForm.phone);
+  if(match.status==="conflict"){setBillFormError(match.reason);return;}
+  if(match.status==="matched"){
+   customer=match.customer;
+   customer={...customer,email:customer.email||billForm.email,phone:customer.phone||billForm.phone,updatedAt:new Date().toISOString()};
+   nextCustomers=nextCustomers.map(item=>item.id===customer?.id?customer!:item);
+   if(billForm.leadId!=="__none__"){
+    const projectMatches=leads.filter(lead=>lead.clientId===customer!.id&&lead.project.trim().toLocaleLowerCase()===billForm.project.trim().toLocaleLowerCase());
+    if(projectMatches.length>1){setBillFormError("More than one CRM opportunity has this customer and project name. Select the exact lead/project in the CRM link field.");return;}
+    if(projectMatches.length===1)linkedLead=projectMatches[0];
+    else {
+     const existingLeads=leads.filter(lead=>lead.clientId===customer!.id);
+     if(existingLeads.length>0){setBillFormError("RR matched the customer by phone/email, but the project does not uniquely match an existing CRM opportunity. Select the correct lead/project above, or explicitly choose “Standalone document — do not move CRM”.");return;}
+    }
+   }
+  }else{
+   customer=createCustomerRecord(customerIdFor(`DOC-${Date.now()}`,nextCustomers),billForm.client,billForm.email,billForm.phone);
+   nextCustomers=[...nextCustomers,customer];
+  }
+ }
+ if(sourceInvoice){
+  const updatedPaid=Math.min(total(sourceInvoice),sourceInvoice.paid+amount);
+  const updatedSource:Invoice={...sourceInvoice,paid:updatedPaid,status:updatedPaid>=total(sourceInvoice)?"Paid":updatedPaid>0?"Partially paid":"Draft"};
+  nextInvoices=nextInvoices.map(item=>item.id===sourceInvoice!.id?updatedSource:item);
+ }
+ const year=new Date().getFullYear();
+ const nextNumber=nextInvoices.filter(item=>item.type===billForm.type).length+1;
+ const document:Invoice={id:`RR-${receipt?"REC":"INV"}-${year}-${String(nextNumber).padStart(3,"0")}`,clientId:customer.id,leadId:linkedLead?.id,appliesToInvoiceId:sourceInvoice?.id,client:billForm.client.trim(),email:billForm.email.trim(),phone:billForm.phone.trim(),project:billForm.project.trim(),date:billForm.date,due:billForm.due,description:billForm.description.trim(),amount,tax,paid,type:billForm.type,status:receipt||paid>=grand?"Paid":paid>0?"Partially paid":"Draft"};
+ nextInvoices=[document,...nextInvoices];
+ let updatedLead:Lead|undefined;
+ if(linkedLead){
+  updatedLead=linkedLead;
+  if(receipt||paid>0){updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
+  if(!receipt){updatedLead=applyPipelineTrigger(updatedLead,"invoice_saved");if(paid>0)updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
+ }
+ setClients(nextCustomers);
+ setInvoices(nextInvoices);
+ if(updatedLead){
+  setLeads(current=>current.map(lead=>lead.id===updatedLead!.id?updatedLead!:lead));
+  if(selectedLead?.id===updatedLead.id)setSelectedLead(updatedLead);
+ }
+ setInvoiceModal(false);setSelectedInvoice(document);
+ setBillFormError("");
+ setBillForm({client:"",email:"",phone:"",project:"",leadId:"",linkedInvoiceId:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice"});
+ const stageMessage=updatedLead?` CRM updated to “${updatedLead.status}” for ${updatedLead.name}.`: " No CRM stage moved because this document was not linked to a specific CRM opportunity.";
+ const paymentMessage=sourceInvoice?` Applied ${money(amount)} to ${sourceInvoice.id}.`:"";
+ setNotice(`${receipt?"Cash receipt":"Invoice"} saved and linked to customer ${customer.name}.${paymentMessage}${stageMessage}`);
+}
 function draftEmail(i:Invoice){const subject=`${i.type} ${i.id} — ${i.project}`,body=`Dear ${i.client},\n\nPlease find the ${i.type.toLowerCase()} details for your project with ${studioName}.\n\nDocument: ${i.id}\nProject: ${i.project}\nTotal: ${money(total(i))}\nAmount received: ${money(i.paid)}\nBalance: ${money(Math.max(0,total(i)-i.paid))}\n\nPlease attach the downloaded PDF before sending.\n\nWarm regards,\n${studioName}\n${studioEmail}`;window.open(emailUrl(i.email,subject,body),"_blank","noopener,noreferrer");}
 if(!logged)return <main className="rr-login"><div className="rr-login-art"><div className="rr-login-mark">RR<span> / </span>CI</div><div className="rr-login-copy"><span className="rr-eyebrow">PRIVATE WORKSPACE</span><h1>Good spaces<br/><i>start with clarity.</i></h1><p>Leads, projects and accounts — thoughtfully brought together.</p></div><div className="rr-login-foot">RR CREATIVE INTERIORS <span>·</span> BEYOND THE ORDINARY</div></div><div className="rr-login-panel"><Link className="rr-back" href="/"><ArrowLeft size={16}/> Back to website</Link><div className="rr-login-form"><div className="rr-monogram">RR</div><span className="rr-eyebrow">ADMINISTRATION</span><h2>Welcome back.</h2><p>Sign in to manage your workspace.</p><form onSubmit={login}><label>Admin email</label><input type="email" autoComplete="username" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} placeholder="you@rrcreativeinteriors.in" required/><label>Password</label><input type="password" autoComplete="current-password" value={loginPass} onChange={e=>setLoginPass(e.target.value)} placeholder="Enter your password" required/>{loginError&&<div className="rr-login-error">{loginError}</div>}<button className="rr-primary rr-login-submit" type="submit">Sign in <ChevronDown size={16}/></button></form><div className="rr-secure-note"><span/> Private access only. Credentials are not stored in the browser.</div></div></div></main>;
 return <main className="rr-admin"><aside className="rr-sidebar"><Link href="/" className="rr-admin-brand"><Image alt="" width={38} height={38} src="/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png"/><span><b>RR CREATIVE</b><small>INTERIORS · ADMIN</small></span></Link><div className="rr-workspace-tag">WORKSPACE <span>LIVE</span></div><nav>{[{label:"Overview",icon:LayoutDashboard},{label:"Leads & CRM",icon:Users},{label:"Pipeline setup",icon:SlidersHorizontal},{label:"Invoices & receipts",icon:FileText},{label:"Portfolio library",icon:FolderOpen},{label:"Settings",icon:Settings}].map(n=><button key={n.label} className={section===n.label?"active":""} onClick={()=>{setSection(n.label);setSearch("");if(n.label!=="Leads & CRM")setStageFilter("All stages");}}><n.icon size={18}/>{n.label}{n.label==="Leads & CRM"&&<em>{leads.filter(l=>stageForLead(l,pipelineStages)?.isInitial).length}</em>}</button>)}</nav><div className="rr-sidebar-bottom"><div className="rr-help-card"><div className="rr-help-icon">✦</div><b>Everything in order.</b><p>Your business workspace, one considered detail at a time.</p></div><div className="rr-user"><div className="rr-avatar">RR</div><div><b>Administrator</b><small>{studioEmail}</small></div><button title="Sign out" onClick={async()=>{await fetch("/api/admin/logout",{method:"POST"}).catch(()=>{});setLogged(false);setWorkspaceLoaded(false);setWorkspaceStatus("loading");setLoginEmail("");setLoginPass("");}}><LogOut size={17}/></button></div></div></aside><section className="rr-main"><header className="rr-topbar"><div className="rr-crumb">Workspace <span>/</span> <b>{section}</b></div><div className="rr-top-actions"><span className="rr-today"><CalendarDays size={15}/>{todayLabel||"Today"}</span><span className="rr-save-status" role="status"><i className={workspaceStatus}/>{workspaceStatus==="loading"?"Loading records":workspaceStatus==="saving"?"Saving changes":workspaceStatus==="error"?"Sync issue":"All changes saved"}</span><button className="rr-bell" title="Notifications"><Bell size={18}/><i/></button><div className="rr-top-avatar">RR</div></div></header><div className="rr-content">{notice&&<div className="rr-notice"><Check size={16}/>{notice}<button onClick={()=>setNotice("")}><X size={15}/></button></div>}
