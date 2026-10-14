@@ -157,21 +157,28 @@ function StageCard({
         <summary><SlidersHorizontal size={15}/> Required information on entry <span>{stage.requiredFields.length} rules</span></summary>
         <p>When a lead moves into this stage, RR checks the selected fields. The move is blocked until missing information is supplied.</p>
         <div className="rr-stage-required-grid">
-          {PIPELINE_FIELD_OPTIONS.map((field) => (
-            <label key={field.key} className="rr-stage-required-option">
-              <input
-                type="checkbox"
-                checked={stage.requiredFields.includes(field.key)}
-                onChange={(event) => {
-                  const requiredFields = event.target.checked
-                    ? [...new Set([...stage.requiredFields, field.key])]
-                    : stage.requiredFields.filter((key: PipelineField) => key !== field.key);
-                  onUpdate({ requiredFields });
-                }}
-              />
-              <span><b>{field.label}</b><small>{field.help}</small></span>
-            </label>
-          ))}
+          {PIPELINE_FIELD_OPTIONS.map((field) => {
+            const locked = stage.kind === "won"
+              ? field.key === "agreementSigned" || field.key === "advanceConfirmed"
+              : (stage.kind === "lost" || stage.kind === "disqualified") && field.key === "lostReason";
+            const isChecked = stage.requiredFields.includes(field.key) || locked;
+            return (
+              <label key={field.key} className={`rr-stage-required-option${locked ? " is-locked" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  disabled={locked}
+                  onChange={(event) => {
+                    const requiredFields = event.target.checked
+                      ? [...new Set([...stage.requiredFields, field.key])]
+                      : stage.requiredFields.filter((key: PipelineField) => key !== field.key);
+                    onUpdate({ requiredFields });
+                  }}
+                />
+                <span><b>{field.label}{locked ? " · required" : ""}</b><small>{locked ? "Required by the pipeline's safety rules and cannot be disabled." : field.help}</small></span>
+              </label>
+            );
+          })}
         </div>
       </details>
     </article>
