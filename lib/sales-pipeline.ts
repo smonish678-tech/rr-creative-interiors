@@ -131,7 +131,8 @@ export function normalizeSalesPipeline(value: unknown): SalesPipelineStage[] {
 
   const pipeline = [...source];
   const invoiceStageExists = pipeline.some((stage) => stage.id === "invoice-prepared" || stage.name.toLocaleLowerCase() === "invoice prepared");
-  if (!invoiceStageExists) {
+  const invoiceTriggerConfigured = pipeline.some((stage) => stage.automationTriggers.includes("invoice_saved"));
+  if (!invoiceStageExists && !invoiceTriggerConfigured) {
     const template = DEFAULT_SALES_PIPELINE.find((stage) => stage.id === "invoice-prepared")!;
     const insertAt = pipeline.findIndex((stage) => stage.kind === "won" || stage.kind === "nurture" || stage.kind === "lost" || stage.kind === "disqualified");
     pipeline.splice(insertAt < 0 ? pipeline.length : insertAt, 0, { ...template, requiredFields: [...template.requiredFields], automationTriggers: [] });
