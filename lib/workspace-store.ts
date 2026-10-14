@@ -7,6 +7,7 @@ export type WorkspaceRecord = Record<string, unknown>;
 export type OperationsWorkspace = {
   leads: WorkspaceRecord[];
   invoices: WorkspaceRecord[];
+  clients: WorkspaceRecord[];
   studioName: string;
   studioEmail: string;
   pipelineStages: SalesPipelineStage[];
@@ -73,6 +74,7 @@ function decryptWorkspace(serialized: string, token: string): OperationsWorkspac
   return {
     leads: Array.isArray(data.leads) ? data.leads.filter(isRecord) : [],
     invoices: Array.isArray(data.invoices) ? data.invoices.filter(isRecord) : [],
+    clients: Array.isArray(data.clients) ? data.clients.filter(isRecord) : [],
     studioName: typeof data.studioName === "string" ? data.studioName : "RR Creative Interiors",
     studioEmail: typeof data.studioEmail === "string" ? data.studioEmail : "accounts@rrcreativeinteriors.in",
     pipelineStages: normalizeSalesPipeline(data.pipelineStages),
@@ -91,6 +93,7 @@ export async function loadOperationsWorkspace(): Promise<OperationsWorkspace> {
     return {
       leads: [],
       invoices: [],
+      clients: [],
       studioName: "RR Creative Interiors",
       studioEmail: "accounts@rrcreativeinteriors.in",
       pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields] })),
