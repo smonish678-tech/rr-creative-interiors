@@ -5,18 +5,19 @@ import Link from "next/link";
 import Image from "next/image";
 import PortfolioManager from "@/components/admin/portfolio-manager";
 import PipelineConfigurator from "@/components/admin/pipeline-configurator";
-import { DEFAULT_SALES_PIPELINE, PIPELINE_FIELD_OPTIONS, normalizeSalesPipeline, type PipelineField, type SalesPipelineStage } from "@/lib/sales-pipeline";
+import { DEFAULT_SALES_PIPELINE, PIPELINE_FIELD_OPTIONS, normalizeSalesPipeline, type PipelineAutomationTrigger, type PipelineField, type SalesPipelineStage } from "@/lib/sales-pipeline";
+import { normalizeCustomerEmail, normalizeCustomerPhone, resolveCustomerIdentity, type CustomerRecord } from "@/lib/customer-matching";
 import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Filter, LayoutDashboard, LogOut, Mail, Plus, Search, Settings, Users, Wallet, X, FolderOpen, SlidersHorizontal } from "lucide-react";
 
 type Stage = string;
 type AgreementStatus = "not-started" | "sent" | "signed";
 type AdvanceStatus = "not-requested" | "due" | "received" | "waived";
 type Lead = {
-  id:string; name:string; email:string; phone:string; project:string; source:string; budget:string; status:Stage; date:string; notes:string;
+  id:string; clientId?:string; name:string; email:string; phone:string; project:string; source:string; budget:string; status:Stage; date:string; notes:string;
   stageId?:string; serviceType?:string; location?:string; area?:string; timeline?:string; nextAction?:string; nextFollowUpDate?:string;
   lostReason?:string; agreementStatus?:AgreementStatus; advanceStatus?:AdvanceStatus; advanceExceptionReason?:string;
 };
-type Invoice = { id:string; client:string; email:string; project:string; date:string; due:string; description:string; amount:number; tax:number; paid:number; type:"Invoice"|"Cash receipt"; status:"Draft"|"Partially paid"|"Paid" };
+type Invoice = { id:string; clientId?:string; leadId?:string; appliesToInvoiceId?:string; client:string; email:string; phone?:string; project:string; date:string; due:string; description:string; amount:number; tax:number; paid:number; type:"Invoice"|"Cash receipt"; status:"Draft"|"Partially paid"|"Paid" };
 
 function localDateValue(date = new Date()): string {
   const year = date.getFullYear();
@@ -74,6 +75,85 @@ function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineF
 
 function fieldLabel(field: PipelineField): string {
   return PIPELINE_FIELD_OPTIONS.find((option) => option.key === field)?.label || field;
+}
+
+function createCustomerRecord(id: string, name: string, email: string, phone: string): CustomerRecord {
+  const now = new Date().toISOString();
+  return { id, name: name.trim(), email: email.trim(), phone: phone.trim(), createdAt: now, updatedAt: now };
+}
+
+function customerIdFor(base: string, customers: CustomerRecord[]): string {
+  const stem = `CL-${base.replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 70) || Date.now().toString()}`;
+  if (!customers.some((customer) => customer.id === stem)) return stem;
+  let suffix = 2;
+  while (customers.some((customer) => customer.id === `${stem}-${suffix}`)) suffix += 1;
+  return `${stem}-${suffix}`;
+}
+
+function migrateCustomerLinks(rawLeads: Lead[], rawInvoices: Invoice[], savedCustomers: CustomerRecord[]) {
+  const customers: CustomerRecord[] = savedCustomers.filter((customer) => customer && typeof customer.id === "string" && typeof customer.name === "string").map((customer) => ({
+    ...customer, email: typeof customer.email === "string" ? customer.email : "", phone: typeof customer.phone === "string" ? customer.phone : "",
+  }));
+  let leads = rawLeads.map((lead) => ({ ...lead }));
+  let invoices = rawInvoices.map((invoice) => ({ ...invoice }));
+  const customerExists = (id: string | undefined) => Boolean(id && customers.some((customer) => customer.id === id));
+
+  leads = leads.map((lead) => {
+    let customer = customerExists(lead.clientId) ? customers.find((item) => item.id === lead.clientId) : undefined;
+    if (!customer) {
+      const match = resolveCustomerIdentity(customers, lead.email, lead.phone);
+      if (match.status === "matched") customer = match.customer;
+    }
+    if (!customer) {
+      const id = customerIdFor(lead.id, customers);
+      customer = createCustomerRecord(id, lead.name || "Unnamed customer", lead.email || "", lead.phone || "");
+      customers.push(customer);
+    } else {
+      customer = { ...customer, email: customer.email || lead.email || "", phone: customer.phone || lead.phone || "", updatedAt: new Date().toISOString() };
+      const index = customers.findIndex((item) => item.id === customer!.id);
+      if (index >= 0) customers[index] = customer;
+    }
+    return { ...lead, clientId: customer.id, name: customer.name || lead.name, email: customer.email || lead.email || "", phone: customer.phone || lead.phone || "" };
+  });
+
+  invoices = invoices.map((invoice) => {
+    const linkedLead = leads.find((lead) => lead.id === invoice.leadId);
+    let customer = linkedLead ? customers.find((item) => item.id === linkedLead.clientId) : undefined;
+    if (!customer && customerExists(invoice.clientId)) customer = customers.find((item) => item.id === invoice.clientId);
+    if (!customer) {
+      const match = resolveCustomerIdentity(customers, invoice.email, invoice.phone);
+      if (match.status === "matched") customer = match.customer;
+    }
+    if (!customer) {
+      const id = customerIdFor(invoice.id, customers);
+      customer = createCustomerRecord(id, invoice.client || "Unnamed customer", invoice.email || "", invoice.phone || "");
+      customers.push(customer);
+    } else {
+      customer = { ...customer, email: customer.email || invoice.email || "", phone: customer.phone || invoice.phone || "", updatedAt: new Date().toISOString() };
+      const index = customers.findIndex((item) => item.id === customer!.id);
+      if (index >= 0) customers[index] = customer;
+    }
+    let leadId = invoice.leadId || linkedLead?.id;
+    if (!leadId) {
+      const projectMatches = leads.filter((lead) => lead.clientId === customer!.id && lead.project.trim().toLocaleLowerCase() === (invoice.project || "").trim().toLocaleLowerCase());
+      if (projectMatches.length === 1) leadId = projectMatches[0].id;
+    }
+    return { ...invoice, clientId: customer.id, leadId, client: invoice.client || customer.name, email: invoice.email || customer.email, phone: invoice.phone || customer.phone };
+  });
+
+  return { customers, leads, invoices };
+}
+
+function invoiceClientLabel(invoice: Invoice, customers: CustomerRecord[]): string {
+  return customers.find((customer) => customer.id === invoice.clientId)?.name || invoice.client;
+}
+
+function invoiceClientEmail(invoice: Invoice, customers: CustomerRecord[]): string {
+  return customers.find((customer) => customer.id === invoice.clientId)?.email || invoice.email;
+}
+
+function invoiceClientPhone(invoice: Invoice, customers: CustomerRecord[]): string {
+  return customers.find((customer) => customer.id === invoice.clientId)?.phone || invoice.phone || "";
 }
 
 const money=(n:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n);
