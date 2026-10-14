@@ -42,7 +42,13 @@ function pipelineTone(lead: Lead, pipeline: SalesPipelineStage[]): string {
 }
 
 function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineField[] {
-  return stage.requiredFields.filter((field) => {
+  const immutableGateFields: PipelineField[] = stage.kind === "won"
+    ? ["agreementSigned", "advanceConfirmed"]
+    : stage.kind === "lost" || stage.kind === "disqualified"
+      ? ["lostReason"]
+      : [];
+  const requiredFields = [...new Set([...stage.requiredFields, ...immutableGateFields])];
+  return requiredFields.filter((field) => {
     switch (field) {
       case "name": return !lead.name?.trim();
       case "contact": return !(lead.phone?.trim() || lead.email?.trim());
@@ -190,6 +196,12 @@ function updatePipelineStage(id:string,patch:Partial<SalesPipelineStage>){
  if(patch.isInitial===true&&(patch.active===false||patch.kind&&patch.kind!=="open")){setNotice("The starting stage must be active and use Active opportunity behaviour.");return;}
  if(patch.active===false&&current.kind==="open"&&current.active&&pipelineStages.filter(stage=>stage.active&&stage.kind==="open").length<=1){setNotice("Keep at least one active opportunity stage.");return;}
  const proposed={...current,...patch};
+ const mandatoryFields: PipelineField[] = proposed.kind === "won"
+  ? ["agreementSigned", "advanceConfirmed"]
+  : proposed.kind === "lost" || proposed.kind === "disqualified"
+   ? ["lostReason"]
+   : [];
+ proposed.requiredFields=[...new Set([...proposed.requiredFields,...mandatoryFields])];
  if(proposed.kind==="won"||proposed.kind==="lost"||proposed.kind==="disqualified")proposed.followUpDays=null;
  let next=pipelineStages.map(stage=>stage.id===id?proposed:stage);
  if(patch.isInitial===true)next=next.map(stage=>({...stage,isInitial:stage.id===id}));
