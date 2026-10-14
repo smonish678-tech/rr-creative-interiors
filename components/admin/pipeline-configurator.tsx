@@ -6,6 +6,7 @@ import {
   type PipelineField,
   type PipelineStageKind,
   type PipelineTone,
+  type PipelineAutomationTrigger,
   type SalesPipelineStage,
 } from "@/lib/sales-pipeline";
 
@@ -32,6 +33,10 @@ const tones: Array<{ value: PipelineTone; label: string }> = [
   { value: "green", label: "Green" },
   { value: "red", label: "Red" },
   { value: "stone", label: "Neutral" },
+];
+const automationTriggerOptions: Array<{ value: PipelineAutomationTrigger; label: string; help: string }> = [
+  { value: "invoice_saved", label: "Invoice saved", help: "Move a linked active lead here when an invoice is created." },
+  { value: "receipt_saved", label: "Cash receipt saved", help: "When payment is linked, try to close the linked sale after its agreement/payment gates pass." },
 ];
 const followUpOptions: Array<{ value: string; label: string }> = [
   { value: "0", label: "Today" },
@@ -152,6 +157,34 @@ function StageCard({
         </label>
         <button type="button" className="rr-stage-delete" onClick={onRemove} title="Remove stage"><Trash2 size={14}/> Remove</button>
       </div>
+
+      <details className="rr-stage-requirements rr-stage-triggers">
+        <summary><SlidersHorizontal size={15}/> Automatic stage changes <span>{(stage.automationTriggers || []).length} triggers</span></summary>
+        <p>Choose which business events should move a linked CRM opportunity to this stage. Each event can have only one destination stage.</p>
+        <div className="rr-stage-required-grid">
+          {automationTriggerOptions.map((trigger) => {
+            const checked = (stage.automationTriggers || []).includes(trigger.value);
+            const incompatible = (trigger.value === "invoice_saved" && stage.kind !== "open") ||
+              (trigger.value === "receipt_saved" && stage.kind !== "won");
+            return (
+              <label key={trigger.value} className={`rr-stage-required-option${incompatible ? " is-locked" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={incompatible}
+                  onChange={(event) => {
+                    const automationTriggers = event.target.checked
+                      ? [...new Set([...(stage.automationTriggers || []), trigger.value])]
+                      : (stage.automationTriggers || []).filter((value) => value !== trigger.value);
+                    onUpdate({ automationTriggers });
+                  }}
+                />
+                <span><b>{trigger.label}</b><small>{incompatible ? "Invoice events must target an active-opportunity stage; receipt closure must target a Won stage." : trigger.help}</small></span>
+              </label>
+            );
+          })}
+        </div>
+      </details>
 
       <details className="rr-stage-requirements">
         <summary><SlidersHorizontal size={15}/> Required information on entry <span>{stage.requiredFields.length} rules</span></summary>
