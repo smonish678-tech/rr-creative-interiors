@@ -397,6 +397,7 @@ function addPipelineStage(){
 function removePipelineStage(id:string){
  const stage=pipelineStages.find(item=>item.id===id);
  if(!stage)return;
+ if((stage.automationTriggers||[]).length){setNotice("Move this stage’s automatic event trigger to another stage in Pipeline setup before removing it.");return;}
  if(stage.isInitial){setNotice("Choose another starting stage before removing this stage.");return;}
  if(stageLeadCounts[id]>0){setNotice(`Move the ${stageLeadCounts[id]} lead(s) out of “${stage.name}” before removing it.`);return;}
  if(stage.active&&stage.kind==="open"&&pipelineStages.filter(item=>item.active&&item.kind==="open").length<=1){setNotice("Keep at least one active opportunity stage.");return;}
