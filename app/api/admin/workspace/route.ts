@@ -13,7 +13,7 @@ function unauthorized() {
 export async function GET(request: Request) {
   if (!isAdminRequest(request)) return unauthorized();
   try {
-    const workspace = await loadOperationsWorkspace();
+    const workspace = await loadOperationsWorkspace({ includePublicEnquiries: true });
     return NextResponse.json({ workspace }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not load the operations workspace.";
