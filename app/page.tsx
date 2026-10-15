@@ -171,37 +171,58 @@ function Nav() {
 
 function ContactForm() {
   const [sent, setSent] = useState(false);
-  const [values, setValues] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    type: "",
-    budget: "",
-    message: ""
-  });
+  const [saving, setSaving] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [whatsAppHref, setWhatsAppHref] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [values, setValues] = useState({ name: "", phone: "", email: "", type: "", budget: "", message: "" });
 
-  const update = (key: keyof typeof values, value: string) =>
+  const update = (key: keyof typeof values, value: string) => {
     setValues((current) => ({ ...current, [key]: value }));
+    setSent(false);
+    setWhatsAppHref("");
+    setSubmissionError("");
+  };
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (saving || sent) return;
+    setSaving(true);
+    setSubmissionError("");
 
-    const text = [
-      "Hello RR Creative Interiors,",
-      "Name: " + values.name,
-      "Phone: " + values.phone,
-      "Email: " + values.email,
-      "Project: " + values.type,
-      "Budget: " + values.budget,
-      "Message: " + values.message
-    ].join("\n");
+    const submissionId = window.crypto.randomUUID();
+    try {
+      const response = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submissionId, name: values.name, phone: values.phone, email: values.email,
+          serviceType: values.type, budget: values.budget, message: values.message, companyWebsite,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.accepted !== true) {
+        throw new Error(typeof result.error === "string" ? result.error : "We could not save your enquiry. Please try again.");
+      }
 
-    window.open(
-      "https://wa.me/919901592929?text=" + encodeURIComponent(text),
-      "_blank",
-      "noopener,noreferrer"
-    );
-    setSent(true);
+      const text = [
+        "Hello RR Creative Interiors,",
+        "Website enquiry received by RR CRM.",
+        "Name: " + values.name,
+        "Phone: " + values.phone,
+        "Email: " + (values.email || "Not provided"),
+        "Project: " + (values.type || "Not selected"),
+        "Budget: " + (values.budget || "Not specified"),
+        "Message: " + values.message,
+        result.reference ? "Enquiry reference: " + result.reference : "",
+      ].filter(Boolean).join("\\n");
+      setWhatsAppHref("https://wa.me/919901592929?text=" + encodeURIComponent(text));
+      setSent(true);
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : "We could not save your enquiry. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const budgetOptions = ["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"];
@@ -235,38 +256,26 @@ function ContactForm() {
           <div className="rr-form-mark">RR<span>↗</span></div>
         </div>
 
+        <div className="rr-enquiry-honeypot" aria-hidden="true">
+          <label>Leave this field empty<input name="companyWebsite" type="text" tabIndex={-1} autoComplete="off" value={companyWebsite} onChange={(event) => setCompanyWebsite(event.target.value)} /></label>
+        </div>
+
         <div className="rr-field-grid">
           <label className="rr-field">
             <span>01 · Name</span>
-            <input
-              required
-              value={values.name}
-              onChange={(e) => update("name", e.target.value)}
-              placeholder="Your name"
-            />
+            <input required maxLength={100} autoComplete="name" value={values.name} onChange={(event) => update("name", event.target.value)} placeholder="Your name" />
           </label>
           <label className="rr-field">
             <span>02 · Phone</span>
-            <input
-              required
-              type="tel"
-              value={values.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              placeholder="+91"
-            />
+            <input required type="tel" maxLength={30} autoComplete="tel" value={values.phone} onChange={(event) => update("phone", event.target.value)} placeholder="+91" />
           </label>
           <label className="rr-field">
             <span>03 · Email</span>
-            <input
-              type="email"
-              value={values.email}
-              onChange={(e) => update("email", e.target.value)}
-              placeholder="you@email.com"
-            />
+            <input type="email" maxLength={254} autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} placeholder="you@email.com" />
           </label>
           <label className="rr-field">
             <span>04 · Project</span>
-            <select value={values.type} onChange={(e) => update("type", e.target.value)}>
+            <select value={values.type} onChange={(event) => update("type", event.target.value)}>
               <option value="">Choose a direction</option>
               <option>Residential interior</option>
               <option>Turnkey interior</option>
@@ -281,12 +290,7 @@ function ContactForm() {
           <div className="rr-budget-label"><span>05 · Indicative budget</span><strong>{values.budget || "Choose a range"}</strong></div>
           <div className="rr-budget-grid">
             {budgetOptions.map((item) => (
-              <button
-                type="button"
-                key={item}
-                className={values.budget === item ? "rr-budget-chip is-selected" : "rr-budget-chip"}
-                onClick={() => update("budget", item)}
-              >
+              <button type="button" key={item} className={values.budget === item ? "rr-budget-chip is-selected" : "rr-budget-chip"} onClick={() => update("budget", item)}>
                 {item}
               </button>
             ))}
@@ -295,31 +299,27 @@ function ContactForm() {
 
         <label className="rr-field rr-field-message">
           <span>06 · Tell us about the space</span>
-          <textarea
-            required
-            rows={4}
-            value={values.message}
-            onChange={(e) => update("message", e.target.value)}
-            placeholder="Property, approximate size, what you are planning, and when you'd like to begin."
-          />
+          <textarea required minLength={10} maxLength={2500} rows={4} value={values.message} onChange={(event) => update("message", event.target.value)} placeholder="Property, approximate size, what you are planning, and when you&apos;d like to begin." />
         </label>
 
         <div className="rr-form-foot">
           <div className="rr-form-note">
             <span className="rr-signal"></span>
-            Usually easier to begin on WhatsApp — this form prepares the enquiry for you.
+            Your enquiry is saved to our CRM first. WhatsApp is optional.
           </div>
-          <button type="submit" className="rr-form-submit">
-            <span>Send enquiry</span>
+          <button type="submit" className="rr-form-submit" disabled={saving || sent}>
+            <span>{saving ? "Saving enquiry…" : sent ? "Enquiry received" : "Send enquiry"}</span>
             <MessageCircle size={18} />
             <ArrowUpRight size={16} />
           </button>
         </div>
 
+        {submissionError && <p className="rr-form-error" role="alert">{submissionError}</p>}
         {sent && (
-          <p className="rr-form-success">
-            Your WhatsApp enquiry is ready in a new tab.
-          </p>
+          <div className="rr-form-success" role="status">
+            <p>Your enquiry has been saved. RR can now see it in the CRM pipeline.</p>
+            <a href={whatsAppHref} target="_blank" rel="noopener noreferrer">Continue on WhatsApp <ArrowUpRight size={14} /></a>
+          </div>
         )}
       </form>
     </div>
