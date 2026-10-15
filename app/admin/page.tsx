@@ -168,7 +168,7 @@ const [search,setSearch]=useState(""),[stageFilter,setStageFilter]=useState("All
 const [selectedLead,setSelectedLead]=useState<Lead|null>(null),[selectedInvoice,setSelectedInvoice]=useState<Invoice|null>(null),[selectedLeadError,setSelectedLeadError]=useState(""),[leadFormError,setLeadFormError]=useState(""),[notice,setNotice]=useState("");
 const [studioName,setStudioName]=useState("RR Creative Interiors"),[studioEmail,setStudioEmail]=useState("accounts@rrcreativeinteriors.in");
 const [workspaceLoaded,setWorkspaceLoaded]=useState(false),[workspaceStatus,setWorkspaceStatus]=useState("loading");
-const saveQueueRef=useRef<Promise<void>>(Promise.resolve());
+const saveQueueRef=useRef<Promise<void>>(Promise.resolve());const leadsRef=useRef<Lead[]>([]);const clientsRef=useRef<CustomerRecord[]>([]);
 const [leadForm,setLeadForm]=useState({name:"",email:"",phone:"",project:"",serviceType:"",location:"",area:"",timeline:"",source:"Website enquiry",budget:"",notes:"",nextAction:""});
 const [billForm,setBillForm]=useState({client:"",email:"",phone:"",project:"",leadId:"",linkedInvoiceId:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice" as "Invoice"|"Cash receipt"});const [billFormError,setBillFormError]=useState("");
 const activeStages = useMemo(()=>pipelineStages.filter(stage=>stage.active || leads.some(lead=>lead.stageId===stage.id || lead.status===stage.name)),[pipelineStages,leads]);
@@ -182,6 +182,8 @@ const matchesStage=stageFilter==="All stages"||stage?.id===stageFilter||l.status
 return matchesStage&&`${l.name} ${l.email} ${l.phone} ${l.project} ${l.serviceType||""} ${l.location||""} ${l.source} ${l.id} ${l.nextAction||""}`.toLowerCase().includes(search.toLowerCase());
 }),[leads,stageFilter,search,pipelineStages]);const visibleInvoices=useMemo(()=>invoices.filter(i=>`${i.id} ${invoiceClientLabel(i,clients)} ${invoiceClientEmail(i,clients)} ${invoiceClientPhone(i,clients)} ${i.project}`.toLowerCase().includes(search.toLowerCase())),[invoices,search,clients]);const billableInvoices=invoices.filter(i=>i.type==="Invoice");const received=invoices.reduce((sum,item)=>sum+(item.type==="Invoice"?item.paid:item.appliesToInvoiceId?0:item.paid),0),outstanding=billableInvoices.reduce((sum,item)=>sum+Math.max(0,total(item)-item.paid),0);
 const todayLabel = new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date());
+useEffect(()=>{leadsRef.current=leads;},[leads]);
+useEffect(()=>{clientsRef.current=clients;},[clients]);
 useEffect(()=>{let active=true;fetch("/api/admin/session",{cache:"no-store"}).then(async r=>r.ok?r.json():null).then(data=>{if(active&&data?.authenticated===true)setLogged(true);}).catch(()=>{});return()=>{active=false;};},[]);
 useEffect(()=>{
  if(!logged)return;
@@ -250,11 +252,11 @@ useEffect(()=>{
    if(!response.ok)return;
    const data=await response.json().catch(()=>({}));
    if(!Array.isArray(data.leads)||!data.leads.length)return;
-   const currentLeads=leads;
+   const currentLeads=leadsRef.current;
    const knownLeadIds=new Set(currentLeads.map(lead=>lead.id));
    const additions=(data.leads as Lead[]).filter(lead=>typeof lead.id==="string"&&!knownLeadIds.has(lead.id));
    if(!additions.length)return;
-   const currentClients=clients;
+   const currentClients=clientsRef.current;
    const incomingClients=Array.isArray(data.clients)?data.clients as CustomerRecord[]:[];
    const clientById=new Map<string,CustomerRecord>([...currentClients,...incomingClients].map(client=>[client.id,client] as const));
    const newClients=incomingClients.filter(client=>!currentClients.some(current=>current.id===client.id));
@@ -274,7 +276,7 @@ useEffect(()=>{
  void checkForWebsiteEnquiries();
  const timer=window.setInterval(()=>void checkForWebsiteEnquiries(),30000);
  return()=>window.clearInterval(timer);
-},[logged,workspaceLoaded,clients,leads]);
+},[logged,workspaceLoaded]);
 async function login(e:FormEvent){e.preventDefault();setLoginError("");try{const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:loginEmail,password:loginPass})});const data=await response.json().catch(()=>({}));if(!response.ok){setLoginError(data.error||"Unable to sign in.");return;}setWorkspaceLoaded(false);setWorkspaceStatus("loading");setLogged(true);setLoginPass("");}catch{setLoginError("Unable to reach the sign-in service. Please try again.");}}
 function openLeadModal(){setLeadFormError("");setLeadModal(true);}
 function maybePromoteLeadToWon(lead:Lead):Lead{
