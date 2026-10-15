@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { get, list, put } from "@vercel/blob";
 import { DEFAULT_SALES_PIPELINE, normalizeSalesPipeline, type SalesPipelineStage } from "@/lib/sales-pipeline";
+import { normalizeCustomerEmail, normalizeCustomerPhone, resolveCustomerIdentity, type CustomerRecord } from "@/lib/customer-matching";
 
 export type WorkspaceRecord = Record<string, unknown>;
 
@@ -14,6 +15,18 @@ export type OperationsWorkspace = {
 };
 
 const WORKSPACE_PATH = "rr-creative-interiors/workspace/operations.enc";
+const PUBLIC_ENQUIRY_PREFIX = "rr-creative-interiors/public-enquiries/";
+
+export type PublicEnquiryInboxRecord = {
+  submissionId: string;
+  receivedAt: string;
+  name: string;
+  phone: string;
+  email: string;
+  serviceType: string;
+  budget: string;
+  message: string;
+};
 
 function storageToken(): string {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
@@ -29,47 +42,33 @@ function encryptionKey(token: string): Buffer {
     .digest();
 }
 
-function encryptWorkspace(workspace: OperationsWorkspace, token: string): string {
+function encryptValue(value: unknown, token: string): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", encryptionKey(token), iv);
-  const ciphertext = Buffer.concat([
-    cipher.update(JSON.stringify(workspace), "utf8"),
-    cipher.final(),
-  ]);
-  return JSON.stringify({
-    version: 1,
-    iv: iv.toString("base64"),
-    tag: cipher.getAuthTag().toString("base64"),
-    data: ciphertext.toString("base64"),
-  });
+  const ciphertext = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()]);
+  return JSON.stringify({ version: 1, iv: iv.toString("base64"), tag: cipher.getAuthTag().toString("base64"), data: ciphertext.toString("base64") });
+}
+
+function encryptWorkspace(workspace: OperationsWorkspace, token: string): string {
+  return encryptValue(workspace, token);
+}
+
+function decryptValue(serialized: string, token: string): unknown {
+  const envelope: unknown = JSON.parse(serialized);
+  if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) throw new Error("Stored record has an invalid format.");
+  const item = envelope as { version?: unknown; iv?: unknown; tag?: unknown; data?: unknown };
+  if (item.version !== 1 || typeof item.iv !== "string" || typeof item.tag !== "string" || typeof item.data !== "string") {
+    throw new Error("Stored record version is not supported.");
+  }
+  const decipher = createDecipheriv("aes-256-gcm", encryptionKey(token), Buffer.from(item.iv, "base64"));
+  decipher.setAuthTag(Buffer.from(item.tag, "base64"));
+  const plaintext = Buffer.concat([decipher.update(Buffer.from(item.data, "base64")), decipher.final()]);
+  return JSON.parse(plaintext.toString("utf8")) as unknown;
 }
 
 function decryptWorkspace(serialized: string, token: string): OperationsWorkspace {
-  const envelope: unknown = JSON.parse(serialized);
-  if (!envelope || typeof envelope !== "object") {
-    throw new Error("Stored workspace has an invalid format.");
-  }
-  const item = envelope as { version?: unknown; iv?: unknown; tag?: unknown; data?: unknown };
-  if (
-    item.version !== 1 ||
-    typeof item.iv !== "string" ||
-    typeof item.tag !== "string" ||
-    typeof item.data !== "string"
-  ) {
-    throw new Error("Stored workspace version is not supported.");
-  }
-
-  const decipher = createDecipheriv("aes-256-gcm", encryptionKey(token), Buffer.from(item.iv, "base64"));
-  decipher.setAuthTag(Buffer.from(item.tag, "base64"));
-  const plaintext = Buffer.concat([
-    decipher.update(Buffer.from(item.data, "base64")),
-    decipher.final(),
-  ]);
-  const value: unknown = JSON.parse(plaintext.toString("utf8"));
-  if (!value || typeof value !== "object") {
-    throw new Error("Stored workspace has an invalid format.");
-  }
-
+  const value = decryptValue(serialized, token);
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Stored workspace has an invalid format.");
   const data = value as Partial<OperationsWorkspace>;
   return {
     leads: Array.isArray(data.leads) ? data.leads.filter(isRecord) : [],
@@ -85,27 +84,145 @@ function isRecord(value: unknown): value is WorkspaceRecord {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
-export async function loadOperationsWorkspace(): Promise<OperationsWorkspace> {
+function isPublicEnquiryInboxRecord(value: unknown): value is PublicEnquiryInboxRecord {
+  if (!isRecord(value)) return false;
+  return typeof value.submissionId === "string" && /^[0-9a-f-]{36}$/i.test(value.submissionId) &&
+    typeof value.receivedAt === "string" && typeof value.name === "string" && typeof value.phone === "string" &&
+    typeof value.email === "string" && typeof value.serviceType === "string" && typeof value.budget === "string" &&
+    typeof value.message === "string";
+}
+
+async function readPublicEnquiry(blob: { url: string }, token: string): Promise<PublicEnquiryInboxRecord | null> {
+  const response = await get(blob.url, { access: "public", token, useCache: false });
+  if (!response || response.statusCode !== 200) return null;
+  const value = decryptValue(await new Response(response.stream).text(), token);
+  return isPublicEnquiryInboxRecord(value) ? value : null;
+}
+
+async function listAllBlobs(prefix: string, token: string) {
+  const blobs: Array<{ pathname: string; url: string }> = [];
+  let cursor: string | undefined;
+  do {
+    const page = await list({ prefix, token, ...(cursor ? { cursor } : {}) });
+    blobs.push(...page.blobs);
+    cursor = page.cursor || undefined;
+  } while (cursor && blobs.length < 10000);
+  return blobs;
+}
+
+export async function savePublicEnquiryInbox(record: PublicEnquiryInboxRecord): Promise<"saved" | "duplicate"> {
+  const token = storageToken();
+  const pathname = `${PUBLIC_ENQUIRY_PREFIX}${record.submissionId}.enc`;
+  const existing = (await list({ prefix: pathname, token })).blobs.find((blob) => blob.pathname === pathname);
+  if (existing) {
+    const previous = await readPublicEnquiry(existing, token);
+    if (previous && previous.submissionId === record.submissionId &&
+      previous.name === record.name && previous.phone === record.phone && previous.email === record.email &&
+      previous.serviceType === record.serviceType && previous.budget === record.budget && previous.message === record.message) {
+      return "duplicate";
+    }
+    throw new Error("This enquiry submission reference has already been used. Refresh the form and try again.");
+  }
+  await put(pathname, encryptValue(record, token), {
+    access: "public", token, contentType: "application/octet-stream", addRandomSuffix: false, allowOverwrite: false,
+  });
+  return "saved";
+}
+
+function dateWithOffset(start: string, days: number | null): string {
+  if (days === null) return "";
+  const date = new Date(start);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function appendPublicEnquiryLeads(workspace: OperationsWorkspace, records: PublicEnquiryInboxRecord[]): OperationsWorkspace {
+  if (!records.length) return workspace;
+  const leads = [...workspace.leads];
+  const customers = workspace.clients.map((item) => ({
+    id: typeof item.id === "string" ? item.id : "",
+    name: typeof item.name === "string" ? item.name : "",
+    email: typeof item.email === "string" ? item.email : "",
+    phone: typeof item.phone === "string" ? item.phone : "",
+    createdAt: typeof item.createdAt === "string" ? item.createdAt : "",
+    updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : "",
+  })).filter((item) => item.id && item.name) as CustomerRecord[];
+  const pipeline = normalizeSalesPipeline(workspace.pipelineStages);
+  const initialStage = pipeline.find((stage) => stage.active && stage.isInitial && stage.kind === "open") ||
+    pipeline.find((stage) => stage.active && stage.kind === "open") || DEFAULT_SALES_PIPELINE[0];
+  const knownSubmissions = new Set(leads.map((lead) => typeof lead.publicSubmissionId === "string" ? lead.publicSubmissionId : "").filter(Boolean));
+  const pending = records.filter((record) => !knownSubmissions.has(record.submissionId)).sort((a, b) => a.receivedAt.localeCompare(b.receivedAt));
+
+  for (const record of pending) {
+    const shortId = record.submissionId.replace(/-/g, "").slice(0, 16).toUpperCase();
+    const leadId = `LD-WEB-${shortId}`;
+    if (leads.some((lead) => lead.id === leadId)) continue;
+    const match = resolveCustomerIdentity(customers, record.email, record.phone);
+    let customer: CustomerRecord;
+    let identityWarning = "";
+    if (match.status === "matched") {
+      customer = match.customer;
+      const index = customers.findIndex((item) => item.id === customer.id);
+      if (index >= 0) {
+        const refreshed = { ...customer, email: customer.email || record.email, phone: customer.phone || record.phone, updatedAt: record.receivedAt };
+        customers[index] = refreshed;
+        customer = refreshed;
+      }
+      if (record.name.trim().toLocaleLowerCase() !== customer.name.trim().toLocaleLowerCase()) {
+        identityWarning = `Name supplied on the website enquiry: ${record.name}. The existing customer name was retained because the contact matched by ${match.matchedBy}.\n\n`;
+      }
+    } else {
+      if (match.status === "conflict") identityWarning = "Potential customer-identity conflict: the contact details match different or inconsistent existing customer records. This enquiry was kept as a separate customer for manual review.\n\n";
+      let customerId = `CL-WEB-${shortId}`;
+      let suffix = 2;
+      while (customers.some((item) => item.id === customerId)) customerId = `CL-WEB-${shortId}-${suffix++}`;
+      customer = { id: customerId, name: record.name, email: record.email, phone: record.phone, createdAt: record.receivedAt, updatedAt: record.receivedAt };
+      customers.push(customer);
+    }
+    const summary = record.message.replace(/\s+/g, " ").trim();
+    const shortSummary = summary.length > 88 ? `${summary.slice(0, 85).trimEnd()}…` : summary;
+    const project = `${record.serviceType || "Website enquiry"} — ${shortSummary}`.slice(0, 160);
+    const date = record.receivedAt.slice(0, 10);
+    const lead = {
+      id: leadId, clientId: customer.id, publicSubmissionId: record.submissionId, publicSubmissionReceivedAt: record.receivedAt,
+      name: customer.name, email: customer.email || record.email, phone: customer.phone || record.phone,
+      project, source: "Website enquiry", budget: record.budget, status: initialStage.name, stageId: initialStage.id,
+      date, notes: `${identityWarning}${record.message}`, serviceType: record.serviceType, location: "", area: "", timeline: "",
+      nextAction: initialStage.defaultNextAction || "Review new website enquiry", nextFollowUpDate: dateWithOffset(date, initialStage.followUpDays),
+      lostReason: "", agreementStatus: "not-started", advanceStatus: "not-requested", advanceExceptionReason: "",
+    };
+    leads.unshift(lead);
+    knownSubmissions.add(record.submissionId);
+  }
+  return { ...workspace, leads, clients: customers };
+}
+
+export async function loadOperationsWorkspace(options: { includePublicEnquiries?: boolean } = {}): Promise<OperationsWorkspace> {
   const token = storageToken();
   const result = await list({ prefix: WORKSPACE_PATH, token });
   const blob = result.blobs.find((item) => item.pathname === WORKSPACE_PATH);
+  let workspace: OperationsWorkspace;
   if (!blob) {
-    return {
-      leads: [],
-      invoices: [],
-      clients: [],
-      studioName: "RR Creative Interiors",
-      studioEmail: "accounts@rrcreativeinteriors.in",
-      pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields] })),
+    workspace = {
+      leads: [], invoices: [], clients: [], studioName: "RR Creative Interiors", studioEmail: "accounts@rrcreativeinteriors.in",
+      pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields], automationTriggers: [...stage.automationTriggers] })),
     };
+  } else {
+    const response = await get(blob.url, { access: "public", token, useCache: false });
+    if (!response || response.statusCode !== 200) throw new Error("Could not load the encrypted operations workspace.");
+    workspace = decryptWorkspace(await new Response(response.stream).text(), token);
   }
+  if (!options.includePublicEnquiries) return workspace;
 
-  const response = await get(blob.url, { access: "public", token, useCache: false });
-  if (!response || response.statusCode !== 200) {
-    throw new Error("Could not load the encrypted operations workspace.");
-  }
-  const encrypted = await new Response(response.stream).text();
-  return decryptWorkspace(encrypted, token);
+  const allInboxBlobs = await listAllBlobs(PUBLIC_ENQUIRY_PREFIX, token);
+  const known = new Set(workspace.leads.map((lead) => typeof lead.publicSubmissionId === "string" ? lead.publicSubmissionId : "").filter(Boolean));
+  const pendingBlobs = allInboxBlobs.filter((blobItem) => {
+    const filename = blobItem.pathname.slice(PUBLIC_ENQUIRY_PREFIX.length).replace(/\.enc$/, "");
+    return blobItem.pathname.endsWith(".enc") && /^[0-9a-f-]{36}$/i.test(filename) && !known.has(filename);
+  });
+  if (!pendingBlobs.length) return workspace;
+  const inboxRecords = (await Promise.all(pendingBlobs.map((item) => readPublicEnquiry(item, token)))).filter((item): item is PublicEnquiryInboxRecord => item !== null);
+  return appendPublicEnquiryLeads(workspace, inboxRecords);
 }
 
 export async function saveOperationsWorkspace(workspace: OperationsWorkspace): Promise<void> {
