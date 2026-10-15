@@ -62,7 +62,9 @@ export async function POST(request: Request) {
 
   let body: Record<string, unknown>;
   try {
-    const parsed: unknown = await request.json();
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).byteLength > 12000) return NextResponse.json({ error: "The enquiry is too long. Please shorten the message and try again." }, { status: 413 });
+    const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid");
     body = parsed as Record<string, unknown>;
   } catch {
