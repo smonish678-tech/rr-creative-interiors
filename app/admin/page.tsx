@@ -244,7 +244,6 @@ useEffect(()=>{
 },[logged,workspaceLoaded,leads,invoices,clients,studioName,studioEmail,pipelineStages]);
 useEffect(()=>{
  if(!logged||!workspaceLoaded)return;
- let active=true;
  const checkForWebsiteEnquiries=async()=>{
   try{
    const response=await fetch("/api/admin/enquiries/updates",{cache:"no-store"});
@@ -257,7 +256,7 @@ useEffect(()=>{
    if(!additions.length)return;
    const currentClients=clientsRef.current;
    const incomingClients=Array.isArray(data.clients)?data.clients as CustomerRecord[]:[];
-   const clientById=new Map([...currentClients,...incomingClients].map(client=>[client.id,client]));
+   const clientById=new Map<string,CustomerRecord>([...currentClients,...incomingClients].map(client=>[client.id,client] as const));
    const newClients=incomingClients.filter(client=>!currentClients.some(current=>current.id===client.id));
    if(newClients.length)setClients(current=>[...current,...newClients.filter(item=>!current.some(existing=>existing.id===item.id))]);
    const linkedAdditions=additions.map(lead=>{
@@ -274,7 +273,7 @@ useEffect(()=>{
  };
  void checkForWebsiteEnquiries();
  const timer=window.setInterval(()=>void checkForWebsiteEnquiries(),30000);
- return()=>{active=false;window.clearInterval(timer);};
+ return()=>window.clearInterval(timer);
 },[logged,workspaceLoaded]);
 async function login(e:FormEvent){e.preventDefault();setLoginError("");try{const response=await fetch("/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:loginEmail,password:loginPass})});const data=await response.json().catch(()=>({}));if(!response.ok){setLoginError(data.error||"Unable to sign in.");return;}setWorkspaceLoaded(false);setWorkspaceStatus("loading");setLogged(true);setLoginPass("");}catch{setLoginError("Unable to reach the sign-in service. Please try again.");}}
 function openLeadModal(){setLeadFormError("");setLeadModal(true);}
