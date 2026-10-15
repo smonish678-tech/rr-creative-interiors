@@ -123,10 +123,20 @@ export async function savePublicEnquiryInbox(record: PublicEnquiryInboxRecord): 
     }
     throw new Error("This enquiry submission reference has already been used. Refresh the form and try again.");
   }
-  await put(pathname, encryptValue(record, token), {
-    access: "public", token, contentType: "application/octet-stream", addRandomSuffix: false, allowOverwrite: false,
-  });
-  return "saved";
+  try {
+    await put(pathname, encryptValue(record, token), {
+      access: "public", token, contentType: "application/octet-stream", addRandomSuffix: false, allowOverwrite: false,
+    });
+    return "saved";
+  } catch (error) {
+    const raced = (await list({ prefix: pathname, token })).blobs.find((blob) => blob.pathname === pathname);
+    if (raced) {
+      const previous = await readPublicEnquiry(raced, token);
+      if (previous && previous.submissionId === record.submissionId && previous.name === record.name && previous.phone === record.phone &&
+        previous.email === record.email && previous.serviceType === record.serviceType && previous.budget === record.budget && previous.message === record.message) return "duplicate";
+    }
+    throw error;
+  }
 }
 
 function dateWithOffset(start: string, days: number | null): string {
