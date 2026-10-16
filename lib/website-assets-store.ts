@@ -51,7 +51,8 @@ function isAsset(value: unknown): value is WebsiteAssetRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const item = value as Partial<WebsiteAssetRecord>;
   return typeof item.id === "string" && typeof item.url === "string" && typeof item.pathname === "string" &&
-    typeof item.contentType === "string" && typeof item.fileName === "string" && typeof item.createdAt === "string";
+    typeof item.contentType === "string" && typeof item.fileName === "string" &&
+    typeof item.sizeBytes === "number" && Number.isFinite(item.sizeBytes) && typeof item.createdAt === "string";
 }
 
 function emptyConfig(): WebsiteAssetConfig {
