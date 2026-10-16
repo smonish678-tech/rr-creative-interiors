@@ -41,13 +41,15 @@ export async function POST(request: Request) {
       const contentType = typeof input.contentType === "string" ? input.contentType : "";
       let parsed: URL;
       try { parsed = new URL(url); } catch { return NextResponse.json({ error: "The uploaded image URL is invalid." }, { status: 400 }); }
+      const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic"];
       if (parsed.protocol !== "https:" || !parsed.hostname.endsWith(".blob.vercel-storage.com") ||
-        !pathname.startsWith("rr-creative-interiors/site-assets/") || !contentType.startsWith("image/")) {
-        return NextResponse.json({ error: "Only uploaded image files from RR website storage are accepted." }, { status: 400 });
+        !pathname.startsWith("rr-creative-interiors/site-assets/") || !allowedImageTypes.includes(contentType)) {
+        return NextResponse.json({ error: "Only JPG, PNG, WebP, AVIF and HEIC images uploaded to RR website storage are accepted." }, { status: 400 });
       }
       if (config.assets.length >= 500) return NextResponse.json({ error: "The website image library has reached its 500-item limit." }, { status: 400 });
       const fileName = typeof input.fileName === "string" ? input.fileName.trim().slice(0, 160) : "website-image";
       const sizeBytes = typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? Math.max(0, Math.round(input.sizeBytes)) : 0;
+      if (sizeBytes <= 0 || sizeBytes > 30 * 1024 * 1024) return NextResponse.json({ error: "Each website image must be no larger than 30 MB." }, { status: 400 });
       const asset: WebsiteAssetRecord = { id: randomUUID(), url, pathname, contentType, fileName: fileName || "website-image", sizeBytes, createdAt: new Date().toISOString() };
       await saveWebsiteAssetConfig({ ...config, assets: [asset, ...config.assets] });
       return NextResponse.json({ asset }, { status: 201, headers: { "Cache-Control": "no-store" } });
