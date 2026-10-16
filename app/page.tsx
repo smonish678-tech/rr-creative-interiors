@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useScroll } from "framer-motion";
 import { ArrowUpRight, ChevronRight, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
@@ -50,9 +50,9 @@ const principles = [
 ];
 
 const journal = [
-  ["01", "Custom should mean considered", "Why the most personal interiors begin with better questions—not a longer shopping list."],
-  ["02", "Where a budget makes a difference", "How to prioritise daily-use surfaces, storage and details without upgrading everything."],
-  ["03", "A room has to work on Tuesday", "The layout, light and small routines that make an interior feel right long after the reveal."]
+  ["01", "Custom should feel personal—not complicated", "A good brief captures how you live, what needs to change and which details matter. From there, design becomes a set of useful decisions, not a list of extras."],
+  ["02", "Where a budget makes a difference", "Prioritise the things you touch, use and rely on every day. Spend where quality changes the experience; simplify where an upgrade adds little."],
+  ["03", "A room has to work on Tuesday", "The reveal is one day. Storage, circulation, light and easy maintenance are what make an interior feel right through ordinary life."]
 ];
 
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -82,7 +82,7 @@ function Nav({ logoUrl }: { logoUrl: string }) {
     { name: "The Eye", href: "#eye", id: "eye" },
     { name: "Services", href: "#services", id: "services" },
     { name: "Process", href: "#process", id: "process" },
-    { name: "Journal", href: "#journal", id: "journal" },
+    { name: "Notes", href: "#journal", id: "journal" },
     { name: "Contact", href: "#contact", id: "contact" }
   ];
 
@@ -227,7 +227,7 @@ function ContactForm() {
     }
   };
 
-  const budgetOptions = ["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"];
+  const budgetOptions = ["Below ₹10L", "₹10–20L", "₹20–40L", "₹40L+"];
 
   return (
     <div className="rr-enquiry-shell">
@@ -684,7 +684,7 @@ export default function Page() {
               <a href="#eye">The Eye</a>
               <a href="#services">Services</a>
               <a href="#process">Process</a>
-              <a href="#journal">Journal</a>
+              <a href="#journal">Notes</a>
             </div>
           </div>
           <div>
