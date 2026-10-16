@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         const video = ["mp4", "webm", "mov", "quicktime"].includes(fileExt);
         if (isWebsiteAsset && video) throw new Error("Website brand and section slots accept images only. Use the Portfolio library for videos.");
         return {
-          allowedContentTypes: isWebsiteAsset ? allowedContentTypes.filter((type) => type.startsWith("image/")) : allowedContentTypes,
+          allowedContentTypes: isWebsiteAsset ? allowedContentTypes.filter((type) => ["image/jpeg", "image/png", "image/webp", "image/avif"].includes(type)) : allowedContentTypes,
           maximumSizeInBytes: video ? 150 * 1024 * 1024 : 30 * 1024 * 1024,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({ purpose: isWebsiteAsset ? "rr-creative-interiors-site-assets" : "rr-creative-interiors-portfolio" }),
