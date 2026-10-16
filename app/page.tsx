@@ -59,10 +59,10 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, transform: "translateY(14px)" }}
+      whileInView={{ opacity: 1, transform: "translateY(0px)" }}
       viewport={{ once: true, margin: "-12% 0px" }}
-      transition={{ duration: 0.9, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.55, delay, ease: [0.23, 1, 0.32, 1] }}
     >
       {children}
     </motion.div>
@@ -408,7 +408,7 @@ export default function Page() {
 
             <div className="mt-16 grid gap-6 lg:grid-cols-[1.12fr_.88fr]">
               <Reveal className="group relative min-h-[620px] overflow-hidden">
-                <img src={images.living} alt="Living space interior design" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                <img src={images.living} alt="Living space interior design" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a08]/80 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
                   <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Living · Made around you</p>
@@ -461,7 +461,7 @@ export default function Page() {
                         controls
                         preload="metadata"
                         playsInline
-                        className="block aspect-[4/5] w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                        className="block aspect-[4/5] w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
                       />
                     ) : (
                       <img
@@ -504,7 +504,7 @@ export default function Page() {
               ].map((item, i) => (
                 <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-[#2b211a]/15 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
                   <div className="relative aspect-[4/3] overflow-hidden">
-                    <img src={item.img} alt={item.title} className="h-full w-full object-cover transition duration-[1400ms] ease-out group-hover:scale-[1.06]" />
+                    <img src={item.img} alt={item.title} className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                     <div className="absolute left-5 top-5 text-[8px] uppercase tracking-[.2em] text-white">{item.tag}</div>
                   </div>
