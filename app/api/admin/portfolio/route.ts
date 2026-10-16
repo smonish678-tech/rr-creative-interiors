@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       project: typeof body.project === "string" ? body.project.trim().slice(0, 140) : "",
       description: typeof body.description === "string" ? body.description.trim().slice(0, 600) : "",
       category: typeof body.category === "string" ? body.category.trim().slice(0, 60) : "Residential",
-      published: body.published === true,
+      published: siteSlot === "gallery" ? body.published === true : true,
       siteSlot,
       createdAt: new Date().toISOString(),
     };
