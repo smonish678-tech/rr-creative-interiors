@@ -12,6 +12,7 @@ export type PortfolioAsset = {
   description: string;
   category: string;
   published: boolean;
+  siteSlot?: string;
   createdAt: string;
 };
 
