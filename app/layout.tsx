@@ -7,7 +7,7 @@ const socialImage = "/rr-media/hero/Interior%20Inspiration.jpg";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "RR Creative Interiors | Fully Customised, Thoughtfully Priced",
+  title: "Fully Customised Interiors, Thoughtfully Priced | RR Creative Interiors",
   description:
     "Fully customised home, commercial and turnkey interiors in Bengaluru. Designed around your life and investment, with considered materials, clear scope and thoughtful execution.",
   keywords: [
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "RR Creative Interiors — Made around you. Priced with purpose.",
-    description: "Fully customised interiors in Bengaluru. Clear scope, considered choices and thoughtful execution."
+    description: "Fully customised interiors in Bengaluru. Clear scope, considered choices and thoughtful execution.",
     images: [socialImage]
   },
   robots: {
