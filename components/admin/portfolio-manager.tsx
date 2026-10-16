@@ -24,7 +24,7 @@ type PortfolioAsset = {
   createdAt: string;
 };
 
-const categories = ["Residential", "Kitchen & wardrobes", "Commercial", "Office", "Details & materials", "Other"];
+const categories = ["Residential", "Kitchen & wardrobes", "Commercial", "Office", "Details & materials", "Brand assets", "Other"];
 
 export default function PortfolioManager() {
   const [items, setItems] = useState<PortfolioAsset[]>([]);
@@ -87,6 +87,16 @@ export default function PortfolioManager() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
+
+  function chooseSiteSlot(nextSlot: SiteImageSlot) {
+    setSiteSlot(nextSlot);
+    if (nextSlot === "brand-logo") {
+      setProject((current) => current || "RR brand identity");
+      setTitle((current) => current || "Primary website logo");
+      setCategory("Brand assets");
+      setPublished(true);
+    }
+  }
 
   async function onUpload(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -201,7 +211,7 @@ export default function PortfolioManager() {
       const response = await fetch("/api/admin/portfolio", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: item.id, siteSlot: nextSlot }),
+        body: JSON.stringify({ id: item.id, siteSlot: nextSlot, ...(nextSlot === "gallery" ? {} : { published: true }) }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not update the website placement.");
@@ -288,7 +298,7 @@ export default function PortfolioManager() {
             </div>
           )}
           <div className="rr-portfolio-form-grid">
-            <label className="rr-wide-field">Website placement <small>Optional</small><select value={siteSlot} onChange={(event) => setSiteSlot(event.target.value as SiteImageSlot)} disabled={busy}>{SITE_IMAGE_SLOTS.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}</select><small>{SITE_IMAGE_SLOTS.find((slot) => slot.value === siteSlot)?.help}</small></label>
+            <label className="rr-wide-field">Website placement <small>Optional</small><select value={siteSlot} onChange={(event) => chooseSiteSlot(event.target.value as SiteImageSlot)} disabled={busy}>{SITE_IMAGE_SLOTS.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}</select><small>{SITE_IMAGE_SLOTS.find((slot) => slot.value === siteSlot)?.help}</small></label>
             <label>Project name <span>*</span><input value={project} onChange={(e) => setProject(e.target.value)} placeholder="e.g. Indiranagar residence" maxLength={140} required disabled={busy} /></label>
             <label>Media title <small>Optional</small><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Warm oak living room" maxLength={140} disabled={busy} /></label>
             <label>Category<select value={category} onChange={(e) => setCategory(e.target.value)} disabled={busy}>{categories.map((value) => <option key={value}>{value}</option>)}</select></label>
