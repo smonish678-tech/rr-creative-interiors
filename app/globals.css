@@ -709,3 +709,43 @@ body:has(.rr-site-light){background:var(--rr-paper);color:var(--rr-ink)}
   .rr-site-light .rr-footer-cta{min-height:0}
   .rr-site-light .rr-enquiry-shell{gap:18px}
 }
+
+
+/* Scroll-morph hero: light editorial canvas with a restrained image field. */
+.rr-site-light .rr-morph-hero{color:var(--rr-ink);background:var(--rr-paper)!important}
+.rr-site-light .rr-morph-hero-sticky{background:var(--rr-paper)!important}
+.rr-site-light .rr-hero-scrim{background:linear-gradient(90deg,rgba(246,242,235,.96) 0%,rgba(246,242,235,.84) 35%,rgba(246,242,235,.20) 73%,rgba(246,242,235,.5) 100%),linear-gradient(180deg,rgba(246,242,235,.36),transparent 34%,rgba(246,242,235,.78) 100%)}
+.rr-site-light .rr-hero-vignette{box-shadow:inset 0 0 100px rgba(67,49,33,.035);pointer-events:none}
+.rr-site-light .rr-hero-count{color:var(--rr-ink)}
+.rr-site-light .rr-hero-kicker{color:var(--rr-russet)}
+.rr-site-light .rr-hero-title{color:var(--rr-ink)}
+.rr-site-light .rr-hero-title-accent{color:var(--rr-russet)}
+.rr-site-light .rr-hero-body{color:#55483c}
+.rr-site-light .rr-hero-link{color:var(--rr-ink);border-color:var(--rr-russet);transition:color 180ms ease,border-color 180ms ease}
+.rr-site-light .rr-hero-link span{color:var(--rr-russet)}
+.rr-site-light .rr-hero-side{color:#74665a}
+.rr-site-light .rr-hero-indicator{background:rgba(33,26,21,.22);transition:background 180ms ease}
+.rr-site-light .rr-hero-indicator.is-active{background:var(--rr-russet)}
+.rr-site-light .rr-hero-foot{color:#74665a}
+.rr-site-light .rr-glaze-line{opacity:.38;background:linear-gradient(180deg,transparent,rgba(140,63,50,.38),transparent)}
+.rr-site-light .rr-enquiry-card .rr-form-submit:focus-visible,.rr-site-light a:focus-visible,.rr-site-light button:focus-visible,.rr-site-light select:focus-visible{outline:2px solid var(--rr-russet);outline-offset:3px}
+@media (hover:hover) and (pointer:fine){
+  .rr-site-light .rr-hero-link:hover{color:var(--rr-russet);border-color:var(--rr-russet)}
+}
+@media(prefers-reduced-motion:reduce){
+  .rr-site-light .rr-hero-photo{transition:opacity 200ms ease!important;transform:none!important}
+  .rr-site-light .rr-hero-link,.rr-site-light .rr-hero-indicator{transition:none!important}
+}
+
+/* Editable image placement controls in the admin asset portal */
+.rr-wide-field{grid-column:1/-1}
+.rr-wide-field>small{font-size:9px;color:#958574;line-height:1.6}
+.rr-asset-placement{display:grid;gap:6px;margin:13px 0 12px;padding:10px;border:1px solid #e6ddd0;border-radius:6px;background:#faf6ef}
+.rr-asset-placement>span{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8a755b}
+.rr-asset-placement select{width:100%;padding:8px;border:1px solid #ded1c1;border-radius:4px;background:#fffdf8;color:#403226;font-size:10px}
+.rr-asset-placement small{font-size:8px;line-height:1.55;color:#988775}
+.rr-site-light #portfolio .rr-portfolio-grid img,.rr-site-light #portfolio .rr-portfolio-grid video{transition:transform 300ms var(--rr-ease-out)}
+@media(hover:hover) and (pointer:fine){
+  .rr-site-light #portfolio .rr-portfolio-grid figure:hover img,.rr-site-light #portfolio .rr-portfolio-grid figure:hover video{transform:scale(1.025)}
+}
+@media(max-width:760px){.rr-wide-field{grid-column:auto}.rr-site-light .rr-hero-foot span:last-child{display:none}}
