@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     "commercial interior designers Bangalore",
     "corporate interiors Bangalore",
     "custom interior design Bangalore",
-    "affordable custom interiors Bengaluru",
+    "thoughtfully priced interiors Bengaluru",
     "modular kitchen Bangalore"
   ],
   applicationName: "RR Creative Interiors",
