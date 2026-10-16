@@ -12,14 +12,14 @@ type Scene = {
 };
 
 const DEFAULT_SCENES: Scene[] = [
-  { src: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2600&q=88", kicker: "01 · MADE AROUND YOU", title: "Nothing off|the shelf.", body: "Your routines, space and taste set the brief. We begin with your life—not a package you have to fit.", side: "A custom fit starts with listening." },
+  { src: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2600&q=88", kicker: "01 · FULLY CUSTOMISED. THOUGHTFULLY PRICED.", title: "Made for|your life.", body: "No one-size-fits-all plans. We shape the design around your space, the way you live, and a budget we treat as part of the brief.", side: "Personal design. Considered choices." },
   { src: "/rr-media/hero/Interior%20Inspiration.jpg", kicker: "02 · THE FIRST IMPRESSION", title: "A better|way in.", body: "An entrance should feel natural to move through. We think about arrival, storage and the first feeling of home together.", side: "The first step belongs to you." },
   { src: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2600&q=88", kicker: "03 · HOW YOU LIVE", title: "Designed for|your everyday.", body: "The best-looking room is the one that works. Circulation, light, storage and the way you live lead the design.", side: "Function is part of the finish." },
   { src: "/rr-media/hero/download.jpg", kicker: "04 · SPACE & FLOW", title: "Room to|breathe.", body: "Not every corner needs filling. Good planning gives furniture, daylight and movement space to make sense.", side: "Less waste. More room." },
   { src: "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=2600&q=88", kicker: "05 · MATERIAL & CRAFT", title: "Every detail|earns its place.", body: "We weigh finish, durability, proportion and cost together. The aim is a considered result, not an expensive list.", side: "A thoughtful choice beats an upgrade for its own sake." },
   { src: "/rr-media/hero/%23modern%20%23reception%20%23interior.jpg", kicker: "06 · YOUR CHARACTER", title: "Your taste.|Not a template.", body: "References are a starting point, never a stencil. We adapt the direction to the people, the property and the agreed scope.", side: "Personal, not copy-pasted." },
   { src: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=2600&q=88", kicker: "07 · THOUGHTFUL VALUE", title: "Custom design.|Clear priorities.", body: "We help you decide where to invest, where to simplify and which details will make a real difference to the finished space.", side: "A budget is a design input." },
-  { src: "/rr-media/hero/download%20%281%29.jpg", kicker: "08 · THE FINISHED FEELING", title: "Made for you.|Priced with sense.", body: "Fully customised interiors, thoughtfully priced around your brief. Personal design, useful choices and a scope you can understand.", side: "Your space. Your signature." }
+  { src: "/rr-media/hero/download%20%281%29.jpg", kicker: "08 · THE FINISHED FEELING", title: "Made for you.|Priced with sense.", body: "Fully customised interiors. Thoughtfully priced around your brief—with clear priorities, considered choices and a scope you can understand.", side: "Your space. Your signature." }
 ];
 
 const VERT = `
