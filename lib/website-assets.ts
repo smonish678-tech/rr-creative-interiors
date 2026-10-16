@@ -22,6 +22,7 @@ export type WebsiteAssetRecord = {
   pathname: string;
   contentType: string;
   fileName: string;
+  sizeBytes: number;
   createdAt: string;
 };
 
