@@ -10,6 +10,16 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+async function requestWebsiteAssetConfig(): Promise<ManagerConfig> {
+  const response = await fetch("/api/admin/site-assets", { cache: "no-store" });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "The website asset library could not be loaded.");
+  return {
+    assets: Array.isArray(data.assets) ? data.assets : [],
+    assignments: data.assignments && typeof data.assignments === "object" ? data.assignments : {},
+  };
+}
+
 export default function WebsiteAssetsManager() {
   const [assets, setAssets] = useState<WebsiteAssetRecord[]>([]);
   const [assignments, setAssignments] = useState<WebsiteAssetAssignments>({});
@@ -28,11 +38,9 @@ export default function WebsiteAssetsManager() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/site-assets", { cache: "no-store" });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "The website asset library could not be loaded.");
-      setAssets(Array.isArray(data.assets) ? data.assets : []);
-      setAssignments(data.assignments && typeof data.assignments === "object" ? data.assignments : {});
+      const config = await requestWebsiteAssetConfig();
+      setAssets(config.assets);
+      setAssignments(config.assignments);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The website asset library could not be loaded.");
     } finally {
@@ -40,7 +48,22 @@ export default function WebsiteAssetsManager() {
     }
   }
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    let active = true;
+    requestWebsiteAssetConfig()
+      .then((config) => {
+        if (!active) return;
+        setAssets(config.assets);
+        setAssignments(config.assignments);
+      })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "The website asset library could not be loaded.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   const assetById = new Map<string, WebsiteAssetRecord>(assets.map((asset) => [asset.id, asset] as const));
   const assignedIds = new Set(Object.values(assignments).filter((id): id is string => typeof id === "string" && Boolean(id)));
