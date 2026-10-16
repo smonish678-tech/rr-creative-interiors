@@ -148,7 +148,7 @@ export default function MorphScrollHero({ assets = {} }: { assets?: Partial<Reco
   } | null>(null);
   const sceneIndexRef = useRef(0);
 
-  const scenes = useMemo(() => scenes.map((scene, index) => ({ ...scene, src: assets[`heroScene${index + 1}`] || scene.src })), [assets]);
+  const scenes = useMemo(() => SCENES.map((scene, index) => ({ ...scene, src: assets[`heroScene${index + 1}`] || scene.src })), [assets]);
   const titleLines = useMemo(() => scenes[sceneIndex].title.split("|"), [scenes, sceneIndex]);
 
   useEffect(() => {
