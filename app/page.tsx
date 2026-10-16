@@ -331,6 +331,7 @@ function ContactForm() {
 
 export default function Page() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioCard[]>(PORTFOLIO);
+  const [hasPublishedPortfolio, setHasPublishedPortfolio] = useState(false);
   const [siteAssets, setSiteAssets] = useState<Record<string, string>>({});
   const images = useMemo(() => ({
     ...IMG,
@@ -366,6 +367,7 @@ export default function Page() {
             project: item.project,
             description: item.description,
           }));
+        setHasPublishedPortfolio(uploaded.length > 0);
         setPortfolioItems(uploaded.length ? uploaded : PORTFOLIO);
       })
       .catch(() => {});
@@ -445,9 +447,9 @@ export default function Page() {
               <div className="flex items-end justify-between gap-10">
                 <div>
                   <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Portfolio · Selected images</p>
-                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">Real spaces.<br /><em className="text-[#a13b2e]">Specific solutions.</em></h2>
+                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">{hasPublishedPortfolio ? <>Selected work.<br /><em className="text-[#a13b2e]">Specific solutions.</em></> : <>Design references.<br /><em className="text-[#a13b2e]">Ideas made personal.</em></>}</h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-[#6f6054] md:block">Your published project photographs lead this gallery. Upload, curate and replace them from the Portfolio Library in admin.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#6f6054] md:block">{hasPublishedPortfolio ? "A selection of RR project photographs. Each room answers a different brief, not a fixed package." : "A visual starting point for talking about layout, texture and atmosphere—not a template for your space. Publish RR project photos from the Portfolio Library when they are ready."}</p>
               </div>
             </Reveal>
 
@@ -474,7 +476,7 @@ export default function Page() {
                     )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
                     <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.project ? `${item.project}${item.title ? ` · ${item.title}` : ""}` : "RR project photograph"}</span>
+                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.id || item.project ? `${item.project || "RR project"}${item.title ? ` · ${item.title}` : ""}` : "Interior design reference"}</span>
                       <ArrowUpRight size={14} className="text-[#edca83]" />
                     </div>
                   </figure>
@@ -483,7 +485,7 @@ export default function Page() {
             </div>
 
             <div className="mt-12 flex items-center justify-between border-t border-[#2b211a]/15 pt-5">
-              <span className="text-[8px] uppercase tracking-[.18em] text-[#956c3d]">Selected work · Updated as new images are published</span>
+              <span className="text-[8px] uppercase tracking-[.18em] text-[#956c3d]">{hasPublishedPortfolio ? "RR project photography · updated as new work is published" : "Visual references · real RR work appears here when published"}</span>
               <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
             </div>
           </div>
