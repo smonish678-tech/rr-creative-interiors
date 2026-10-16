@@ -42,7 +42,7 @@ export default function WebsiteAssetsManager() {
 
   useEffect(() => { void refresh(); }, []);
 
-  const assetById = new Map(assets.map((asset) => [asset.id, asset]));
+  const assetById = new Map<string, WebsiteAssetRecord>(assets.map((asset) => [asset.id, asset] as const));
   const assignedIds = new Set(Object.values(assignments).filter((id): id is string => typeof id === "string" && Boolean(id)));
 
   async function saveAssignment(slot: WebsiteAssetSlot, id: string) {
