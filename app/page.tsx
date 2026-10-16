@@ -379,57 +379,57 @@ export default function Page() {
       <main id="top">
         <MorphScrollHero sceneImages={heroSceneImages} />
 
-        <section id="about" className="relative bg-[#eee5d9] text-[#1d1713]">
+        <section id="about" className="relative bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-28 md:px-10 lg:grid-cols-[.8fr_1.2fr] lg:py-40">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-[#98764d]">05 · The studio</p>
-              <h2 className="mt-5 max-w-xl font-serif text-5xl leading-[.94] tracking-[-.04em] md:text-7xl">A room should feel inevitable.</h2>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#956c3d]">The RR approach</p>
+              <h2 className="mt-5 max-w-xl font-serif text-5xl leading-[.94] tracking-[-.04em] md:text-7xl">Designed around you. Not a package.</h2>
             </Reveal>
             <Reveal delay={0.1}>
               <div className="max-w-3xl">
-                <p className="text-xl leading-9 text-[#62564e]">Not staged. Not overloaded. Not designed for a photograph before it is designed for a life.</p>
-                <p className="mt-8 text-base leading-8 text-[#6c6056]">RR Creative Interiors works from the inside out: understand the person, solve the plan, choose the material, then carry the idea through the site.</p>
+                <p className="text-xl leading-9 text-[#514237]">Fully customised does not mean adding more for the sake of it. It means making the right decisions for your space, your taste and your budget.</p>
+                <p className="mt-8 text-base leading-8 text-[#6c5d50]">We start by understanding how you live or work, what needs to change and what matters most. From layout and storage to finishes and lighting, each choice has a reason—and a place in the agreed scope.</p>
               </div>
             </Reveal>
           </div>
         </section>
 
-        <section id="spaces" className="bg-[#15100d] text-white">
+        <section id="spaces" className="bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">06 · Spatial studies</p>
-                  <h2 className="mt-5 max-w-2xl font-serif text-5xl leading-[.94] md:text-7xl">The mood is part of the architecture.</h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">A custom fit, down to the details</p>
+                  <h2 className="mt-5 max-w-2xl font-serif text-5xl leading-[.94] md:text-7xl">Beautiful is personal. So is the plan.</h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-white/48 md:block">Temporary demo imagery — these are visual studies, not claimed RR projects. Replace with real project shoots as they arrive.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#6f6054] md:block">Every property brings different proportions, routines and priorities. The images here can be managed from Website Studio.</p>
               </div>
             </Reveal>
 
             <div className="mt-16 grid gap-6 lg:grid-cols-[1.12fr_.88fr]">
               <Reveal className="group relative min-h-[620px] overflow-hidden">
-                <img src={IMG.living} alt="Contemporary living room visual reference" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                <img src={images.living} alt="Living space interior design" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a08]/80 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
-                  <p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Living · Visual study</p>
-                  <h3 className="mt-3 font-serif text-4xl md:text-5xl">Quietly dramatic.</h3>
+                  <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Living · Made around you</p>
+                  <h3 className="mt-3 font-serif text-4xl md:text-5xl">Room for your kind of life.</h3>
                 </div>
               </Reveal>
               <div className="grid gap-6">
                 <Reveal className="group relative min-h-[300px] overflow-hidden">
-                  <img src={IMG.kitchen} alt="Modern luxury kitchen visual reference" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                  <img src={images.kitchen} alt="Custom kitchen interior design" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   <div className="absolute bottom-0 p-7">
-                    <p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Kitchen · Visual study</p>
-                    <h3 className="mt-2 font-serif text-3xl">Useful can still be beautiful.</h3>
+                    <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Kitchen · Planned to fit</p>
+                    <h3 className="mt-2 font-serif text-3xl">Every inch has a job.</h3>
                   </div>
                 </Reveal>
                 <Reveal className="group relative min-h-[300px] overflow-hidden">
-                  <img src={IMG.bedroom} alt="Modern bedroom visual reference" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                  <img src={images.bedroom} alt="Bedroom interior design" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   <div className="absolute bottom-0 p-7">
-                    <p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Private · Visual study</p>
-                    <h3 className="mt-2 font-serif text-3xl">Softness without excess.</h3>
+                    <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Private · Thought through</p>
+                    <h3 className="mt-2 font-serif text-3xl">Calm, without the clutter.</h3>
                   </div>
                 </Reveal>
               </div>
