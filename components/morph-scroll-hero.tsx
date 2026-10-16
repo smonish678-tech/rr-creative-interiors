@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 
 type Scene = {
   src: string;
@@ -84,7 +85,8 @@ void main(){
 `;
 
 export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Array<string | undefined> }) {
-  const scenes = useMemo(() => DEFAULT_scenes.map((scene, index) => ({ ...scene, src: sceneImages[index] || scene.src })), [sceneImages]);
+  const scenes = useMemo(() => DEFAULT_SCENES.map((scene, index) => ({ ...scene, src: sceneImages[index] || scene.src })), [sceneImages]);
+  const reduceMotion = useReducedMotion() ?? false;
   const sectionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fallbackRefs = useRef<(HTMLImageElement | null)[]>([]);
@@ -107,10 +109,7 @@ export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Ar
     const section = sectionRef.current;
     const canvas = canvasRef.current;
     if (!section || !canvas) return;
-    readyRef.current = false;
-    setShaderReady(false);
     sceneIndexRef.current = 0;
-    setSceneIndex(0);
 
     const gl =
       canvas.getContext("webgl", { alpha: false, antialias: false }) ??
@@ -125,7 +124,7 @@ export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Ar
 
     setFallback(0);
 
-    if (!gl) {
+    if (reduceMotion || !gl) {
       return;
     }
 
@@ -263,12 +262,12 @@ export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Ar
       setShaderReady(false);
       return;
     }
-  }, [scenes]);
+  }, [scenes, reduceMotion]);
 
   useEffect(() => {
     const section = sectionRef.current;
     const canvas = canvasRef.current;
-    if (!section || !canvas) return;
+    if (!section || !canvas || reduceMotion) return;
 
     const render = () => {
       const runtime = runtimeRef.current;
@@ -318,11 +317,11 @@ export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Ar
 
     rafRef.current = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [scenes]);
+  }, [reduceMotion, scenes]);
 
   return (
-    <section ref={sectionRef} className="relative h-[860vh] bg-[#f6f1e8]">
-      <div className="sticky top-0 h-screen overflow-hidden bg-[#f6f1e8]">
+    <section ref={sectionRef} className={reduceMotion ? "relative min-h-[88svh] bg-[#f6f1e8]" : "relative h-[860vh] bg-[#f6f1e8]"}>
+      <div className={reduceMotion ? "relative min-h-[88svh] overflow-hidden bg-[#f6f1e8]" : "sticky top-0 h-screen overflow-hidden bg-[#f6f1e8]"}>
         <div className="absolute inset-0">
           {scenes.map((scene, index) => (
             <img
