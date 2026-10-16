@@ -438,15 +438,15 @@ export default function Page() {
         </section>
 
 
-        <section id="portfolio" className="relative overflow-hidden bg-[#e8ded1] text-[#1d1713]">
+        <section id="portfolio" className="relative overflow-hidden bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-40">
             <Reveal>
               <div className="flex items-end justify-between gap-10">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">07 · Selected work & details</p>
-                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">Real spaces.<br /><em className="text-[#9d1714]">Personal solutions.</em></h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Portfolio · Selected images</p>
+                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">Real spaces.<br /><em className="text-[#a13b2e]">Specific solutions.</em></h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-[#685b51] md:block">Published project photographs appear here. Add or replace images through the admin Portfolio library.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#6f6054] md:block">Your published project photographs lead this gallery. Upload, curate and replace them from the Portfolio Library in admin.</p>
               </div>
             </Reveal>
 
@@ -481,36 +481,36 @@ export default function Page() {
               ))}
             </div>
 
-            <div className="mt-12 flex items-center justify-between border-t border-[#1d1713]/15 pt-5">
-              <span className="text-[8px] uppercase tracking-[.18em] text-[#8c6f4f]">Project gallery · Updated as work is published</span>
+            <div className="mt-12 flex items-center justify-between border-t border-[#2b211a]/15 pt-5">
+              <span className="text-[8px] uppercase tracking-[.18em] text-[#956c3d]">Selected work · Updated as new images are published</span>
               <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
             </div>
           </div>
         </section>
 
-        <section id="eye" className="relative overflow-hidden bg-[#16100d] text-white">
+        <section id="eye" className="relative overflow-hidden bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">08 · The designer&apos;s eye</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">We see the<br /><em className="text-[#e3bd71]">quiet decisions.</em></h2>
-              <p className="mt-8 max-w-md text-sm leading-7 text-white/48">A premium room rarely announces why it works. The proportion, the visual axis, the light, the edge of a material — those are the decisions we want you to notice only after you feel them.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">The details that do the work</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">Good design is<br /><em className="text-[#a13b2e]">felt in the details.</em></h2>
+              <p className="mt-8 max-w-md text-sm leading-7 text-[#6f6054]">A room need not look expensive to feel considered. Proportion, light, storage and the meeting point between materials quietly shape how it works every day.</p>
             </Reveal>
 
             <div className="grid gap-8">
               {[
-                {img: IMG.living, tag:"01 · PROPORTION", title:"A visual axis is felt before it is seen.", note:"Furniture, openings and sightlines are composed so the room reads as one quiet movement."},
-                {img: IMG.kitchen, tag:"02 · MATERIAL", title:"Contrast gives restraint a pulse.", note:"Stone against timber. Matte beside reflection. Warm metal against a quieter surface."},
-                {img: IMG.detail, tag:"03 · LIGHT", title:"Good lighting edits the room.", note:"Layers of light reveal depth, soften edges and change the atmosphere without changing the architecture."}
+                {img: images.proportion, tag:"01 · PROPORTION", title:"A layout should make sense before it makes an impression.", note:"Sightlines, furniture and circulation are arranged around the room—not forced into a template."},
+                {img: images.marble, tag:"02 · MATERIAL", title:"Choose materials for more than the photograph.", note:"Weigh look, touch, upkeep and cost together so a finish earns its place in the brief."},
+                {img: images.detail, tag:"03 · LIGHT", title:"Light changes how a room lives.", note:"Daylight, task lighting and softer evening layers bring out the architecture without unnecessary complexity."}
               ].map((item, i) => (
-                <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-white/12 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
+                <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-[#2b211a]/15 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img src={item.img} alt={item.title} className="h-full w-full object-cover transition duration-[1400ms] ease-out group-hover:scale-[1.06]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute left-5 top-5 text-[8px] uppercase tracking-[.2em] text-[#ecd08b]">{item.tag}</div>
+                    <div className="absolute left-5 top-5 text-[8px] uppercase tracking-[.2em] text-white">{item.tag}</div>
                   </div>
                   <div>
                     <h3 className="max-w-xl font-serif text-4xl leading-[.98] tracking-[-.03em] md:text-5xl">{item.title}</h3>
-                    <p className="mt-5 max-w-lg text-sm leading-7 text-white/45">{item.note}</p>
+                    <p className="mt-5 max-w-lg text-sm leading-7 text-[#6f6054]">{item.note}</p>
                   </div>
                 </Reveal>
               ))}
@@ -518,19 +518,19 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="philosophy" className="bg-[#e9dfd2] text-[#1d1713]">
+        <section id="philosophy" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.7fr_1.3fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">09 · Philosophy</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">The room before the room.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Our philosophy</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Custom by design.<br /><em className="text-[#a13b2e]">Thoughtful by nature.</em></h2>
             </Reveal>
             <Reveal delay={0.08}>
               <div className="grid gap-0 border-t border-[#1d1713]/15">
                 {principles.map(([n, h, p]) => (
-                  <div key={n} className="grid gap-5 border-b border-[#1d1713]/15 py-8 md:grid-cols-[64px_280px_1fr] md:items-start">
-                    <span className="text-[10px] tracking-[.2em] text-[#a17745]">{n}</span>
+                  <div key={n} className="grid gap-5 border-b border-[#2b211a]/15 py-8 md:grid-cols-[64px_280px_1fr] md:items-start">
+                    <span className="text-[10px] tracking-[.2em] text-[#956c3d]">{n}</span>
                     <h3 className="font-serif text-3xl">{h}</h3>
-                    <p className="max-w-xl text-sm leading-7 text-[#665b52]">{p}</p>
+                    <p className="max-w-xl text-sm leading-7 text-[#6f6054]">{p}</p>
                   </div>
                 ))}
               </div>
