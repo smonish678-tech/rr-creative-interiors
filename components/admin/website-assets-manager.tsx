@@ -98,7 +98,8 @@ export default function WebsiteAssetsManager() {
   async function onUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!files.length || busy) return;
-    if (files.some((file) => !file.type.startsWith("image/"))) {
+    const websiteImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+    if (files.some((file) => !websiteImageTypes.has(file.type))) {
       setError("Upload image files only. Use the Portfolio library for video.");
       return;
     }
@@ -202,7 +203,7 @@ export default function WebsiteAssetsManager() {
         <div className="rr-panel-heading"><div><h2>Upload logo or photography</h2><p>JPG, PNG, WebP or AVIF · up to 30 MB each</p></div><span className="rr-upload-lock"><Upload size={15}/> Admin only</span></div>
         <form className="rr-portfolio-upload-form" onSubmit={onUpload}>
           <label className="rr-dropzone" htmlFor="rr-website-asset-files">
-            <input id="rr-website-asset-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif,image/heic" onChange={handleFileChange} disabled={busy}/>
+            <input id="rr-website-asset-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleFileChange} disabled={busy}/>
             <span className="rr-dropzone-icon"><ImagePlus size={22}/></span>
             <b>Choose your logo or project photos</b>
             <small>You can select several images at once. Uploads are saved to the RR website image library.</small>
