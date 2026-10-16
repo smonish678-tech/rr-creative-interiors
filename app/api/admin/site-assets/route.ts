@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       }
       if (config.assets.length >= 500) return NextResponse.json({ error: "The website image library has reached its 500-item limit." }, { status: 400 });
       const fileName = typeof input.fileName === "string" ? input.fileName.trim().slice(0, 160) : "website-image";
-      const asset: WebsiteAssetRecord = { id: randomUUID(), url, pathname, contentType, fileName: fileName || "website-image", createdAt: new Date().toISOString() };
+      const sizeBytes = typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? Math.max(0, Math.round(input.sizeBytes)) : 0;
+      const asset: WebsiteAssetRecord = { id: randomUUID(), url, pathname, contentType, fileName: fileName || "website-image", sizeBytes, createdAt: new Date().toISOString() };
       await saveWebsiteAssetConfig({ ...config, assets: [asset, ...config.assets] });
       return NextResponse.json({ asset }, { status: 201, headers: { "Cache-Control": "no-store" } });
     }
