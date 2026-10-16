@@ -418,7 +418,7 @@ export default function Page() {
               </Reveal>
               <div className="grid gap-6">
                 <Reveal className="group relative min-h-[300px] overflow-hidden">
-                  <img src={images.kitchen} alt="Custom kitchen interior design" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                  <img src={images.kitchen} alt="Custom kitchen interior design" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   <div className="absolute bottom-0 p-7">
                     <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Kitchen · Planned to fit</p>
@@ -469,7 +469,7 @@ export default function Page() {
                         src={item.src}
                         alt={item.title || item.project || `Interior design reference ${i + 1}`}
                         loading="lazy"
-                        className="block h-auto w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                        className="block h-auto w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
                       />
                     )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
@@ -674,13 +674,13 @@ export default function Page() {
               alt="RR Creative Interiors"
               className="h-14 w-auto object-contain"
             />
-            <p className="mt-6 max-w-md text-sm leading-7 text-white/42">
+            <p className="mt-6 max-w-md text-sm leading-7 text-[#6f6054]">
               Fully customised residential and commercial interiors, planned around your brief, your priorities and an agreed scope.
             </p>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Explore</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/62">
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#956c3d]">Explore</p>
+            <div className="mt-5 grid gap-3 text-sm text-[#514237]">
               <a href="#spaces">Spaces</a>
               <a href="#eye">The Eye</a>
               <a href="#services">Services</a>
@@ -689,15 +689,15 @@ export default function Page() {
             </div>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Contact</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/62">
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#956c3d]">Contact</p>
+            <div className="mt-5 grid gap-3 text-sm text-[#514237]">
               <a href="tel:+919901592929">+91 99015 92929</a>
               <a href="mailto:sales@rrcreativeinteriors.in">sales@rrcreativeinteriors.in</a>
               <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
             </div>
           </div>
         </div>
-        <div className="border-t border-white/10 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-white/25 md:px-10">
+        <div className="border-t border-[#2b211a]/15 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-[#6f6054] md:px-10">
           © 2026 RR Creative Interiors · Bengaluru · Fully customised interiors, thoughtfully priced.
         </div>
       </footer>
