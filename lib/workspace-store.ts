@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { get, list, put } from "@vercel/blob";
 import { DEFAULT_SALES_PIPELINE, normalizeSalesPipeline, type SalesPipelineStage } from "@/lib/sales-pipeline";
-import { normalizeCustomerPhone, resolveCustomerIdentity, type CustomerRecord } from "@/lib/customer-matching";
+import { resolveCustomerIdentity, type CustomerRecord } from "@/lib/customer-matching";
 
 export type WorkspaceRecord = Record<string, unknown>;
 
