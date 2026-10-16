@@ -307,7 +307,7 @@ function ContactForm() {
         <div className="rr-form-foot">
           <div className="rr-form-note">
             <span className="rr-signal"></span>
-            Your enquiry is saved to our CRM first. WhatsApp is optional.
+            A thoughtful first conversation. No package pitch.
           </div>
           <button type="submit" className="rr-form-submit" disabled={saving || sent}>
             <span>{saving ? "Saving enquiry…" : sent ? "Enquiry received" : "Send enquiry"}</span>
@@ -582,48 +582,48 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="bg-[#16100d] text-white">
+        <section className="bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-8 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">12 · Material study</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Texture is where the design becomes physical.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Materials · Finish · Value</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Choose for the room you will live in.</h2>
             </Reveal>
             <Reveal delay={0.08} className="relative min-h-[540px] overflow-hidden">
-              <img src="https://i.pinimg.com/originals/2e/9f/ef/2e9fefb451405b618d9028b79f2cf94c.png" alt="Luxury materials moodboard visual reference" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <img src={images.materials} alt="Interior materials and finishes" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/48 via-transparent to-transparent" />
               <div className="absolute bottom-7 left-7 right-7 flex items-end justify-between">
-                <div><p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Marble · timber · brass · stone</p><p className="mt-2 max-w-md text-sm leading-6 text-white/70">Temporary moodboard reference. The live site can later use RR&apos;s actual material library and site photography.</p></div>
+                <div><p className="text-[9px] uppercase tracking-[.2em] text-white/90">Finish · Texture · Maintenance</p><p className="mt-2 max-w-md text-sm leading-6 text-white/90">The right choice balances appearance, day-to-day use, upkeep and the agreed budget. Not every surface needs the most expensive option.</p></div>
                 <span className="font-serif text-5xl text-white/35">RR</span>
               </div>
             </Reveal>
           </div>
         </section>
 
-        <section id="journal" className="bg-[#e8ded1] text-[#1d1713]">
+        <section id="journal" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">13 · Journal</p>
-              <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">Ideas worth living with.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">A few things worth getting right</p>
+              <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">The details are personal.</h2>
             </Reveal>
-            <div className="mt-14 grid gap-0 border-t border-[#1d1713]/15 md:grid-cols-3">
+            <div className="mt-14 grid gap-0 border-t border-[#2b211a]/15 md:grid-cols-3">
               {journal.map(([n,h,p])=>(
-                <article key={n} className="border-b border-[#1d1713]/15 p-8 md:border-r md:last:border-r-0">
+                <article key={n} className="border-b border-[#2b211a]/15 p-8 md:border-r md:last:border-r-0">
                   <span className="text-[9px] tracking-[.2em] text-[#a17745]">{n}</span>
                   <h3 className="mt-12 font-serif text-3xl leading-tight">{h}</h3>
                   <p className="mt-5 text-sm leading-7 text-[#695d53]">{p}</p>
-                  <a href="https://rrcreativeinteriors.in/" target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 text-[9px] uppercase tracking-[.16em]">Read the studio journal <ChevronRight size={14} /></a>
+                  <a href="#contact" className="mt-8 inline-flex items-center gap-2 text-[9px] uppercase tracking-[.16em] text-[#a13b2e]">Discuss your project <ChevronRight size={14} /></a>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="contact" className="bg-[#f1e9dc] text-[#1d1713]">
+        <section id="contact" className="bg-[#efe7dc] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.82fr_1.18fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">14 · Start a project</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Let&apos;s make room for what matters.</h2>
-              <p className="mt-8 max-w-xl text-lg leading-8 text-[#695d53]">Tell us about the home, office, retail space or turnkey project you have in mind.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Tell us what you have in mind</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Your space. Your brief. Your budget.</h2>
+              <p className="mt-8 max-w-xl text-lg leading-8 text-[#6f6054]">Tell us about the property, the changes you want and the budget you would like us to work within. We will start with the brief—not a pre-set package.</p>
               <div className="mt-10 grid gap-3 text-sm">
                 <a href="tel:+919901592929" className="inline-flex items-center gap-3"><Phone size={16} /> +91 99015 92929</a>
                 <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3">WhatsApp enquiry ↗</a>
@@ -652,8 +652,8 @@ export default function Page() {
           <div className="rr-footer-cta-glow" aria-hidden="true" />
           <div className="rr-footer-cta-inner">
             <div>
-              <p className="rr-footer-kicker">13 · Start something worth keeping</p>
-              <h2>Give your space<br /><em>a point of view.</em></h2>
+              <p className="rr-footer-kicker">Fully customised · thoughtfully priced</p>
+              <h2>Make it yours.<br /><em>Make it make sense.</em></h2>
             </div>
             <a href="#contact" className="rr-footer-cta-orbit" aria-label="Start a project">
               <span>START<br />A PROJECT</span>
@@ -661,8 +661,8 @@ export default function Page() {
             </a>
           </div>
           <div className="rr-footer-cta-line">
-            <span>Residential · Commercial · Turnkey</span>
-            <span>Bangalore · Karnataka</span>
+            <span>Residential · Commercial · Renovation · Turnkey</span>
+            <span>Bengaluru · Karnataka</span>
           </div>
         </section>
 
@@ -671,10 +671,10 @@ export default function Page() {
             <img
               src={siteAssets.logo || RR_LOGO}
               alt="RR Creative Interiors"
-              className="h-14 w-auto brightness-110"
+              className="h-14 w-auto object-contain"
             />
             <p className="mt-6 max-w-md text-sm leading-7 text-white/42">
-              Beyond The Ordinary — interior environments shaped around how people actually live.
+              Fully customised residential and commercial interiors, planned around your brief, your priorities and an agreed scope.
             </p>
           </div>
           <div>
