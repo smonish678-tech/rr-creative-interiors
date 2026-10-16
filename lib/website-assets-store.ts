@@ -77,7 +77,7 @@ export async function saveWebsiteAssetConfig(config: WebsiteAssetConfig): Promis
 }
 
 export function publicWebsiteAssetMap(config: WebsiteAssetConfig): Partial<Record<WebsiteAssetSlot, string>> {
-  const byId = new Map(config.assets.map((asset) => [asset.id, asset.url]));
+  const byId = new Map<string, string>(config.assets.map((asset) => [asset.id, asset.url] as const));
   const result: Partial<Record<WebsiteAssetSlot, string>> = {};
   for (const slot of WEBSITE_ASSET_SLOT_OPTIONS) {
     const id = config.assignments[slot.key];
