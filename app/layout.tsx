@@ -27,11 +27,7 @@ export const metadata: Metadata = {
   publisher: "RR Creative Interiors",
   alternates: { canonical: "/" },
   icons: {
-    icon: [
-      { url: favicon, type: "image/png" },
-      { url: favicon, sizes: "192x192", type: "image/png" },
-      { url: favicon, sizes: "512x512", type: "image/png" }
-    ],
+    icon: [{ url: favicon }],
     apple: favicon
   },
   openGraph: {
