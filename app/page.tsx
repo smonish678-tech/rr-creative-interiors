@@ -390,7 +390,7 @@ export default function Page() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://rrcreativeinteriors.in/#website","url":"https://rrcreativeinteriors.in/","name":"RR Creative Interiors","alternateName":"RR Interiors","description":"RR Creative Interiors — Beyond The Ordinary. Interior design studio in Bangalore.","inLanguage":"en-IN"},{"@type":"Organization","@id":"https://rrcreativeinteriors.in/#organization","name":"RR Creative Interiors","alternateName":"RR Interiors","url":"https://rrcreativeinteriors.in/","logo":{"@type":"ImageObject","url":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png","contentUrl":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png"},"telephone":["+919901592929","+919110241957"],"email":"sales@rrcreativeinteriors.in","address":{"@type":"PostalAddress","streetAddress":"32, 2nd Cross Rd, KNB Aaradya layout, Kommaghatta","addressLocality":"Bengaluru","addressRegion":"Karnataka","postalCode":"560060","addressCountry":"IN"},"areaServed":{"@type":"City","name":"Bengaluru"},"description":"Interior design studio in Bangalore offering residential, commercial and turnkey interior design services.","knowsAbout":["Residential interior design","Commercial interior design","Turnkey interiors","Modular kitchens","Wardrobes and storage","Lighting and ceiling design"]}]})}} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://rrcreativeinteriors.in/#website","url":"https://rrcreativeinteriors.in/","name":"RR Creative Interiors","alternateName":"RR Interiors","description":"RR Creative Interiors creates fully customised interiors in Bengaluru, thoughtfully planned around each client’s brief and budget.","inLanguage":"en-IN"},{"@type":"Organization","@id":"https://rrcreativeinteriors.in/#organization","name":"RR Creative Interiors","alternateName":"RR Interiors","url":"https://rrcreativeinteriors.in/","logo":{"@type":"ImageObject","url":siteAssets.brandLogo || "https://rrcreativeinteriors.in/rr-media/logo/rr%205.png","contentUrl":siteAssets.brandLogo || "https://rrcreativeinteriors.in/rr-media/logo/rr%205.png"},"telephone":["+919901592929","+919110241957"],"email":"sales@rrcreativeinteriors.in","address":{"@type":"PostalAddress","streetAddress":"32, 2nd Cross Rd, KNB Aaradya layout, Kommaghatta","addressLocality":"Bengaluru","addressRegion":"Karnataka","postalCode":"560060","addressCountry":"IN"},"areaServed":{"@type":"City","name":"Bengaluru"},"description":"Interior design studio in Bengaluru offering residential, commercial and turnkey interior design services.","knowsAbout":["Residential interior design","Commercial interior design","Turnkey interiors","Modular kitchens","Wardrobes and storage","Lighting and ceiling design"]}]})}} />
       <SmoothScroll />
       <Nav logoUrl={logoUrl} />
       <main id="top">
@@ -519,7 +519,7 @@ export default function Page() {
                 {img: IMG.kitchen, tag:"02 · MATERIAL", title:"Contrast gives restraint a pulse.", note:"Stone against timber. Matte beside reflection. Warm metal against a quieter surface."},
                 {img: IMG.detail, tag:"03 · LIGHT", title:"Good lighting edits the room.", note:"Layers of light reveal depth, soften edges and change the atmosphere without changing the architecture."}
               ].map((item, i) => (
-                <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-white/12 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
+                <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-[#27231e]/15 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img src={item.img} alt={item.title} className="h-full w-full object-cover transition duration-[1400ms] ease-out group-hover:scale-[1.06]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -527,7 +527,7 @@ export default function Page() {
                   </div>
                   <div>
                     <h3 className="max-w-xl font-serif text-4xl leading-[.98] tracking-[-.03em] md:text-5xl">{item.title}</h3>
-                    <p className="mt-5 max-w-lg text-sm leading-7 text-white/45">{item.note}</p>
+                    <p className="mt-5 max-w-lg text-sm leading-7 text-[#63584e]">{item.note}</p>
                   </div>
                 </Reveal>
               ))}
@@ -564,9 +564,9 @@ export default function Page() {
               </div>
             </Reveal>
 
-            <div className="mt-14 border-t border-white/12">
+            <div className="mt-14 border-t border-[#27231e]/15">
               {services.map(([n, name, desc, imageKey]) => (
-                <motion.div key={n} className="service-row group relative grid gap-5 border-b border-[#28231e]/15 py-8 md:grid-cols-[70px_1fr_1fr_32px] md:items-center" whileHover={{ transform: "translateX(5px)" }}>
+                <div key={n} className="service-row group relative grid gap-5 border-b border-[#28231e]/15 py-8 md:grid-cols-[70px_1fr_1fr_32px] md:items-center" >
                   <span className="text-[10px] tracking-[.2em] text-[#98683f]">{n}</span>
                   <h3 className="font-serif text-3xl md:text-4xl">{name}</h3>
                   <p className="max-w-lg text-sm leading-7 text-[#63584e]">{desc}</p>
@@ -574,7 +574,7 @@ export default function Page() {
                   <div className="service-preview pointer-events-none absolute right-[4%] top-1/2 z-20 hidden aspect-[4/3] w-[250px] -translate-y-1/2 overflow-hidden border border-[#28231e]/10 shadow-[0_24px_70px_rgba(45,34,22,.12)] md:block">
                     <img src={sitePhotos[imageKey as keyof typeof sitePhotos]} alt="" className="h-full w-full object-cover opacity-0 transition duration-250 group-hover:opacity-100" />
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -690,8 +690,8 @@ export default function Page() {
               alt="RR Creative Interiors"
               className="h-14 w-auto object-contain"
             />
-            <p className="mt-6 max-w-md text-sm leading-7 text-white/42">
-              Beyond The Ordinary — interior environments shaped around how people actually live.
+            <p className="mt-6 max-w-md text-sm leading-7 text-[#63584e]">
+              Fully customised interiors, shaped around real life and an agreed project scope.
             </p>
           </div>
           <div>
@@ -706,15 +706,15 @@ export default function Page() {
           </div>
           <div>
             <p className="text-[9px] uppercase tracking-[.2em] text-[#98683f]">Contact</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/62">
+            <div className="mt-5 grid gap-3 text-sm text-[#63584e]">
               <a href="tel:+919901592929">+91 99015 92929</a>
               <a href="mailto:sales@rrcreativeinteriors.in">sales@rrcreativeinteriors.in</a>
               <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
             </div>
           </div>
         </div>
-        <div className="border-t border-white/10 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-white/25 md:px-10">
-          © 2026 RR Creative Interiors · Bangalore · Demo experience — replace visual references with real RR work before launch
+        <div className="border-t border-[#27231e]/15 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-[#63584e] md:px-10">
+          © 2026 RR Creative Interiors · Bengaluru · Demo experience — replace visual references with real RR work before launch
         </div>
       </footer>
     </>
