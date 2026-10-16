@@ -41,8 +41,9 @@ function isValidRecord(value: unknown): value is SiteAssetRecord {
   if (typeof record.url !== "string" || typeof record.pathname !== "string" || typeof record.contentType !== "string" || typeof record.updatedAt !== "string") return false;
   try {
     const url = new URL(record.url);
+    const urlPath = decodeURIComponent(url.pathname).replace(/^\/+/, "");
     return url.protocol === "https:" && url.hostname.endsWith(".blob.vercel-storage.com") &&
-      record.pathname.startsWith(SITE_ASSET_UPLOAD_PREFIX) && url.pathname.includes(record.pathname.split("/").pop() || "__invalid__") &&
+      record.pathname.startsWith(SITE_ASSET_UPLOAD_PREFIX) && urlPath === record.pathname &&
       ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic"].includes(record.contentType);
   } catch { return false; }
 }
