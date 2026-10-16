@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     images: [
       {
         url: socialImage,
-        alt: "RR Creative Interiors — interior design in Bangalore",
+        alt: "RR Creative Interiors — custom interiors in Bengaluru",
         width: 2000,
         height: 1333
       }
