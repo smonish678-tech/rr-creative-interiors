@@ -400,7 +400,7 @@ export default function MorphScrollHero({ assets = {} }: { assets?: Partial<Reco
         </div>
 
         <div className="absolute right-6 top-[96px] z-20 md:right-[6.4vw] md:top-[102px]">
-          <div className="font-serif text-2xl text-white md:text-3xl">
+          <div className="font-serif text-2xl text-[#27231f] md:text-3xl">
             <span>{String(sceneIndex + 1).padStart(2, "0")}</span>
             <span className="mx-2 text-[#27231f]/30">/</span>
             <span className="font-sans text-[10px] tracking-[0.2em] text-[#27231f]/55">08</span>
