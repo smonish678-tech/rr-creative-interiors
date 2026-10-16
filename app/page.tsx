@@ -75,7 +75,7 @@ function Nav({ logoUrl }: { logoUrl: string }) {
   const [active, setActive] = useState("Home");
   const { scrollYProgress } = useScroll();
 
-  const navigation = [
+  const navigation = useMemo(() => [
     { name: "Home", href: "#top", id: "top" },
     { name: "About", href: "#about", id: "about" },
     { name: "Spaces", href: "#spaces", id: "spaces" },
@@ -85,7 +85,7 @@ function Nav({ logoUrl }: { logoUrl: string }) {
     { name: "Process", href: "#process", id: "process" },
     { name: "Notes", href: "#journal", id: "journal" },
     { name: "Contact", href: "#contact", id: "contact" }
-  ];
+  ], []);
 
   useEffect(() => {
     const targets = navigation
@@ -111,7 +111,7 @@ function Nav({ logoUrl }: { logoUrl: string }) {
 
     targets.forEach((target) => observer.observe(target));
     return () => observer.disconnect();
-  }, []);
+  }, [navigation]);
 
   return (
     <motion.header className="rr-header fixed inset-x-0 top-0 z-50">
