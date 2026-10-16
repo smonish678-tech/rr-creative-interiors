@@ -7,6 +7,7 @@ import {
   Plus, RefreshCw, Trash2, Upload, X
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { SITE_IMAGE_SLOTS, type SiteImageSlot } from "@/lib/site-image-slots";
 
 type PortfolioAsset = {
   id: string;
@@ -19,6 +20,7 @@ type PortfolioAsset = {
   description: string;
   category: string;
   published: boolean;
+  siteSlot?: SiteImageSlot;
   createdAt: string;
 };
 
@@ -31,6 +33,7 @@ export default function PortfolioManager() {
   const [project, setProject] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Residential");
+  const [siteSlot, setSiteSlot] = useState<SiteImageSlot>("gallery");
   const [published, setPublished] = useState(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -97,6 +100,14 @@ export default function PortfolioManager() {
       setError("Choose one or more photos or video clips first.");
       return;
     }
+    if (siteSlot !== "gallery" && files.length > 1) {
+      setError("Choose one file when assigning it to a specific website placement. Multiple files can be added to the portfolio gallery.");
+      return;
+    }
+    if (siteSlot !== "gallery" && files.some((file) => !file.type.startsWith("image/"))) {
+      setError("Website logo and image placements accept photos only. Videos belong in the portfolio gallery.");
+      return;
+    }
     const invalid = files.find((file) => {
       const allowed = file.type.startsWith("image/") || ["video/mp4", "video/webm", "video/quicktime"].includes(file.type);
       const limit = file.type.startsWith("video/") ? 150 * 1024 * 1024 : 30 * 1024 * 1024;
@@ -136,6 +147,7 @@ export default function PortfolioManager() {
             description: description.trim(),
             category,
             published,
+            siteSlot,
           }),
         });
         const data = await response.json().catch(() => ({}));
@@ -145,6 +157,7 @@ export default function PortfolioManager() {
       setFiles([]);
       setTitle("");
       setDescription("");
+      setSiteSlot("gallery");
       if (inputRef.current) inputRef.current.value = "";
       setNotice(`${uploadedCount} media ${uploadedCount === 1 ? "item" : "items"} uploaded successfully. ${published ? "Published items will appear in the website portfolio." : "Items are saved as drafts."}`);
       await refresh();
@@ -176,6 +189,30 @@ export default function PortfolioManager() {
     }
   }
 
+  async function updateSiteSlot(item: PortfolioAsset, nextSlot: SiteImageSlot) {
+    if (item.siteSlot === nextSlot || busy) return;
+    if (nextSlot !== "gallery" && item.kind !== "image") {
+      setError("Only photos can be assigned to a logo or website image placement.");
+      return;
+    }
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/portfolio", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, siteSlot: nextSlot }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not update the website placement.");
+      await refresh();
+      const placement = SITE_IMAGE_SLOTS.find((slot) => slot.value === nextSlot)?.label || "Portfolio gallery";
+      setNotice(nextSlot === "gallery" ? `“${item.title}” is back in the public portfolio gallery.` : `“${item.title}” now controls: ${placement}.`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not update the website placement.");
+    }
+  }
+
   async function removeItem(item: PortfolioAsset) {
     if (!window.confirm(`Remove “${item.title}” from the portfolio? This also deletes the uploaded file.`)) return;
     setError("");
@@ -196,8 +233,8 @@ export default function PortfolioManager() {
       <div className="rr-page-heading">
         <div>
           <span className="rr-eyebrow">THE WORK, PRESENTED WITH INTENTION</span>
-          <h1>Portfolio library</h1>
-          <p>Upload completed projects, control what visitors see, and keep the gallery current.</p>
+          <h1>Website assets &amp; portfolio</h1>
+          <p>Replace the logo, choose the photos used across the homepage, and publish your finished work. Changes appear on the live site after publishing.</p>
         </div>
         <button className="rr-primary" type="button" onClick={() => inputRef.current?.click()}>
           <Plus size={17} /> Add media
@@ -215,7 +252,7 @@ export default function PortfolioManager() {
           <AlertCircle size={19} />
           <div>
             <b>Connect the media library once in Vercel</b>
-            <p>Create a public Blob store for media and a separate private Blob store for the manifest. Set <code>BLOB_READ_WRITE_TOKEN</code> and <code>RR_PORTFOLIO_MANIFEST_BLOB_TOKEN</code>, plus <code>ADMIN_EMAIL</code>, <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_SECRET</code>, in Preview and Production. Never use <code>NEXT_PUBLIC_</code> prefixes for secrets.</p>
+            <p>Create the connected Vercel Blob media store and set <code>BLOB_READ_WRITE_TOKEN</code> plus the admin environment values in Preview and Production. Uploaded photos and logos are public website assets; only administrators can upload, publish, replace or remove them.</p>
           </div>
         </div>
       )}
@@ -251,6 +288,7 @@ export default function PortfolioManager() {
             </div>
           )}
           <div className="rr-portfolio-form-grid">
+            <label className="rr-wide-field">Website placement <small>Optional</small><select value={siteSlot} onChange={(event) => setSiteSlot(event.target.value as SiteImageSlot)} disabled={busy}>{SITE_IMAGE_SLOTS.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}</select><small>{SITE_IMAGE_SLOTS.find((slot) => slot.value === siteSlot)?.help}</small></label>
             <label>Project name <span>*</span><input value={project} onChange={(e) => setProject(e.target.value)} placeholder="e.g. Indiranagar residence" maxLength={140} required disabled={busy} /></label>
             <label>Media title <small>Optional</small><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Warm oak living room" maxLength={140} disabled={busy} /></label>
             <label>Category<select value={category} onChange={(e) => setCategory(e.target.value)} disabled={busy}>{categories.map((value) => <option key={value}>{value}</option>)}</select></label>
@@ -295,6 +333,7 @@ export default function PortfolioManager() {
                 <span className="rr-portfolio-category">{item.category}</span>
                 <h3>{item.title}</h3>
                 <p className="rr-portfolio-project">{item.project}</p>
+                <label className="rr-asset-placement"><span>Website placement</span><select aria-label={`Website placement for ${item.title}`} value={item.siteSlot || "gallery"} onChange={(event) => void updateSiteSlot(item, event.target.value as SiteImageSlot)}>{SITE_IMAGE_SLOTS.filter((slot) => item.kind === "image" || slot.value === "gallery").map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}</select><small>{SITE_IMAGE_SLOTS.find((slot) => slot.value === (item.siteSlot || "gallery"))?.help}</small></label>
                 {item.description && <p className="rr-portfolio-caption">{item.description}</p>}
                 <div className="rr-portfolio-card-actions">
                   <button className="rr-secondary" type="button" onClick={() => void updatePublished(item)}>{item.published ? <EyeOff size={14} /> : <Eye size={14} />}{item.published ? "Unpublish" : "Publish"}</button>
