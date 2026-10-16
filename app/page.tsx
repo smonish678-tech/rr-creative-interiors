@@ -227,7 +227,7 @@ function ContactForm() {
     }
   };
 
-  const budgetOptions = ["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"];
+  const budgetOptions = ["Under ₹5L", "₹5–10L", "₹10–20L", "₹20L+"];
 
   return (
     <div className="rr-enquiry-shell">
