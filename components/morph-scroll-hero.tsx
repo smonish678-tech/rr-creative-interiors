@@ -13,59 +13,59 @@ type Scene = {
 const SCENES: Scene[] = [
   {
     src: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2600&q=88",
-    kicker: "01 · THE BEGINNING",
-    title: "Beyond|The Ordinary.",
-    body: "A considered interior doesn't begin with furniture. It begins with understanding the people, the place and the life that will happen inside it.",
-    side: "A point of view before a floor plan."
+    kicker: "01 · YOUR BRIEF",
+    title: "Your taste.|Your terms.",
+    body: "Every project starts with how you live, what you value, what needs to work better and what you want to invest. The design follows your brief—not a fixed package.",
+    side: "Personal by design."
   },
   {
     src: "/rr-media/hero/Interior%20Inspiration.jpg",
-    kicker: "02 · THE FIRST IMPRESSION",
-    title: "Enter|with intention.",
-    body: "The first room sets the emotional grammar for everything after it. We shape arrival, movement and atmosphere before the eye starts collecting details.",
-    side: "Arrival is part of the architecture."
+    kicker: "02 · MADE TO FIT",
+    title: "Nothing|off the shelf.",
+    body: "Layouts, storage, finishes and furniture are tailored to your space. We begin with what is possible, then make deliberate choices around what matters most.",
+    side: "Customised to your space."
   },
   {
     src: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2600&q=88",
-    kicker: "03 · HOW WE THINK",
-    title: "We design|for living.",
-    body: "Layouts, light, circulation and storage are solved before decoration. The space has to work beautifully before it can look beautiful.",
-    side: "Function is part of the aesthetic."
+    kicker: "03 · EVERYDAY USE",
+    title: "Designed|for real life.",
+    body: "Movement, light, storage and everyday routines come before decoration. A beautiful room should also make ordinary days work better.",
+    side: "Function is part of the design."
   },
   {
     src: "/rr-media/hero/download.jpg",
-    kicker: "04 · THE SPATIAL LINE",
-    title: "Let the room|breathe.",
-    body: "Negative space is not empty. It is what allows furniture, light and architecture to read as one composition.",
-    side: "Restraint creates room for feeling."
+    kicker: "04 · THOUGHTFUL CHOICES",
+    title: "Spend where|it matters.",
+    body: "Not every surface needs to be a statement. We help weigh material, durability, finish and priorities so the budget works harder without losing the character of the space.",
+    side: "Good choices beat excess."
   },
   {
     src: "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=2600&q=88",
-    kicker: "05 · HOW WE BUILD",
-    title: "Every detail|has a reason.",
-    body: "Materials, proportions, hardware, lighting and execution carry the same design intent from the first drawing to the final handover.",
-    side: "The smallest decisions shape the room."
+    kicker: "05 · CRAFT & DETAIL",
+    title: "Made to measure.|Made to last.",
+    body: "From cabinetry and hardware to lighting and the meeting of materials, small decisions are planned to work together—and to stand up to daily use.",
+    side: "The detail is the difference."
   },
   {
     src: "/rr-media/hero/%23modern%20%23reception%20%23interior.jpg",
-    kicker: "06 · THE POINT OF VIEW",
-    title: "Character|over trends.",
-    body: "We use contemporary references as a vocabulary, not a template. The goal is a space with a point of view that still feels personal years later.",
-    side: "Good design outlives the trend."
+    kicker: "06 · COST CLARITY",
+    title: "Custom design.|Clear scope.",
+    body: "Before work begins, discuss the inclusions, finish levels and priorities. If the scope needs to change, talk through the options and cost before proceeding.",
+    side: "No guesswork in the brief."
   },
   {
     src: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=2600&q=88",
-    kicker: "07 · THE FEELING",
-    title: "Make room|for what matters.",
-    body: "The finished space should feel personal rather than over-designed — calm, tactile, memorable and completely at home.",
-    side: "Luxury is how a space makes you feel."
+    kicker: "07 · YOUR KIND OF SPACE",
+    title: "A whole home.|Or one room.",
+    body: "From a complete turnkey interior to a kitchen, wardrobe, renovation or design-only brief, the right scope depends on what your project actually needs.",
+    side: "The service fits the project."
   },
   {
     src: "/rr-media/hero/download%20%281%29.jpg",
-    kicker: "08 · BEYOND",
-    title: "A space that|stays with you.",
-    body: "The best interior is not the loudest one. It is the one you still notice in small ways long after the first impression has passed.",
-    side: "Beyond the visual. Into the everyday."
+    kicker: "08 · THE RESULT",
+    title: "Thoughtful design.|Thoughtfully priced.",
+    body: "A space should feel unmistakably yours—not expensive for the sake of it. We bring design thinking, practical decisions and a clear plan to the place you call your own.",
+    side: "Made for you. Planned with care."
   }
 ];
 
@@ -131,7 +131,7 @@ void main(){
 }
 `;
 
-export default function MorphScrollHero() {
+export default function MorphScrollHero({ assets = {} }: { assets?: Partial<Record<string, string>> }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fallbackRefs = useRef<(HTMLImageElement | null)[]>([]);
@@ -148,7 +148,8 @@ export default function MorphScrollHero() {
   } | null>(null);
   const sceneIndexRef = useRef(0);
 
-  const titleLines = useMemo(() => SCENES[sceneIndex].title.split("|"), [sceneIndex]);
+  const scenes = useMemo(() => SCENES.map((scene, index) => ({ ...scene, src: assets[`heroScene${index + 1}`] || scene.src })), [assets]);
+  const titleLines = useMemo(() => scenes[sceneIndex].title.split("|"), [scenes, sceneIndex]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -231,8 +232,8 @@ export default function MorphScrollHero() {
         uniforms[name] = gl.getUniformLocation(program!, `u_${name}`);
       });
 
-      const textures: (WebGLTexture | null)[] = new Array(SCENES.length).fill(null);
-      const aspects = new Array(SCENES.length).fill(1);
+      const textures: (WebGLTexture | null)[] = new Array(scenes.length).fill(null);
+      const aspects = new Array(scenes.length).fill(1);
 
       const upload = (img: HTMLImageElement, index: number) => {
         if (disposed) return;
@@ -250,7 +251,7 @@ export default function MorphScrollHero() {
       };
 
       Promise.all(
-        SCENES.map(
+        scenes.map(
           (scene, index) =>
             new Promise<void>((resolve) => {
               const img = new Image();
@@ -306,7 +307,7 @@ export default function MorphScrollHero() {
       setShaderReady(false);
       return;
     }
-  }, []);
+  }, [scenes]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -318,8 +319,8 @@ export default function MorphScrollHero() {
       const rect = section.getBoundingClientRect();
       const total = Math.max(section.offsetHeight - window.innerHeight, 1);
       const progress = Math.min(Math.max(-rect.top / total, 0), 1);
-      const scaled = progress * (SCENES.length - 1);
-      const nextIndex = Math.min(SCENES.length - 1, Math.floor(scaled));
+      const scaled = progress * (scenes.length - 1);
+      const nextIndex = Math.min(scenes.length - 1, Math.floor(scaled));
       const local = scaled - nextIndex;
 
       if (nextIndex !== sceneIndexRef.current) {
@@ -333,7 +334,7 @@ export default function MorphScrollHero() {
 
       if (runtime && readyRef.current) {
         const fromIndex = nextIndex;
-        const toIndex = Math.min(SCENES.length - 1, nextIndex + 1);
+        const toIndex = Math.min(scenes.length - 1, nextIndex + 1);
         const fromTex = runtime.textures[fromIndex] || runtime.textures.find(Boolean);
         const toTex = runtime.textures[toIndex] || runtime.textures.find(Boolean);
         if (fromTex && toTex) {
@@ -361,13 +362,13 @@ export default function MorphScrollHero() {
 
     rafRef.current = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafRef.current);
-  }, []);
+  }, [scenes]);
 
   return (
-    <section ref={sectionRef} className="relative h-[860vh] bg-[#0e0b09]">
-      <div className="sticky top-0 h-screen overflow-hidden bg-[#0e0b09]">
+    <section ref={sectionRef} className="relative h-[860vh] bg-[#f7f4ee]">
+      <div className="sticky top-0 h-screen overflow-hidden bg-[#f7f4ee]">
         <div className="absolute inset-0">
-          {SCENES.map((scene, index) => (
+          {scenes.map((scene, index) => (
             <img
               key={scene.src}
               ref={(node) => {
@@ -386,8 +387,8 @@ export default function MorphScrollHero() {
             style={{ opacity: shaderReady ? 1 : 0, transition: "opacity .35s ease" }}
             aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,5,4,.87)_0%,rgba(8,5,4,.52)_38%,rgba(8,5,4,.08)_72%,rgba(8,5,4,.34)_100%),linear-gradient(180deg,rgba(8,5,4,.42),transparent_35%,rgba(8,5,4,.80)_100%)]" />
-          <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(0,0,0,.36)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,245,238,.93)_0%,rgba(248,245,238,.78)_38%,rgba(248,245,238,.16)_72%,rgba(248,245,238,.48)_100%),linear-gradient(180deg,rgba(248,245,238,.55),transparent_35%,rgba(248,245,238,.86)_100%)]" />
+          <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(50,37,24,.08)]" />
           <div className="rr-glaze-line" aria-hidden="true" />
           <div className="rr-spark-field" aria-hidden="true">
             <i className="rr-spark" />
@@ -399,46 +400,46 @@ export default function MorphScrollHero() {
         </div>
 
         <div className="absolute right-6 top-[96px] z-20 md:right-[6.4vw] md:top-[102px]">
-          <div className="font-serif text-2xl text-white md:text-3xl">
+          <div className="font-serif text-2xl text-[#27231f] md:text-3xl">
             <span>{String(sceneIndex + 1).padStart(2, "0")}</span>
-            <span className="mx-2 text-white/30">/</span>
-            <span className="font-sans text-[10px] tracking-[0.2em] text-white/50">04</span>
+            <span className="mx-2 text-[#27231f]/30">/</span>
+            <span className="font-sans text-[10px] tracking-[0.2em] text-[#27231f]/55">08</span>
           </div>
         </div>
 
         <div className="absolute bottom-20 left-6 z-20 w-[min(1040px,calc(100%-48px))] md:bottom-[12.5vh] md:left-[6.4vw]">
-          <div className="mb-4 text-[10px] uppercase tracking-[0.28em] text-[#e8c983]">
-            {SCENES[sceneIndex].kicker}
+          <div className="mb-4 text-[10px] uppercase tracking-[0.28em] text-[#98683f]">
+            {scenes[sceneIndex].kicker}
           </div>
-          <h1 className="max-w-[1200px] font-serif text-[12vw] font-normal leading-[.84] tracking-[-0.055em] text-[#f5eee4] md:text-[7vw] lg:text-[6.65vw]">
+          <h1 className="max-w-[1200px] font-serif text-[12vw] font-normal leading-[.84] tracking-[-0.055em] text-[#27231f] md:text-[7vw] lg:text-[6.65vw]">
             <span className="block">{titleLines[0]}</span>
-            <span className="block whitespace-nowrap pl-[4.6vw] italic text-[#e3bd71]">{titleLines[1]}</span>
+            <span className="block whitespace-nowrap pl-[4.6vw] italic text-[#9d352a]">{titleLines[1]}</span>
           </h1>
-          <p className="mt-6 max-w-[610px] text-[13px] leading-7 text-white/72 md:text-[15px] md:leading-8">
-            {SCENES[sceneIndex].body}
+          <p className="mt-6 max-w-[610px] text-[13px] leading-7 text-[#63584e] md:text-[15px] md:leading-8">
+            {scenes[sceneIndex].body}
           </p>
-          <a href="#contact" className="mt-7 inline-flex items-center gap-3 border-b border-[#e4c27b] pb-2 text-[10px] uppercase tracking-[0.18em] text-white">
-            Explore the studio <span className="text-[#e4c27b]">↗</span>
+          <a href="#contact" className="mt-7 inline-flex items-center gap-3 border-b border-[#9d352a] pb-2 text-[10px] uppercase tracking-[0.18em] text-[#27231f]">
+            Explore the studio <span className="text-[#9d352a]">↗</span>
           </a>
         </div>
 
         <div className="absolute bottom-24 right-7 z-20 hidden flex-col items-end gap-4 md:flex">
-          <div className="writing-vertical rotate-180 text-[8px] uppercase tracking-[0.22em] text-white/38">
-            {SCENES[sceneIndex].side}
+          <div className="writing-vertical rotate-180 text-[8px] uppercase tracking-[0.22em] text-[#27231f]/55">
+            {scenes[sceneIndex].side}
           </div>
           <div className="flex flex-col gap-2">
-            {SCENES.map((_, i) => (
+            {scenes.map((_, i) => (
               <span
                 key={i}
-                className={i === sceneIndex ? "h-14 w-[3px] bg-[#e4c27b]" : "h-7 w-[2px] bg-white/25"}
+                className={i === sceneIndex ? "h-14 w-[3px] bg-[#9d352a]" : "h-7 w-[2px] bg-white/25"}
               />
             ))}
           </div>
         </div>
 
-        <div className="absolute bottom-7 left-6 right-6 z-20 flex items-center justify-between text-[8px] uppercase tracking-[0.2em] text-white/35 md:left-10 md:right-10">
+        <div className="absolute bottom-7 left-6 right-6 z-20 flex items-center justify-between text-[8px] uppercase tracking-[0.2em] text-[#27231f]/52 md:left-10 md:right-10">
           <span>Scroll through the studio</span>
-          <span>Demo imagery · replace with RR photography</span>
+          <span>Interior design, tailored to you</span>
         </div>
       </div>
     </section>

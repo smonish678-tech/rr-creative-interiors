@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import SiteFavicon from "@/components/site-favicon";
 
 const siteUrl = "https://rrcreativeinteriors.in";
 const favicon = "/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
@@ -7,19 +8,19 @@ const socialImage = "/rr-media/hero/Interior%20Inspiration.jpg";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "RR Creative Interiors | Interior Designers in Bangalore",
+  title: "Custom Interiors, Thoughtfully Priced | RR Creative Interiors",
   description:
-    "RR Creative Interiors is a Bangalore interior design studio creating residential, commercial and turnkey spaces with thoughtful planning, refined materials and precise execution. Beyond The Ordinary.",
+    "Fully customised residential, commercial, renovation and turnkey interiors in Bengaluru—designed around your brief, with scope and budget considered from the start.",
   keywords: [
-    "interior designers in Bangalore",
-    "interior design studio Bangalore",
-    "home interiors Bangalore",
-    "residential interior designers Bangalore",
-    "turnkey interiors Bangalore",
-    "commercial interior designers Bangalore",
-    "corporate interiors Bangalore",
-    "luxury interiors Bangalore",
-    "modular kitchen Bangalore"
+    "custom interior designers in Bengaluru",
+    "custom interior design Bengaluru",
+    "home interiors Bengaluru",
+    "residential interiors Bengaluru",
+    "turnkey interiors Bengaluru",
+    "commercial interiors Bengaluru",
+    "corporate interiors Bengaluru",
+    "custom interiors thoughtfully priced",
+    "modular kitchens Bengaluru"
   ],
   applicationName: "RR Creative Interiors",
   creator: "RR Creative Interiors",
@@ -34,9 +35,9 @@ export const metadata: Metadata = {
     apple: favicon
   },
   openGraph: {
-    title: "RR Creative Interiors — Beyond The Ordinary",
+    title: "Fully customised interiors, thoughtfully priced — RR Creative Interiors",
     description:
-      "Thoughtful residential, commercial and turnkey interiors in Bangalore.",
+      "Custom residential, commercial, renovation and turnkey interiors in Bengaluru, planned around your brief and budget.",
     url: siteUrl,
     siteName: "RR Creative Interiors",
     type: "website",
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
     images: [
       {
         url: socialImage,
-        alt: "RR Creative Interiors — interior design in Bangalore",
+        alt: "RR Creative Interiors — custom interiors in Bengaluru",
         width: 2000,
         height: 1333
       }
@@ -52,8 +53,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "RR Creative Interiors — Beyond The Ordinary",
-    description: "Interior design studio in Bangalore.",
+    title: "Fully customised interiors, thoughtfully priced — RR Creative Interiors",
+    description: "Custom interiors in Bengaluru. Your taste, your needs, your budget.",
     images: [socialImage]
   },
   robots: {
@@ -74,7 +75,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><SiteFavicon />{children}</body>
     </html>
   );
 }
