@@ -2,14 +2,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #110c0a;
-  --bg-soft: #17100d;
-  --paper: #eee5d9;
-  --paper-2: #e4d8ca;
-  --ink: #1d1713;
-  --gold: #d7b26a;
-  --gold-2: #ebc980;
-  --muted: #9f9187;
+  --bg: #f7f3ec;
+  --bg-soft: #efe7dc;
+  --paper: #fbf8f2;
+  --paper-2: #eee6da;
+  --ink: #29211b;
+  --gold: #b48749;
+  --gold-2: #c49b5b;
+  --muted: #76685d;
   --serif: "Playfair Display", Georgia, serif;
   --sans: "DM Sans", Arial, sans-serif;
 }
@@ -616,3 +616,107 @@ button,input,select,textarea{font:inherit}
 .rr-form-success{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;text-transform:none;letter-spacing:0;font-size:12px;line-height:1.55}
 .rr-form-success p{margin:0;flex:1;min-width:220px;font:inherit;text-transform:none;letter-spacing:0;color:#52745e}
 .rr-form-success a{display:inline-flex;align-items:center;gap:6px;color:#285d3c;text-decoration:underline;text-underline-offset:3px;font-size:11px;font-weight:600;white-space:nowrap}
+
+
+/* RR light editorial identity: warm paper, architectural ink, restrained terracotta. */
+html,body{background:#f7f3ec;color:#29211b}
+.rr-header{background:linear-gradient(180deg,rgba(250,247,241,.97),rgba(250,247,241,.84));backdrop-filter:blur(14px);border-bottom:1px solid rgba(55,43,30,.1)}
+.rr-header:has(.rr-mobile-nav){background:rgba(250,247,241,.98)}
+.rr-brand img{filter:none}
+.rr-brand:hover img{filter:none}
+.rr-nav-link{color:rgba(41,33,27,.62)}
+.rr-nav-link:hover,.rr-nav-link.is-active{color:#29211b}
+.rr-header-progress{background:#a13b2e;box-shadow:0 0 12px rgba(161,59,46,.18)}
+.rr-nav-cta{color:#29211b;border-color:rgba(156,108,54,.38);background:rgba(255,255,255,.58)}
+.rr-nav-cta:hover{background:#a13b2e;color:#fff;border-color:#a13b2e}
+.rr-mobile-toggle{color:#29211b;background:rgba(255,255,255,.68);border-color:rgba(55,43,30,.18)}
+.rr-mobile-nav{border-top:1px solid rgba(55,43,30,.12);background:rgba(250,247,241,.98);backdrop-filter:blur(18px)}
+.rr-mobile-nav a{border-bottom:1px solid rgba(55,43,30,.12);color:rgba(41,33,27,.76)}
+.rr-mobile-nav a.is-active{color:#a13b2e}
+.rr-footer{background:#fbf8f2;color:#29211b}
+.rr-footer-cta{border-top:1px solid rgba(55,43,30,.12);border-bottom:1px solid rgba(55,43,30,.14);background:radial-gradient(circle at 77% 46%,rgba(196,155,91,.12),transparent 28%),radial-gradient(circle at 20% 64%,rgba(161,59,46,.055),transparent 23%),linear-gradient(115deg,#f6efe3,#fdfbf6 68%)}
+.rr-footer-cta-glow{background:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.36) 46%,transparent 67%)}
+.rr-footer-kicker{color:#956c3d}
+.rr-footer-cta h2{color:#29211b}
+.rr-footer-cta h2 em{color:#a13b2e}
+.rr-footer-cta-orbit{border-color:rgba(161,59,46,.48);color:#29211b}
+.rr-footer-cta-orbit:before{border-color:rgba(156,108,54,.3)}
+.rr-footer-cta-orbit svg{color:#a13b2e}
+.rr-footer-cta-orbit:hover{background:rgba(161,59,46,.06);border-color:#a13b2e}
+.rr-footer-cta-orbit:hover:before{transform:rotate(10deg) scale(.96)}
+.rr-footer-cta-line{border-top-color:rgba(55,43,30,.16);color:rgba(41,33,27,.56)}
+.rr-footer .text-white\/42{color:rgba(41,33,27,.68)}
+.rr-footer .text-white\/62{color:rgba(41,33,27,.7)}
+.rr-footer .text-white\/25{color:rgba(41,33,27,.52)}
+.rr-footer .border-white\/10{border-color:rgba(55,43,30,.14)}
+.rr-footer [class*="text-[#dcb66d]"]{color:#956c3d}
+.rr-floating-contact{border-color:rgba(55,43,30,.13);background:rgba(250,247,241,.94);backdrop-filter:blur(18px);box-shadow:0 14px 38px rgba(47,34,22,.12)}
+.rr-float{color:#29211b;border-color:rgba(55,43,30,.12)}
+.rr-float:hover{background:#a13b2e;color:white;border-color:#a13b2e}
+.rr-float-wa{background:rgba(53,168,82,.06);border-color:rgba(79,156,105,.26)}
+.rr-float-wa:hover{background:#387b4b;color:white;border-color:#387b4b}
+.rr-form-submit{background:#29211b;border-color:#29211b;color:#fff}
+.rr-form-submit:hover{background:#a13b2e;border-color:#a13b2e;color:#fff}
+.rr-budget-chip.is-selected{background:#29211b;border-color:#29211b;color:#fff}
+.rr-footer a:focus-visible,.rr-header a:focus-visible,.rr-header button:focus-visible{outline:2px solid #a13b2e;outline-offset:4px}
+.service-row{cursor:default}
+.service-preview{background:#e9dfd2;border:1px solid rgba(55,43,30,.12);box-shadow:0 24px 60px rgba(54,38,23,.16)}
+.service-row-arrow{transition:transform 180ms cubic-bezier(.23,1,.32,1),color 180ms ease}
+.rr-website-assets-manager{min-width:0}
+.rr-website-assets-note{display:flex;align-items:flex-start;gap:12px;margin:0 0 18px;padding:16px;border:1px solid #e6d9c6;border-radius:7px;background:#fbf4e9;color:#956c3d}
+.rr-website-assets-note>svg{flex:0 0 auto;margin-top:2px}
+.rr-website-assets-note b{display:block;color:#4b3927;font-size:12px}
+.rr-website-assets-note p{margin:6px 0 0;color:#7f6e5b;font-size:10px;line-height:1.75}
+.rr-website-asset-group{margin-top:28px}
+.rr-website-asset-group .rr-library-heading{align-items:flex-start}
+.rr-website-asset-group .rr-library-heading p{max-width:720px;font-size:10px;line-height:1.7}
+.rr-website-slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.rr-website-slot-card{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(0,1.2fr);min-width:0;overflow:hidden;border:1px solid #e6ddd0;border-radius:8px;background:#fffdf9;box-shadow:0 5px 22px rgba(41,30,22,.025)}
+.rr-website-slot-preview{position:relative;min-height:155px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#e8dfd3}
+.rr-website-slot-preview img{display:block;width:100%;height:100%;min-height:155px;object-fit:cover}
+.rr-website-slot-preview.is-logo-preview{background:repeating-conic-gradient(#eee8de 0% 25%,#faf7f1 0% 50%) 50%/20px 20px}
+.rr-website-slot-preview.is-logo-preview img{padding:18px;object-fit:contain}
+.rr-website-slot-status{position:absolute;left:8px;top:8px;display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border-radius:4px;background:rgba(251,248,242,.94);color:#416b48;font-size:8px;font-weight:600}
+.rr-website-slot-empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:140px;padding:16px;color:#968675;text-align:center;font-size:9px;line-height:1.5}
+.rr-website-slot-empty svg{color:#b09671}
+.rr-website-slot-body{min-width:0;padding:13px 14px;display:flex;flex-direction:column;align-items:stretch}
+.rr-website-slot-body>b{font:400 17px/1.25 Georgia,serif;color:#33271e}
+.rr-website-slot-body>p{margin:6px 0 13px;color:#8d7d6b;font-size:9px;line-height:1.6}
+.rr-website-slot-select{display:grid;gap:6px;margin-top:auto}
+.rr-website-slot-select>span{font-size:8px;text-transform:uppercase;letter-spacing:.12em;color:#88745c}
+.rr-website-slot-select select{width:100%;min-width:0;border:1px solid #e3d7c6;border-radius:5px;padding:9px 8px;background:#fffefa;color:#392d21;font-size:10px}
+.rr-website-slot-select select:focus-visible{outline:2px solid #a13b2e;outline-offset:2px}
+.rr-website-slot-select select:disabled{opacity:.6;cursor:wait}
+.rr-website-unassign{align-self:flex-start;margin-top:8px;border:0;background:transparent;color:#9b6458;text-decoration:underline;text-underline-offset:3px;font-size:9px;cursor:pointer}
+.rr-website-asset-library{margin-top:34px}
+.rr-site-asset-save-status{display:inline-flex;align-items:center;gap:6px;color:#7a6c5a;font-size:9px}
+.rr-site-asset-library-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.rr-site-asset-card{min-width:0;border:1px solid #e6ddd0;border-radius:7px;background:#fffdf9;overflow:hidden}
+.rr-site-asset-image{display:block;width:100%;padding:0;border:0;aspect-ratio:4/3;overflow:hidden;background:#e8dfd3;cursor:zoom-in}
+.rr-site-asset-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform 220ms cubic-bezier(.23,1,.32,1)}
+.rr-site-asset-card-body{padding:10px}
+.rr-site-asset-card-body>b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#453629;font-size:9px;font-weight:600}
+.rr-site-asset-card-body>small{display:block;margin-top:5px;color:#9a8a78;font-size:8px}
+.rr-site-asset-actions{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding-top:9px;border-top:1px solid #f0e8dc}
+.rr-site-asset-actions button{display:grid;place-items:center;width:29px;height:28px;border:1px solid #ecd9d3;border-radius:4px;background:#fff9f7;color:#9d5b50;cursor:pointer}
+.rr-site-asset-actions button:disabled{opacity:.4;cursor:not-allowed}
+.rr-site-assigned-tag,.rr-site-unassigned-tag{display:inline-flex;align-items:center;gap:4px;font-size:8px;color:#6c8060}
+.rr-site-unassigned-tag{color:#988775}
+.rr-site-image-lightbox{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:30px;background:rgba(29,23,19,.82);backdrop-filter:blur(6px)}
+.rr-site-image-lightbox img{display:block;max-width:min(1100px,94vw);max-height:86vh;object-fit:contain;box-shadow:0 24px 100px rgba(0,0,0,.4)}
+.rr-site-image-lightbox>button{position:absolute;top:20px;right:24px;width:42px;height:42px;border:1px solid rgba(255,255,255,.42);border-radius:50%;background:rgba(255,255,255,.08);color:white;font-size:28px;cursor:pointer}
+@media(hover:hover) and (pointer:fine){
+ .rr-website-slot-card:hover{border-color:#d0b78f;box-shadow:0 10px 30px rgba(41,30,22,.055)}
+ .rr-site-asset-image:hover img{transform:scale(1.025)}
+ .service-row:hover .service-row-arrow{transform:translate(2px,-2px);color:#a13b2e}
+}
+@media(max-width:1060px){.rr-website-slot-grid{grid-template-columns:1fr}.rr-site-asset-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.rr-website-slot-grid{grid-template-columns:1fr}.rr-website-slot-card{grid-template-columns:minmax(110px,.65fr) minmax(0,1.35fr)}.rr-site-asset-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rr-website-assets-manager .rr-page-heading{align-items:flex-start;gap:12px}.rr-website-slot-body{padding:11px}.rr-website-slot-body>b{font-size:15px}.rr-website-slot-preview,.rr-website-slot-preview img{min-height:135px}}
+@media(max-width:440px){.rr-website-slot-card{grid-template-columns:1fr}.rr-website-slot-preview,.rr-website-slot-preview img{min-height:175px}.rr-site-asset-library-grid{grid-template-columns:1fr 1fr}.rr-site-asset-card-body{padding:8px}}
+@media(prefers-reduced-motion:reduce){
+ .rr-website-slot-card,.rr-site-asset-image img,.service-row-arrow{transition:none!important}
+ .rr-website-slot-card:hover,.rr-site-asset-image:hover img,.service-row:hover .service-row-arrow{transform:none}
+ .rr-signal{animation:none}
+ .rr-glaze-line,.rr-spark-field{animation:none!important}
+ .rr-website-assets-manager .rr-spinning{animation:none}
+}
