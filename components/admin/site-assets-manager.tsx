@@ -1,7 +1,7 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, Check, FileImage, Image as ImageIcon, LoaderCircle, RefreshCw, Trash2, Upload } from "lucide-react";
 import { SITE_ASSET_GROUPS, type SiteAssetKey, type SiteAssetManifest } from "@/lib/site-assets";
 
@@ -14,7 +14,7 @@ export default function SiteAssetsManager() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -27,9 +27,9 @@ export default function SiteAssetsManager() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   async function replaceAsset(key: SiteAssetKey, file: File) {
     setError("");
@@ -154,7 +154,7 @@ export default function SiteAssetsManager() {
                 const busy = uploadingKey === slot.key;
                 return (
                   <article key={slot.key} className={`rr-site-asset-card${asset ? " is-configured" : ""}`}>
-                    <div className={`rr-site-asset-preview${slot.key === "brandLogo" ? " is-logo" : ""}`}>
+                    <div className={`rr-site-asset-preview${slot.key === "brandLogo" || slot.key === "brandMark" ? " is-logo" : ""}`}>
                       {asset?.url ? (
                         <img src={asset.url} alt={`${slot.label} preview`} />
                       ) : (
