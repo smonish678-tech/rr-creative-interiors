@@ -5,8 +5,6 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { AlertCircle, Check, FileImage, ImagePlus, LoaderCircle, RefreshCw, Trash2, Upload } from "lucide-react";
 import { WEBSITE_ASSET_GROUPS, type WebsiteAssetAssignments, type WebsiteAssetRecord, type WebsiteAssetSlot } from "@/lib/website-assets";
 
-type ManagerConfig = { assets: WebsiteAssetRecord[]; assignments: WebsiteAssetAssignments };
-
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
