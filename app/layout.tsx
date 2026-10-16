@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 const siteUrl = "https://rrcreativeinteriors.in";
-const favicon = "/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
+const favicon = "/api/site-assets/logo";
 const socialImage = "/rr-media/hero/Interior%20Inspiration.jpg";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "RR Creative Interiors | Interior Designers in Bangalore",
+  title: "Custom Interior Designers in Bengaluru | RR Creative Interiors",
   description:
-    "RR Creative Interiors is a Bangalore interior design studio creating residential, commercial and turnkey spaces with thoughtful planning, refined materials and precise execution. Beyond The Ordinary.",
+    "Fully customised residential, commercial and turnkey interiors in Bengaluru. Personal design, considered material choices and pricing shaped around your brief.",
   keywords: [
     "interior designers in Bangalore",
     "interior design studio Bangalore",
@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     "turnkey interiors Bangalore",
     "commercial interior designers Bangalore",
     "corporate interiors Bangalore",
-    "luxury interiors Bangalore",
+    "custom interior design Bangalore",
+    "thoughtfully priced interiors Bengaluru",
     "modular kitchen Bangalore"
   ],
   applicationName: "RR Creative Interiors",
@@ -26,17 +27,13 @@ export const metadata: Metadata = {
   publisher: "RR Creative Interiors",
   alternates: { canonical: "/" },
   icons: {
-    icon: [
-      { url: favicon, type: "image/png" },
-      { url: favicon, sizes: "192x192", type: "image/png" },
-      { url: favicon, sizes: "512x512", type: "image/png" }
-    ],
+    icon: [{ url: favicon }],
     apple: favicon
   },
   openGraph: {
-    title: "RR Creative Interiors — Beyond The Ordinary",
+    title: "Fully customised interiors. Thoughtfully priced. | RR Creative Interiors",
     description:
-      "Thoughtful residential, commercial and turnkey interiors in Bangalore.",
+      "Personalised home and commercial interiors in Bengaluru, designed around your brief and a budget that makes sense.",
     url: siteUrl,
     siteName: "RR Creative Interiors",
     type: "website",
@@ -52,8 +49,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "RR Creative Interiors — Beyond The Ordinary",
-    description: "Interior design studio in Bangalore.",
+    title: "Fully customised interiors. Thoughtfully priced. | RR Creative Interiors",
+    description: "Personalised residential and commercial interiors in Bengaluru, with a clear brief and considered choices.",
     images: [socialImage]
   },
   robots: {

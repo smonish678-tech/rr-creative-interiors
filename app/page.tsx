@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll } from "framer-motion";
 import { ArrowUpRight, ChevronRight, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
@@ -29,50 +29,53 @@ const IMG = {
   detail: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=1600&q=84"
 };
 
-const services = [
-  ["01", "Turnkey Interiors", "A single design language from the first drawing to final handover.", IMG.living],
-  ["02", "Residential Interiors", "Homes planned around everyday rituals, storage, comfort and light.", IMG.lounge],
-  ["03", "Commercial Interiors", "Customer-facing spaces where identity, circulation and atmosphere work together.", IMG.marble],
-  ["04", "Corporate Interiors", "Workspaces shaped for clarity, culture, focus and hospitality.", IMG.detail],
-  ["05", "Modular Kitchens", "Efficient planning, generous storage and material depth.", IMG.kitchen],
-  ["06", "Wardrobes & Storage", "Built-ins that disappear into the architecture.", IMG.bedroom],
-  ["07", "Lighting & Ceiling", "Lighting layers that change the character of the room through the day.", IMG.detail],
-  ["08", "Furniture & Detailing", "TV units, studies, crockery, foyer, pooja, kids rooms and more.", IMG.marble]
+
+const services: Array<[string, string, string, keyof typeof IMG]> = [
+  ["01", "Turnkey interiors", "One considered direction from the first conversation through design, materials and execution.", "living"],
+  ["02", "Residential interiors", "Homes planned around your routines, the things you own and the way you want each room to feel.", "lounge"],
+  ["03", "Commercial & corporate", "Workspaces and customer-facing environments that balance identity, flow and function.", "marble"],
+  ["04", "Renovation & redesign", "Keep what works, rethink what does not, and make the existing space work harder.", "bedroom"],
+  ["05", "Modular kitchens", "Storage, work zones and finishes planned for your kitchen—not a standard module count.", "kitchen"],
+  ["06", "Wardrobes & storage", "Made-to-measure storage that respects the room, the contents and the architecture.", "bedroom"],
+  ["07", "Lighting & ceilings", "Layered light and considered ceilings that change a room without overcomplicating it.", "detail"],
+  ["08", "Furniture & detailing", "TV units, studies, crockery, foyer, pooja and custom furniture shaped around the brief.", "marble"],
+  ["09", "Design-only consultation", "Layouts, concepts and material direction for clients who need the design before the build.", "living"],
 ];
 
 const principles = [
-  ["01", "Listen first", "We start with the way you live, not a style board."],
-  ["02", "Solve the plan", "Space, storage, circulation and light are resolved before surface styling."],
-  ["03", "Choose with intent", "Materials are selected for how they age, wear and feel — not only how they photograph."],
-  ["04", "Carry the line", "The same thinking survives the jump from 3D visual to real site."],
+  ["01", "Start with the people", "We ask how you live, what is not working, what you want to keep and what you want to change. The brief belongs to you."],
+  ["02", "Make it truly custom", "No two properties or people ask for the same thing. The plan, storage, finishes and details respond to the actual space."],
+  ["03", "Spend with intention", "We help prioritise where a better material or detail matters—and where a simpler choice is the smarter one."],
+  ["04", "Respect the agreed scope", "Design, selections and execution should follow a clear brief and a quote you can review before the work moves ahead."],
 ];
 
 const journal = [
-  ["01", "The room before the furniture", "Why the invisible decisions — circulation, proportion and light — create the strongest interiors."],
-  ["02", "Luxury is not more", "A room can feel richer by removing three things and improving one."],
-  ["03", "What we look for in materials", "Texture, reflection, ageing, maintenance and the moment two surfaces meet."]
+  ["01", "Custom should feel personal—not complicated", "A good brief captures how you live, what needs to change and which details matter. From there, design becomes a set of useful decisions, not a list of extras."],
+  ["02", "Where a budget makes a difference", "Prioritise the things you touch, use and rely on every day. Spend where quality changes the experience; simplify where an upgrade adds little."],
+  ["03", "A room has to work on Tuesday", "The reveal is one day. Storage, circulation, light and easy maintenance are what make an interior feel right through ordinary life."]
 ];
 
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const reduceMotion = useReducedMotion() ?? false;
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, transform: reduceMotion ? "none" : "translateY(14px)" }}
+      whileInView={{ opacity: 1, transform: "translateY(0px)" }}
       viewport={{ once: true, margin: "-12% 0px" }}
-      transition={{ duration: 0.9, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: reduceMotion ? 0.12 : 0.55, delay: reduceMotion ? 0 : delay, ease: [0.23, 1, 0.32, 1] }}
     >
       {children}
     </motion.div>
   );
 }
 
-function Nav() {
+function Nav({ logoUrl }: { logoUrl: string }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("Home");
   const { scrollYProgress } = useScroll();
 
-  const navigation = [
+  const navigation = useMemo(() => [
     { name: "Home", href: "#top", id: "top" },
     { name: "About", href: "#about", id: "about" },
     { name: "Spaces", href: "#spaces", id: "spaces" },
@@ -80,9 +83,9 @@ function Nav() {
     { name: "The Eye", href: "#eye", id: "eye" },
     { name: "Services", href: "#services", id: "services" },
     { name: "Process", href: "#process", id: "process" },
-    { name: "Journal", href: "#journal", id: "journal" },
+    { name: "Notes", href: "#journal", id: "journal" },
     { name: "Contact", href: "#contact", id: "contact" }
-  ];
+  ], []);
 
   useEffect(() => {
     const targets = navigation
@@ -108,14 +111,14 @@ function Nav() {
 
     targets.forEach((target) => observer.observe(target));
     return () => observer.disconnect();
-  }, []);
+  }, [navigation]);
 
   return (
     <motion.header className="rr-header fixed inset-x-0 top-0 z-50">
       <div className="rr-header-inner">
         <a href="#top" className="rr-brand" aria-label="RR Creative Interiors home" onClick={() => setActive("Home")}>
           <img
-            src={RR_LOGO}
+            src={logoUrl}
             alt="RR Creative Interiors"
           />
         </a>
@@ -225,7 +228,7 @@ function ContactForm() {
     }
   };
 
-  const budgetOptions = ["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"];
+  const budgetOptions = ["Below ₹10L", "₹10–20L", "₹20–40L", "₹40L+"];
 
   return (
     <div className="rr-enquiry-shell">
@@ -250,8 +253,8 @@ function ContactForm() {
       <form onSubmit={submit} className="rr-enquiry-card">
         <div className="rr-form-head">
           <div>
-            <span>Tell us where you&apos;re starting</span>
-            <h3>A little context.<br /><em>Then we take it from there.</em></h3>
+            <span>A brief built around you</span>
+            <h3>Tell us what needs to work.<br /><em>We’ll start there.</em></h3>
           </div>
           <div className="rr-form-mark">RR<span>↗</span></div>
         </div>
@@ -305,7 +308,7 @@ function ContactForm() {
         <div className="rr-form-foot">
           <div className="rr-form-note">
             <span className="rr-signal"></span>
-            Your enquiry is saved to our CRM first. WhatsApp is optional.
+            A thoughtful first conversation. No package pitch.
           </div>
           <button type="submit" className="rr-form-submit" disabled={saving || sent}>
             <span>{saving ? "Saving enquiry…" : sent ? "Enquiry received" : "Send enquiry"}</span>
@@ -328,9 +331,27 @@ function ContactForm() {
 
 export default function Page() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioCard[]>(PORTFOLIO);
+  const [hasPublishedPortfolio, setHasPublishedPortfolio] = useState(false);
+  const [siteAssets, setSiteAssets] = useState<Record<string, string>>({});
+  const images = useMemo(() => ({
+    ...IMG,
+    living: siteAssets.livingSpace || IMG.living,
+    lounge: siteAssets.livingSpace || IMG.lounge,
+    kitchen: siteAssets.kitchen || IMG.kitchen,
+    bedroom: siteAssets.bedroom || IMG.bedroom,
+    marble: siteAssets.eyeMaterial || IMG.marble,
+    detail: siteAssets.eyeLighting || IMG.detail,
+    proportion: siteAssets.eyeProportion || IMG.living,
+    materials: siteAssets.materialsBoard || IMG.detail,
+  }), [siteAssets]);
+  const heroSceneImages = useMemo(() => Array.from({ length: 8 }, (_, index) => siteAssets[`heroScene${index + 1}`]), [siteAssets]);
 
   useEffect(() => {
     let active = true;
+    fetch("/api/site-assets", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (active && data?.assets && typeof data.assets === "object") setSiteAssets(data.assets as Record<string, string>); })
+      .catch(() => {});
     fetch("/api/portfolio", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
@@ -346,7 +367,8 @@ export default function Page() {
             project: item.project,
             description: item.description,
           }));
-        setPortfolioItems([...uploaded, ...PORTFOLIO]);
+        setHasPublishedPortfolio(uploaded.length > 0);
+        setPortfolioItems(uploaded.length ? uploaded : PORTFOLIO);
       })
       .catch(() => {});
     return () => { active = false; };
@@ -354,63 +376,63 @@ export default function Page() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://rrcreativeinteriors.in/#website","url":"https://rrcreativeinteriors.in/","name":"RR Creative Interiors","alternateName":"RR Interiors","description":"RR Creative Interiors — Beyond The Ordinary. Interior design studio in Bangalore.","inLanguage":"en-IN"},{"@type":"Organization","@id":"https://rrcreativeinteriors.in/#organization","name":"RR Creative Interiors","alternateName":"RR Interiors","url":"https://rrcreativeinteriors.in/","logo":{"@type":"ImageObject","url":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png","contentUrl":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png"},"telephone":["+919901592929","+919110241957"],"email":"sales@rrcreativeinteriors.in","address":{"@type":"PostalAddress","streetAddress":"32, 2nd Cross Rd, KNB Aaradya layout, Kommaghatta","addressLocality":"Bengaluru","addressRegion":"Karnataka","postalCode":"560060","addressCountry":"IN"},"areaServed":{"@type":"City","name":"Bengaluru"},"description":"Interior design studio in Bangalore offering residential, commercial and turnkey interior design services.","knowsAbout":["Residential interior design","Commercial interior design","Turnkey interiors","Modular kitchens","Wardrobes and storage","Lighting and ceiling design"]}]})}} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://rrcreativeinteriors.in/#website","url":"https://rrcreativeinteriors.in/","name":"RR Creative Interiors","alternateName":"RR Interiors","description":"Fully customised residential, commercial and turnkey interiors in Bengaluru, thoughtfully priced around each client brief.","inLanguage":"en-IN"},{"@type":"Organization","@id":"https://rrcreativeinteriors.in/#organization","name":"RR Creative Interiors","alternateName":"RR Interiors","url":"https://rrcreativeinteriors.in/","logo":{"@type":"ImageObject","url":"https://rrcreativeinteriors.in/api/site-assets/logo","contentUrl":"https://rrcreativeinteriors.in/api/site-assets/logo"},"telephone":["+919901592929","+919110241957"],"email":"sales@rrcreativeinteriors.in","address":{"@type":"PostalAddress","streetAddress":"32, 2nd Cross Rd, KNB Aaradya layout, Kommaghatta","addressLocality":"Bengaluru","addressRegion":"Karnataka","postalCode":"560060","addressCountry":"IN"},"areaServed":{"@type":"City","name":"Bengaluru"},"description":"Fully customised residential, commercial and turnkey interiors in Bengaluru, thoughtfully priced around each client brief.","knowsAbout":["Residential interior design","Commercial interior design","Turnkey interiors","Modular kitchens","Wardrobes and storage","Lighting and ceiling design"]}]})}} />
       <SmoothScroll />
-      <Nav />
+      <Nav logoUrl={siteAssets.logo || RR_LOGO} />
       <main id="top">
-        <MorphScrollHero />
+        <MorphScrollHero sceneImages={heroSceneImages} />
 
-        <section id="about" className="relative bg-[#eee5d9] text-[#1d1713]">
+        <section id="about" className="relative bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-28 md:px-10 lg:grid-cols-[.8fr_1.2fr] lg:py-40">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-[#98764d]">05 · The studio</p>
-              <h2 className="mt-5 max-w-xl font-serif text-5xl leading-[.94] tracking-[-.04em] md:text-7xl">A room should feel inevitable.</h2>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#956c3d]">The RR approach</p>
+              <h2 className="mt-5 max-w-xl font-serif text-5xl leading-[.94] tracking-[-.04em] md:text-7xl">Designed around you. Not a package.</h2>
             </Reveal>
             <Reveal delay={0.1}>
               <div className="max-w-3xl">
-                <p className="text-xl leading-9 text-[#62564e]">Not staged. Not overloaded. Not designed for a photograph before it is designed for a life.</p>
-                <p className="mt-8 text-base leading-8 text-[#6c6056]">RR Creative Interiors works from the inside out: understand the person, solve the plan, choose the material, then carry the idea through the site.</p>
+                <p className="text-xl leading-9 text-[#514237]">Fully customised does not mean adding more for the sake of it. It means making the right decisions for your space, your taste and your budget.</p>
+                <p className="mt-8 text-base leading-8 text-[#6c5d50]">We start by understanding how you live or work, what needs to change and what matters most. From layout and storage to finishes and lighting, each choice has a reason—and a place in the agreed scope.</p>
               </div>
             </Reveal>
           </div>
         </section>
 
-        <section id="spaces" className="bg-[#15100d] text-white">
+        <section id="spaces" className="bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">06 · Spatial studies</p>
-                  <h2 className="mt-5 max-w-2xl font-serif text-5xl leading-[.94] md:text-7xl">The mood is part of the architecture.</h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">A custom fit, down to the details</p>
+                  <h2 className="mt-5 max-w-2xl font-serif text-5xl leading-[.94] md:text-7xl">Beautiful is personal. So is the plan.</h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-white/48 md:block">Temporary demo imagery — these are visual studies, not claimed RR projects. Replace with real project shoots as they arrive.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#6f6054] md:block">Every property brings different proportions, routines and priorities. The images here can be managed from Website Studio.</p>
               </div>
             </Reveal>
 
             <div className="mt-16 grid gap-6 lg:grid-cols-[1.12fr_.88fr]">
               <Reveal className="group relative min-h-[620px] overflow-hidden">
-                <img src={IMG.living} alt="Contemporary living room visual reference" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                <img src={images.living} alt="Living space interior design" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a08]/80 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
-                  <p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Living · Visual study</p>
-                  <h3 className="mt-3 font-serif text-4xl md:text-5xl">Quietly dramatic.</h3>
+                  <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Living · Made around you</p>
+                  <h3 className="mt-3 font-serif text-4xl md:text-5xl">Room for your kind of life.</h3>
                 </div>
               </Reveal>
               <div className="grid gap-6">
                 <Reveal className="group relative min-h-[300px] overflow-hidden">
-                  <img src={IMG.kitchen} alt="Modern luxury kitchen visual reference" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                  <img src={images.kitchen} alt="Custom kitchen interior design" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   <div className="absolute bottom-0 p-7">
-                    <p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Kitchen · Visual study</p>
-                    <h3 className="mt-2 font-serif text-3xl">Useful can still be beautiful.</h3>
+                    <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Kitchen · Planned to fit</p>
+                    <h3 className="mt-2 font-serif text-3xl">Every inch has a job.</h3>
                   </div>
                 </Reveal>
                 <Reveal className="group relative min-h-[300px] overflow-hidden">
-                  <img src={IMG.bedroom} alt="Modern bedroom visual reference" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                  <img src={images.bedroom} alt="Bedroom interior design" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   <div className="absolute bottom-0 p-7">
-                    <p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Private · Visual study</p>
-                    <h3 className="mt-2 font-serif text-3xl">Softness without excess.</h3>
+                    <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Private · Thought through</p>
+                    <h3 className="mt-2 font-serif text-3xl">Calm, without the clutter.</h3>
                   </div>
                 </Reveal>
               </div>
@@ -419,15 +441,15 @@ export default function Page() {
         </section>
 
 
-        <section id="portfolio" className="relative overflow-hidden bg-[#e8ded1] text-[#1d1713]">
+        <section id="portfolio" className="relative overflow-hidden bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-40">
             <Reveal>
               <div className="flex items-end justify-between gap-10">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">07 · Portfolio studies</p>
-                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">A growing library of<br /><em className="text-[#9d1714]">spaces, details & ideas.</em></h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Portfolio · Selected images</p>
+                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">{hasPublishedPortfolio ? <>Selected work.<br /><em className="text-[#a13b2e]">Specific solutions.</em></> : <>Design references.<br /><em className="text-[#a13b2e]">Ideas made personal.</em></>}</h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-[#685b51] md:block">Your uploaded RR reference images are blended into the experience without removing the existing editorial photography.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#6f6054] md:block">{hasPublishedPortfolio ? "A selection of RR project photographs. Each room answers a different brief, not a fixed package." : "A visual starting point for talking about layout, texture and atmosphere—not a template for your space. Publish RR project photos from the Portfolio Library when they are ready."}</p>
               </div>
             </Reveal>
 
@@ -442,19 +464,19 @@ export default function Page() {
                         controls
                         preload="metadata"
                         playsInline
-                        className="block aspect-[4/5] w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                        className="block aspect-[4/5] w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
                       />
                     ) : (
                       <img
                         src={item.src}
-                        alt={item.title || item.project || `RR Creative Interiors visual study ${i + 1}`}
+                        alt={item.title || item.project || `Interior design reference ${i + 1}`}
                         loading="lazy"
-                        className="block h-auto w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                        className="block h-auto w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
                       />
                     )}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
-                    <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.project ? `${item.project}${item.title ? ` · ${item.title}` : ""}` : "RR visual reference"}</span>
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-220 ease-out group-hover:opacity-100" />
+                    <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-220 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.id || item.project ? `${item.project || "RR project"}${item.title ? ` · ${item.title}` : ""}` : "Interior design reference"}</span>
                       <ArrowUpRight size={14} className="text-[#edca83]" />
                     </div>
                   </figure>
@@ -462,36 +484,36 @@ export default function Page() {
               ))}
             </div>
 
-            <div className="mt-12 flex items-center justify-between border-t border-[#1d1713]/15 pt-5">
-              <span className="text-[8px] uppercase tracking-[.18em] text-[#8c6f4f]">21 uploaded visual references</span>
+            <div className="mt-12 flex items-center justify-between border-t border-[#2b211a]/15 pt-5">
+              <span className="text-[8px] uppercase tracking-[.18em] text-[#956c3d]">{hasPublishedPortfolio ? "RR project photography · updated as new work is published" : "Visual references · real RR work appears here when published"}</span>
               <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
             </div>
           </div>
         </section>
 
-        <section id="eye" className="relative overflow-hidden bg-[#16100d] text-white">
+        <section id="eye" className="relative overflow-hidden bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">08 · The designer&apos;s eye</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">We see the<br /><em className="text-[#e3bd71]">quiet decisions.</em></h2>
-              <p className="mt-8 max-w-md text-sm leading-7 text-white/48">A premium room rarely announces why it works. The proportion, the visual axis, the light, the edge of a material — those are the decisions we want you to notice only after you feel them.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">The details that do the work</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">Good design is<br /><em className="text-[#a13b2e]">felt in the details.</em></h2>
+              <p className="mt-8 max-w-md text-sm leading-7 text-[#6f6054]">A room need not look expensive to feel considered. Proportion, light, storage and the meeting point between materials quietly shape how it works every day.</p>
             </Reveal>
 
             <div className="grid gap-8">
               {[
-                {img: IMG.living, tag:"01 · PROPORTION", title:"A visual axis is felt before it is seen.", note:"Furniture, openings and sightlines are composed so the room reads as one quiet movement."},
-                {img: IMG.kitchen, tag:"02 · MATERIAL", title:"Contrast gives restraint a pulse.", note:"Stone against timber. Matte beside reflection. Warm metal against a quieter surface."},
-                {img: IMG.detail, tag:"03 · LIGHT", title:"Good lighting edits the room.", note:"Layers of light reveal depth, soften edges and change the atmosphere without changing the architecture."}
+                {img: images.proportion, tag:"01 · PROPORTION", title:"A layout should make sense before it makes an impression.", note:"Sightlines, furniture and circulation are arranged around the room—not forced into a template."},
+                {img: images.marble, tag:"02 · MATERIAL", title:"Choose materials for more than the photograph.", note:"Weigh look, touch, upkeep and cost together so a finish earns its place in the brief."},
+                {img: images.detail, tag:"03 · LIGHT", title:"Light changes how a room lives.", note:"Daylight, task lighting and softer evening layers bring out the architecture without unnecessary complexity."}
               ].map((item, i) => (
-                <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-white/12 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
+                <Reveal key={item.tag} delay={i * 0.06} className="group grid gap-6 border-t border-[#2b211a]/15 pt-7 md:grid-cols-[.95fr_1.05fr] md:items-center">
                   <div className="relative aspect-[4/3] overflow-hidden">
-                    <img src={item.img} alt={item.title} className="h-full w-full object-cover transition duration-[1400ms] ease-out group-hover:scale-[1.06]" />
+                    <img src={item.img} alt={item.title} className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <div className="absolute left-5 top-5 text-[8px] uppercase tracking-[.2em] text-[#ecd08b]">{item.tag}</div>
+                    <div className="absolute left-5 top-5 text-[8px] uppercase tracking-[.2em] text-white">{item.tag}</div>
                   </div>
                   <div>
                     <h3 className="max-w-xl font-serif text-4xl leading-[.98] tracking-[-.03em] md:text-5xl">{item.title}</h3>
-                    <p className="mt-5 max-w-lg text-sm leading-7 text-white/45">{item.note}</p>
+                    <p className="mt-5 max-w-lg text-sm leading-7 text-[#6f6054]">{item.note}</p>
                   </div>
                 </Reveal>
               ))}
@@ -499,19 +521,19 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="philosophy" className="bg-[#e9dfd2] text-[#1d1713]">
+        <section id="philosophy" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.7fr_1.3fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">09 · Philosophy</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">The room before the room.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Our philosophy</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Custom by design.<br /><em className="text-[#a13b2e]">Thoughtful by nature.</em></h2>
             </Reveal>
             <Reveal delay={0.08}>
               <div className="grid gap-0 border-t border-[#1d1713]/15">
                 {principles.map(([n, h, p]) => (
-                  <div key={n} className="grid gap-5 border-b border-[#1d1713]/15 py-8 md:grid-cols-[64px_280px_1fr] md:items-start">
-                    <span className="text-[10px] tracking-[.2em] text-[#a17745]">{n}</span>
+                  <div key={n} className="grid gap-5 border-b border-[#2b211a]/15 py-8 md:grid-cols-[64px_280px_1fr] md:items-start">
+                    <span className="text-[10px] tracking-[.2em] text-[#956c3d]">{n}</span>
                     <h3 className="font-serif text-3xl">{h}</h3>
-                    <p className="max-w-xl text-sm leading-7 text-[#665b52]">{p}</p>
+                    <p className="max-w-xl text-sm leading-7 text-[#6f6054]">{p}</p>
                   </div>
                 ))}
               </div>
@@ -519,92 +541,92 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="services" className="bg-[#17110e] text-white">
+        <section id="services" className="bg-[#eee7dd] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
-                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">10 · Services</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Everything beneath the surface.</h2></div>
-                <p className="hidden max-w-md text-sm leading-7 text-white/45 md:block">A complete design and execution vocabulary — without forcing every project into the same mould.</p>
+                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">What we do</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Full service. No fixed formula.</h2></div>
+                <p className="hidden max-w-md text-sm leading-7 text-[#6f6054] md:block">From one carefully planned room to a full turnkey project, the scope is shaped around what you actually need.</p>
               </div>
             </Reveal>
 
-            <div className="mt-14 border-t border-white/12">
+            <div className="mt-14 border-t border-[#2b211a]/15">
               {services.map(([n, name, desc, img]) => (
-                <motion.div key={n} className="service-row group relative grid gap-5 border-b border-white/12 py-8 md:grid-cols-[70px_1fr_1fr_32px] md:items-center" whileHover={{ x: 8 }}>
-                  <span className="text-[10px] tracking-[.2em] text-[#d9ad5c]">{n}</span>
+                <div key={n} className="service-row group relative grid gap-5 border-b border-[#2b211a]/15 py-8 md:grid-cols-[70px_1fr_1fr_32px] md:items-center">
+                  <span className="text-[10px] tracking-[.2em] text-[#956c3d]">{n}</span>
                   <h3 className="font-serif text-3xl md:text-4xl">{name}</h3>
-                  <p className="max-w-lg text-sm leading-7 text-white/48">{desc}</p>
-                  <ArrowUpRight className="text-[#e1c078] transition group-hover:translate-x-1 group-hover:-translate-y-1" size={19} />
+                  <p className="max-w-lg text-sm leading-7 text-[#6f6054]">{desc}</p>
+                  <ArrowUpRight className="service-row-arrow text-[#a13b2e]" size={19} />
                   <div className="service-preview pointer-events-none absolute right-[4%] top-1/2 z-20 hidden aspect-[4/3] w-[250px] -translate-y-1/2 overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,.4)] md:block">
-                    <img src={img} alt="" className="h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-100" />
+                    <img src={images[img]} alt="" className="h-full w-full object-cover opacity-0" />
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="process" className="bg-[#eee5d9] text-[#1d1713]">
+        <section id="process" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.62fr_1.38fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">11 · Process</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Clear enough to trust.</h2>
-              <p className="mt-7 max-w-md text-sm leading-7 text-[#695d53]">The goal is not to make the process feel complicated. It is to make complex work feel calm from the outside.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">How we work</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">A clear brief. Considered choices.</h2>
+              <p className="mt-7 max-w-md text-sm leading-7 text-[#6f6054]">Custom work should still feel clear. We agree the priorities and scope, refine the design with you, then move into execution with the decisions visible.</p>
             </Reveal>
             <div className="border-t border-[#1d1713]/15">
-              {[["01","Discover","Understand the property, the people, the routine, the constraints and the ambition."],["02","Design","Layout, 3D, materials, lighting and details are refined into one visual language."],["03","Build","Fabrication, site coordination and quality checks keep the design honest in the real world."],["04","Handover","The final space is resolved down to the small things before it becomes yours."]].map(([n,h,p],i)=>(
-                <Reveal delay={i*.05} key={n} className="grid gap-5 border-b border-[#1d1713]/15 py-10 md:grid-cols-[70px_240px_1fr]">
-                  <span className="text-[10px] tracking-[.2em] text-[#a17745]">{n}</span>
+              {[["01","Brief & priorities","Understand the property, your routine, what must change and the budget you want the design to respect."],["02","Design & options","Refine layout, storage, finishes and lighting into a direction that feels right for you."],["03","Scope & approval","Review the proposal, inclusions, material choices and price before work begins. Changes are discussed before they change the scope."],["04","Execution & handover","Coordinate the work, review the details and resolve the final items before the space is handed over."]].map(([n,h,p],i)=>(
+                <Reveal delay={i*.05} key={n} className="grid gap-5 border-b border-[#2b211a]/15 py-10 md:grid-cols-[70px_240px_1fr]">
+                  <span className="text-[10px] tracking-[.2em] text-[#956c3d]">{n}</span>
                   <h3 className="font-serif text-3xl md:text-4xl">{h}</h3>
-                  <p className="text-sm leading-7 text-[#695d53]">{p}</p>
+                  <p className="text-sm leading-7 text-[#6f6054]">{p}</p>
                 </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-[#16100d] text-white">
+        <section className="bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-8 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">12 · Material study</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Texture is where the design becomes physical.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Materials · Finish · Value</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Choose for the room you will live in.</h2>
             </Reveal>
             <Reveal delay={0.08} className="relative min-h-[540px] overflow-hidden">
-              <img src="https://i.pinimg.com/originals/2e/9f/ef/2e9fefb451405b618d9028b79f2cf94c.png" alt="Luxury materials moodboard visual reference" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <img src={images.materials} alt="Interior materials and finishes" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/48 via-transparent to-transparent" />
               <div className="absolute bottom-7 left-7 right-7 flex items-end justify-between">
-                <div><p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Marble · timber · brass · stone</p><p className="mt-2 max-w-md text-sm leading-6 text-white/70">Temporary moodboard reference. The live site can later use RR&apos;s actual material library and site photography.</p></div>
+                <div><p className="text-[9px] uppercase tracking-[.2em] text-white/90">Finish · Texture · Maintenance</p><p className="mt-2 max-w-md text-sm leading-6 text-white/90">The right choice balances appearance, day-to-day use, upkeep and the agreed budget. Not every surface needs the most expensive option.</p></div>
                 <span className="font-serif text-5xl text-white/35">RR</span>
               </div>
             </Reveal>
           </div>
         </section>
 
-        <section id="journal" className="bg-[#e8ded1] text-[#1d1713]">
+        <section id="journal" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">13 · Journal</p>
-              <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">Ideas worth living with.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">A few things worth getting right</p>
+              <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">The details are personal.</h2>
             </Reveal>
-            <div className="mt-14 grid gap-0 border-t border-[#1d1713]/15 md:grid-cols-3">
+            <div className="mt-14 grid gap-0 border-t border-[#2b211a]/15 md:grid-cols-3">
               {journal.map(([n,h,p])=>(
-                <article key={n} className="border-b border-[#1d1713]/15 p-8 md:border-r md:last:border-r-0">
+                <article key={n} className="border-b border-[#2b211a]/15 p-8 md:border-r md:last:border-r-0">
                   <span className="text-[9px] tracking-[.2em] text-[#a17745]">{n}</span>
                   <h3 className="mt-12 font-serif text-3xl leading-tight">{h}</h3>
                   <p className="mt-5 text-sm leading-7 text-[#695d53]">{p}</p>
-                  <a href="https://rrcreativeinteriors.in/" target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 text-[9px] uppercase tracking-[.16em]">Read the studio journal <ChevronRight size={14} /></a>
+                  <a href="#contact" className="mt-8 inline-flex items-center gap-2 text-[9px] uppercase tracking-[.16em] text-[#a13b2e]">Discuss your project <ChevronRight size={14} /></a>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="contact" className="bg-[#f1e9dc] text-[#1d1713]">
+        <section id="contact" className="bg-[#efe7dc] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.82fr_1.18fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">14 · Start a project</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Let&apos;s make room for what matters.</h2>
-              <p className="mt-8 max-w-xl text-lg leading-8 text-[#695d53]">Tell us about the home, office, retail space or turnkey project you have in mind.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Tell us what you have in mind</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Your space. Your brief. Your budget.</h2>
+              <p className="mt-8 max-w-xl text-lg leading-8 text-[#6f6054]">Tell us about the property, the changes you want and the budget you would like us to work within. We will start with the brief—not a pre-set package.</p>
               <div className="mt-10 grid gap-3 text-sm">
                 <a href="tel:+919901592929" className="inline-flex items-center gap-3"><Phone size={16} /> +91 99015 92929</a>
                 <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3">WhatsApp enquiry ↗</a>
@@ -633,8 +655,8 @@ export default function Page() {
           <div className="rr-footer-cta-glow" aria-hidden="true" />
           <div className="rr-footer-cta-inner">
             <div>
-              <p className="rr-footer-kicker">13 · Start something worth keeping</p>
-              <h2>Give your space<br /><em>a point of view.</em></h2>
+              <p className="rr-footer-kicker">Fully customised · thoughtfully priced</p>
+              <h2>Make it yours.<br /><em>Make it make sense.</em></h2>
             </div>
             <a href="#contact" className="rr-footer-cta-orbit" aria-label="Start a project">
               <span>START<br />A PROJECT</span>
@@ -642,43 +664,43 @@ export default function Page() {
             </a>
           </div>
           <div className="rr-footer-cta-line">
-            <span>Residential · Commercial · Turnkey</span>
-            <span>Bangalore · Karnataka</span>
+            <span>Residential · Commercial · Renovation · Turnkey</span>
+            <span>Bengaluru · Karnataka</span>
           </div>
         </section>
 
         <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-16 md:px-10 md:grid-cols-[1.2fr_.8fr_.8fr]">
           <div>
             <img
-              src="/rr-media/logo/rr%205.png"
+              src={siteAssets.logo || RR_LOGO}
               alt="RR Creative Interiors"
-              className="h-14 w-auto brightness-110"
+              className="h-14 w-auto object-contain"
             />
-            <p className="mt-6 max-w-md text-sm leading-7 text-white/42">
-              Beyond The Ordinary — interior environments shaped around how people actually live.
+            <p className="mt-6 max-w-md text-sm leading-7 text-[#6f6054]">
+              Fully customised residential and commercial interiors, planned around your brief, your priorities and an agreed scope.
             </p>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Explore</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/62">
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#956c3d]">Explore</p>
+            <div className="mt-5 grid gap-3 text-sm text-[#514237]">
               <a href="#spaces">Spaces</a>
               <a href="#eye">The Eye</a>
               <a href="#services">Services</a>
               <a href="#process">Process</a>
-              <a href="#journal">Journal</a>
+              <a href="#journal">Notes</a>
             </div>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Contact</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/62">
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#956c3d]">Contact</p>
+            <div className="mt-5 grid gap-3 text-sm text-[#514237]">
               <a href="tel:+919901592929">+91 99015 92929</a>
               <a href="mailto:sales@rrcreativeinteriors.in">sales@rrcreativeinteriors.in</a>
               <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
             </div>
           </div>
         </div>
-        <div className="border-t border-white/10 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-white/25 md:px-10">
-          © 2026 RR Creative Interiors · Bangalore · Demo experience — replace visual references with real RR work before launch
+        <div className="border-t border-[#2b211a]/15 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-[#6f6054] md:px-10">
+          © 2026 RR Creative Interiors · Bengaluru · Fully customised interiors, thoughtfully priced.
         </div>
       </footer>
     </>

@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   if (phoneDigits.length < 7 || phoneDigits.length > 15 || !normalizeCustomerPhone(phone)) return NextResponse.json({ error: "Please enter a valid phone number, including the country code if needed." }, { status: 400 });
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: "Please check the email address." }, { status: 400 });
   if (submittedService && !serviceType) return NextResponse.json({ error: "Please select one of the listed project directions." }, { status: 400 });
-  if (budget && !["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"].includes(budget)) return NextResponse.json({ error: "Please select a listed budget range." }, { status: 400 });
+  if (budget && !["Below ₹10L", "₹10–20L", "₹20–40L", "₹40L+"].includes(budget)) return NextResponse.json({ error: "Please select a listed budget range." }, { status: 400 });
   if (message.length < 10) return NextResponse.json({ error: "Please add a little more detail about the space so we can respond usefully." }, { status: 400 });
 
   const record: PublicEnquiryInboxRecord = {
