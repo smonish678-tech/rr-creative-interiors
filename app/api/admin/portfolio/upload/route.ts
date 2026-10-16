@@ -37,19 +37,23 @@ export async function POST(request: Request) {
       body,
       onBeforeGenerateToken: async (pathname) => {
         if (!isAdminRequest(request)) throw new Error("Sign in as an administrator before uploading.");
+        const isPortfolio = pathname.startsWith("rr-creative-interiors/portfolio/");
+        const isWebsiteAsset = pathname.startsWith("rr-creative-interiors/site-assets/");
+        if (!isPortfolio && !isWebsiteAsset) throw new Error("Uploads must use an approved RR media folder.");
         const fileExt = pathname.split(".").pop()?.toLowerCase() || "";
         const video = ["mp4", "webm", "mov", "quicktime"].includes(fileExt);
+        if (isWebsiteAsset && video) throw new Error("Website brand and section slots accept images only. Use the Portfolio library for videos.");
         return {
-          allowedContentTypes,
+          allowedContentTypes: isWebsiteAsset ? allowedContentTypes.filter((type) => type.startsWith("image/")) : allowedContentTypes,
           maximumSizeInBytes: video ? 150 * 1024 * 1024 : 30 * 1024 * 1024,
           addRandomSuffix: true,
-          tokenPayload: JSON.stringify({ purpose: "rr-creative-interiors-portfolio" }),
+          tokenPayload: JSON.stringify({ purpose: isWebsiteAsset ? "rr-creative-interiors-site-assets" : "rr-creative-interiors-portfolio" }),
         };
       },
       onUploadCompleted: async ({ tokenPayload }) => {
         if (!tokenPayload) throw new Error("The upload did not include the expected portfolio marker.");
         const payload = JSON.parse(tokenPayload) as { purpose?: string };
-        if (payload.purpose !== "rr-creative-interiors-portfolio") {
+        if (!["rr-creative-interiors-portfolio", "rr-creative-interiors-site-assets"].includes(payload.purpose || "")) {
           throw new Error("Unexpected upload purpose.");
         }
         // The authenticated browser saves item metadata after this upload completes.
