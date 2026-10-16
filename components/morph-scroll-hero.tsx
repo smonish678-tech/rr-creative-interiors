@@ -194,9 +194,19 @@ export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Ar
         if (disposed) return;
         const tex = gl.createTexture();
         if (!tex) return;
+        const scale = Math.min(1, 1800 / Math.max(img.naturalWidth, img.naturalHeight, 1));
+        const textureCanvas = document.createElement("canvas");
+        textureCanvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        textureCanvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const context = textureCanvas.getContext("2d");
+        if (!context) {
+          gl.deleteTexture(tex);
+          return;
+        }
+        context.drawImage(img, 0, 0, textureCanvas.width, textureCanvas.height);
         gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureCanvas);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -320,7 +330,7 @@ export default function MorphScrollHero({ sceneImages = [] }: { sceneImages?: Ar
   }, [reduceMotion, scenes]);
 
   return (
-    <section ref={sectionRef} className={reduceMotion ? "relative min-h-[88svh] bg-[#f6f1e8]" : "relative h-[860vh] bg-[#f6f1e8]"}>
+    <section ref={sectionRef} className={reduceMotion ? "relative min-h-[88svh] bg-[#f6f1e8]" : "relative h-[560vh] bg-[#f6f1e8]"}>
       <div className={reduceMotion ? "relative min-h-[88svh] overflow-hidden bg-[#f6f1e8]" : "sticky top-0 h-screen overflow-hidden bg-[#f6f1e8]"}>
         <div className="absolute inset-0">
           {scenes.map((scene, index) => (
