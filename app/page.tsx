@@ -29,28 +29,30 @@ const IMG = {
   detail: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=1600&q=84"
 };
 
-const services = [
-  ["01", "Turnkey Interiors", "A single design language from the first drawing to final handover.", IMG.living],
-  ["02", "Residential Interiors", "Homes planned around everyday rituals, storage, comfort and light.", IMG.lounge],
-  ["03", "Commercial Interiors", "Customer-facing spaces where identity, circulation and atmosphere work together.", IMG.marble],
-  ["04", "Corporate Interiors", "Workspaces shaped for clarity, culture, focus and hospitality.", IMG.detail],
-  ["05", "Modular Kitchens", "Efficient planning, generous storage and material depth.", IMG.kitchen],
-  ["06", "Wardrobes & Storage", "Built-ins that disappear into the architecture.", IMG.bedroom],
-  ["07", "Lighting & Ceiling", "Lighting layers that change the character of the room through the day.", IMG.detail],
-  ["08", "Furniture & Detailing", "TV units, studies, crockery, foyer, pooja, kids rooms and more.", IMG.marble]
+
+const services: Array<[string, string, string, keyof typeof IMG]> = [
+  ["01", "Turnkey interiors", "One considered direction from the first conversation through design, materials and execution.", "living"],
+  ["02", "Residential interiors", "Homes planned around your routines, the things you own and the way you want each room to feel.", "lounge"],
+  ["03", "Commercial & corporate", "Workspaces and customer-facing environments that balance identity, flow and function.", "marble"],
+  ["04", "Renovation & redesign", "Keep what works, rethink what does not, and make the existing space work harder.", "bedroom"],
+  ["05", "Modular kitchens", "Storage, work zones and finishes planned for your kitchen—not a standard module count.", "kitchen"],
+  ["06", "Wardrobes & storage", "Made-to-measure storage that respects the room, the contents and the architecture.", "bedroom"],
+  ["07", "Lighting & ceilings", "Layered light and considered ceilings that change a room without overcomplicating it.", "detail"],
+  ["08", "Furniture & detailing", "TV units, studies, crockery, foyer, pooja and custom furniture shaped around the brief.", "marble"],
+  ["09", "Design-only consultation", "Layouts, concepts and material direction for clients who need the design before the build.", "living"],
 ];
 
 const principles = [
-  ["01", "Listen first", "We start with the way you live, not a style board."],
-  ["02", "Solve the plan", "Space, storage, circulation and light are resolved before surface styling."],
-  ["03", "Choose with intent", "Materials are selected for how they age, wear and feel — not only how they photograph."],
-  ["04", "Carry the line", "The same thinking survives the jump from 3D visual to real site."],
+  ["01", "Start with the people", "We ask how you live, what is not working, what you want to keep and what you want to change. The brief belongs to you."],
+  ["02", "Make it truly custom", "No two properties or people ask for the same thing. The plan, storage, finishes and details respond to the actual space."],
+  ["03", "Spend with intention", "We help prioritise where a better material or detail matters—and where a simpler choice is the smarter one."],
+  ["04", "Respect the agreed scope", "Design, selections and execution should follow a clear brief and a quote you can review before the work moves ahead."],
 ];
 
 const journal = [
-  ["01", "The room before the furniture", "Why the invisible decisions — circulation, proportion and light — create the strongest interiors."],
-  ["02", "Luxury is not more", "A room can feel richer by removing three things and improving one."],
-  ["03", "What we look for in materials", "Texture, reflection, ageing, maintenance and the moment two surfaces meet."]
+  ["01", "Custom should mean considered", "Why the most personal interiors begin with better questions—not a longer shopping list."],
+  ["02", "Where a budget makes a difference", "How to prioritise daily-use surfaces, storage and details without upgrading everything."],
+  ["03", "A room has to work on Tuesday", "The layout, light and small routines that make an interior feel right long after the reveal."]
 ];
 
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
@@ -67,7 +69,7 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
   );
 }
 
-function Nav() {
+function Nav({ logoUrl }: { logoUrl: string }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("Home");
   const { scrollYProgress } = useScroll();
@@ -115,7 +117,7 @@ function Nav() {
       <div className="rr-header-inner">
         <a href="#top" className="rr-brand" aria-label="RR Creative Interiors home" onClick={() => setActive("Home")}>
           <img
-            src={RR_LOGO}
+            src={logoUrl}
             alt="RR Creative Interiors"
           />
         </a>
@@ -328,9 +330,26 @@ function ContactForm() {
 
 export default function Page() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioCard[]>(PORTFOLIO);
+  const [siteAssets, setSiteAssets] = useState<Record<string, string>>({});
+  const images = useMemo(() => ({
+    ...IMG,
+    living: siteAssets.livingSpace || IMG.living,
+    lounge: siteAssets.livingSpace || IMG.lounge,
+    kitchen: siteAssets.kitchen || IMG.kitchen,
+    bedroom: siteAssets.bedroom || IMG.bedroom,
+    marble: siteAssets.eyeMaterial || IMG.marble,
+    detail: siteAssets.eyeLighting || IMG.detail,
+    proportion: siteAssets.eyeProportion || IMG.living,
+    materials: siteAssets.materialsBoard || IMG.detail,
+  }), [siteAssets]);
+  const heroSceneImages = useMemo(() => Array.from({ length: 8 }, (_, index) => siteAssets[`heroScene${index + 1}`]), [siteAssets]);
 
   useEffect(() => {
     let active = true;
+    fetch("/api/site-assets", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (active && data?.assets && typeof data.assets === "object") setSiteAssets(data.assets as Record<string, string>); })
+      .catch(() => {});
     fetch("/api/portfolio", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
@@ -346,7 +365,7 @@ export default function Page() {
             project: item.project,
             description: item.description,
           }));
-        setPortfolioItems([...uploaded, ...PORTFOLIO]);
+        setPortfolioItems(uploaded.length ? uploaded : PORTFOLIO);
       })
       .catch(() => {});
     return () => { active = false; };
@@ -356,9 +375,9 @@ export default function Page() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://rrcreativeinteriors.in/#website","url":"https://rrcreativeinteriors.in/","name":"RR Creative Interiors","alternateName":"RR Interiors","description":"RR Creative Interiors — Beyond The Ordinary. Interior design studio in Bangalore.","inLanguage":"en-IN"},{"@type":"Organization","@id":"https://rrcreativeinteriors.in/#organization","name":"RR Creative Interiors","alternateName":"RR Interiors","url":"https://rrcreativeinteriors.in/","logo":{"@type":"ImageObject","url":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png","contentUrl":"https://rrcreativeinteriors.in/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png"},"telephone":["+919901592929","+919110241957"],"email":"sales@rrcreativeinteriors.in","address":{"@type":"PostalAddress","streetAddress":"32, 2nd Cross Rd, KNB Aaradya layout, Kommaghatta","addressLocality":"Bengaluru","addressRegion":"Karnataka","postalCode":"560060","addressCountry":"IN"},"areaServed":{"@type":"City","name":"Bengaluru"},"description":"Interior design studio in Bangalore offering residential, commercial and turnkey interior design services.","knowsAbout":["Residential interior design","Commercial interior design","Turnkey interiors","Modular kitchens","Wardrobes and storage","Lighting and ceiling design"]}]})}} />
       <SmoothScroll />
-      <Nav />
+      <Nav logoUrl={siteAssets.logo || RR_LOGO} />
       <main id="top">
-        <MorphScrollHero />
+        <MorphScrollHero sceneImages={heroSceneImages} />
 
         <section id="about" className="relative bg-[#eee5d9] text-[#1d1713]">
           <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-28 md:px-10 lg:grid-cols-[.8fr_1.2fr] lg:py-40">
@@ -424,10 +443,10 @@ export default function Page() {
             <Reveal>
               <div className="flex items-end justify-between gap-10">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">07 · Portfolio studies</p>
-                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">A growing library of<br /><em className="text-[#9d1714]">spaces, details & ideas.</em></h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">07 · Selected work & details</p>
+                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">Real spaces.<br /><em className="text-[#9d1714]">Personal solutions.</em></h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-[#685b51] md:block">Your uploaded RR reference images are blended into the experience without removing the existing editorial photography.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#685b51] md:block">Published project photographs appear here. Add or replace images through the admin Portfolio library.</p>
               </div>
             </Reveal>
 
@@ -454,7 +473,7 @@ export default function Page() {
                     )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
                     <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.project ? `${item.project}${item.title ? ` · ${item.title}` : ""}` : "RR visual reference"}</span>
+                      <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.project ? `${item.project}${item.title ? ` · ${item.title}` : ""}` : "RR project photograph"}</span>
                       <ArrowUpRight size={14} className="text-[#edca83]" />
                     </div>
                   </figure>
@@ -463,7 +482,7 @@ export default function Page() {
             </div>
 
             <div className="mt-12 flex items-center justify-between border-t border-[#1d1713]/15 pt-5">
-              <span className="text-[8px] uppercase tracking-[.18em] text-[#8c6f4f]">21 uploaded visual references</span>
+              <span className="text-[8px] uppercase tracking-[.18em] text-[#8c6f4f]">Project gallery · Updated as work is published</span>
               <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
             </div>
           </div>
@@ -650,7 +669,7 @@ export default function Page() {
         <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-16 md:px-10 md:grid-cols-[1.2fr_.8fr_.8fr]">
           <div>
             <img
-              src="/rr-media/logo/rr%205.png"
+              src={siteAssets.logo || RR_LOGO}
               alt="RR Creative Interiors"
               className="h-14 w-auto brightness-110"
             />
@@ -678,7 +697,7 @@ export default function Page() {
           </div>
         </div>
         <div className="border-t border-white/10 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-white/25 md:px-10">
-          © 2026 RR Creative Interiors · Bangalore · Demo experience — replace visual references with real RR work before launch
+          © 2026 RR Creative Interiors · Bengaluru · Fully customised interiors, thoughtfully priced.
         </div>
       </footer>
     </>
