@@ -538,44 +538,44 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="services" className="bg-[#17110e] text-white">
+        <section id="services" className="bg-[#eee7dd] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
-                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">10 · Services</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Everything beneath the surface.</h2></div>
-                <p className="hidden max-w-md text-sm leading-7 text-white/45 md:block">A complete design and execution vocabulary — without forcing every project into the same mould.</p>
+                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">What we do</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Full service. No fixed formula.</h2></div>
+                <p className="hidden max-w-md text-sm leading-7 text-[#6f6054] md:block">From one carefully planned room to a full turnkey project, the scope is shaped around what you actually need.</p>
               </div>
             </Reveal>
 
-            <div className="mt-14 border-t border-white/12">
+            <div className="mt-14 border-t border-[#2b211a]/15">
               {services.map(([n, name, desc, img]) => (
-                <motion.div key={n} className="service-row group relative grid gap-5 border-b border-white/12 py-8 md:grid-cols-[70px_1fr_1fr_32px] md:items-center" whileHover={{ x: 8 }}>
-                  <span className="text-[10px] tracking-[.2em] text-[#d9ad5c]">{n}</span>
+                <div key={n} className="service-row group relative grid gap-5 border-b border-[#2b211a]/15 py-8 md:grid-cols-[70px_1fr_1fr_32px] md:items-center">
+                  <span className="text-[10px] tracking-[.2em] text-[#956c3d]">{n}</span>
                   <h3 className="font-serif text-3xl md:text-4xl">{name}</h3>
-                  <p className="max-w-lg text-sm leading-7 text-white/48">{desc}</p>
-                  <ArrowUpRight className="text-[#e1c078] transition group-hover:translate-x-1 group-hover:-translate-y-1" size={19} />
+                  <p className="max-w-lg text-sm leading-7 text-[#6f6054]">{desc}</p>
+                  <ArrowUpRight className="service-row-arrow text-[#a13b2e]" size={19} />
                   <div className="service-preview pointer-events-none absolute right-[4%] top-1/2 z-20 hidden aspect-[4/3] w-[250px] -translate-y-1/2 overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,.4)] md:block">
-                    <img src={img} alt="" className="h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-100" />
+                    <img src={images[img]} alt="" className="h-full w-full object-cover opacity-0" />
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="process" className="bg-[#eee5d9] text-[#1d1713]">
+        <section id="process" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.62fr_1.38fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">11 · Process</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Clear enough to trust.</h2>
-              <p className="mt-7 max-w-md text-sm leading-7 text-[#695d53]">The goal is not to make the process feel complicated. It is to make complex work feel calm from the outside.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">How we work</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">A clear brief. Considered choices.</h2>
+              <p className="mt-7 max-w-md text-sm leading-7 text-[#6f6054]">Custom work should still feel clear. We agree the priorities and scope, refine the design with you, then move into execution with the decisions visible.</p>
             </Reveal>
             <div className="border-t border-[#1d1713]/15">
-              {[["01","Discover","Understand the property, the people, the routine, the constraints and the ambition."],["02","Design","Layout, 3D, materials, lighting and details are refined into one visual language."],["03","Build","Fabrication, site coordination and quality checks keep the design honest in the real world."],["04","Handover","The final space is resolved down to the small things before it becomes yours."]].map(([n,h,p],i)=>(
-                <Reveal delay={i*.05} key={n} className="grid gap-5 border-b border-[#1d1713]/15 py-10 md:grid-cols-[70px_240px_1fr]">
-                  <span className="text-[10px] tracking-[.2em] text-[#a17745]">{n}</span>
+              {[["01","Brief & priorities","Understand the property, your routine, what must change and the budget you want the design to respect."],["02","Design & options","Refine layout, storage, finishes and lighting into a direction that feels right for you."],["03","Scope & approval","Review the proposal, inclusions, material choices and price before work begins. Changes are discussed before they change the scope."],["04","Execution & handover","Coordinate the work, review the details and resolve the final items before the space is handed over."]].map(([n,h,p],i)=>(
+                <Reveal delay={i*.05} key={n} className="grid gap-5 border-b border-[#2b211a]/15 py-10 md:grid-cols-[70px_240px_1fr]">
+                  <span className="text-[10px] tracking-[.2em] text-[#956c3d]">{n}</span>
                   <h3 className="font-serif text-3xl md:text-4xl">{h}</h3>
-                  <p className="text-sm leading-7 text-[#695d53]">{p}</p>
+                  <p className="text-sm leading-7 text-[#6f6054]">{p}</p>
                 </Reveal>
               ))}
             </div>
