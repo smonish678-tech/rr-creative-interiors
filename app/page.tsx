@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll } from "framer-motion";
 import { ArrowUpRight, ChevronRight, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
@@ -56,13 +56,14 @@ const journal = [
 ];
 
 function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const reduceMotion = useReducedMotion() ?? false;
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, transform: "translateY(14px)" }}
+      initial={{ opacity: 0, transform: reduceMotion ? "none" : "translateY(14px)" }}
       whileInView={{ opacity: 1, transform: "translateY(0px)" }}
       viewport={{ once: true, margin: "-12% 0px" }}
-      transition={{ duration: 0.55, delay, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ duration: reduceMotion ? 0.12 : 0.55, delay: reduceMotion ? 0 : delay, ease: [0.23, 1, 0.32, 1] }}
     >
       {children}
     </motion.div>
