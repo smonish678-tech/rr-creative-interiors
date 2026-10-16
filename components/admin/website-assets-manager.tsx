@@ -108,6 +108,7 @@ export default function WebsiteAssetsManager() {
             pathname: blob.pathname,
             contentType: file.type || "image/jpeg",
             fileName: file.name,
+            sizeBytes: file.size,
           }),
         });
         const data = await response.json().catch(() => ({}));
@@ -221,7 +222,7 @@ export default function WebsiteAssetsManager() {
             {assets.map((asset) => (
               <article key={asset.id} className="rr-site-asset-card">
                 <button type="button" className="rr-site-asset-image" onClick={() => setSelectedPreview(asset.url)} aria-label={`Preview ${asset.fileName}`}><img src={asset.url} alt={asset.fileName}/></button>
-                <div className="rr-site-asset-card-body"><b title={asset.fileName}>{asset.fileName}</b><small>{formatBytes(0 + 1)} · {new Date(asset.createdAt).toLocaleDateString("en-IN")}</small><div className="rr-site-asset-actions">{assignedIds.has(asset.id) ? <span className="rr-site-assigned-tag"><Check size={12}/> In use</span> : <span className="rr-site-unassigned-tag">Not assigned</span>}<button type="button" disabled={assignedIds.has(asset.id) || busy} onClick={() => void removeAsset(asset)} title={assignedIds.has(asset.id) ? "Replace assignment before deleting" : "Delete image"}><Trash2 size={14}/></button></div></div>
+                <div className="rr-site-asset-card-body"><b title={asset.fileName}>{asset.fileName}</b><small>{formatBytes(asset.sizeBytes)} · {new Date(asset.createdAt).toLocaleDateString("en-IN")}</small><div className="rr-site-asset-actions">{assignedIds.has(asset.id) ? <span className="rr-site-assigned-tag"><Check size={12}/> In use</span> : <span className="rr-site-unassigned-tag">Not assigned</span>}<button type="button" disabled={assignedIds.has(asset.id) || busy} onClick={() => void removeAsset(asset)} title={assignedIds.has(asset.id) ? "Replace assignment before deleting" : "Delete image"}><Trash2 size={14}/></button></div></div>
               </article>
             ))}
           </div>
