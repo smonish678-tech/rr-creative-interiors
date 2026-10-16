@@ -720,3 +720,72 @@ html,body{background:#f7f3ec;color:#29211b}
  .rr-glaze-line,.rr-spark-field{animation:none!important}
  .rr-website-assets-manager .rr-spinning{animation:none}
 }
+
+
+/* RR Creative Interiors — finished light editorial palette. */
+.rr-header{
+  color:#29211b;
+  background:linear-gradient(180deg,rgba(251,248,242,.97),rgba(251,248,242,.88));
+  border-bottom:1px solid rgba(41,33,27,.09);
+  box-shadow:0 8px 28px rgba(54,39,26,.035);
+  backdrop-filter:blur(16px);
+  transition:background 180ms ease-out,box-shadow 180ms ease-out;
+}
+.rr-header:has(.rr-mobile-nav){background:rgba(251,248,242,.98);backdrop-filter:blur(16px)}
+.rr-brand img{filter:none;transition:opacity 180ms ease-out}
+.rr-brand:hover img{filter:none;opacity:.88;transform:none}
+.rr-nav-link{color:rgba(41,33,27,.68);transition:color 180ms ease-out}
+.rr-nav-link:hover,.rr-nav-link.is-active{color:#a13b2e}
+.rr-squiggly path{stroke:#a13b2e}
+.rr-header-progress{background:#a13b2e;box-shadow:none}
+.rr-nav-cta{border-color:rgba(156,108,54,.42);background:rgba(255,255,255,.62);color:#29211b;transition:background 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out}
+.rr-nav-cta:hover{background:#a13b2e;color:#fffaf3;border-color:#a13b2e;transform:none}
+.rr-mobile-toggle{color:#29211b;background:rgba(255,255,255,.72);border-color:rgba(41,33,27,.17)}
+.rr-mobile-nav{background:rgba(251,248,242,.99);border-top-color:rgba(41,33,27,.12);backdrop-filter:blur(16px)}
+.rr-mobile-nav a{color:#514237;border-bottom-color:rgba(41,33,27,.12)}
+.rr-mobile-nav a.is-active{color:#a13b2e}
+
+.rr-footer{background:#f1ebe1;color:#29211b;border-top:1px solid rgba(41,33,27,.12)}
+.rr-footer-cta{
+  background:
+    radial-gradient(circle at 78% 44%,rgba(180,135,73,.11),transparent 28%),
+    radial-gradient(circle at 16% 64%,rgba(161,59,46,.045),transparent 25%),
+    linear-gradient(115deg,#fbf8f2,#eee5d9 70%,#f7f2e9);
+  border-top-color:rgba(41,33,27,.12);
+  border-bottom-color:rgba(41,33,27,.12);
+}
+.rr-footer-cta-glow{background:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.38) 46%,transparent 67%)}
+.rr-footer-kicker{color:#956c3d}
+.rr-footer-cta h2{color:#29211b}
+.rr-footer-cta h2 em{color:#a13b2e}
+.rr-footer-cta-orbit{border-color:rgba(156,108,54,.62);color:#29211b;transition:transform 180ms cubic-bezier(.23,1,.32,1),background 180ms ease-out,border-color 180ms ease-out}
+.rr-footer-cta-orbit:before{border-color:rgba(156,108,54,.3);transition:transform 180ms ease-out}
+.rr-footer-cta-orbit svg{color:#a13b2e;transition:transform 180ms ease-out}
+.rr-footer-cta-orbit:hover{background:rgba(180,135,73,.1);border-color:#956c3d}
+.rr-footer-cta-line{border-top-color:rgba(41,33,27,.14);color:#786958}
+.rr-floating-contact{border-color:rgba(41,33,27,.14);background:rgba(251,248,242,.96);box-shadow:0 12px 34px rgba(45,33,22,.13)}
+.rr-float{color:#29211b;border-color:rgba(41,33,27,.13);transition:background 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out,transform 180ms ease-out}
+.rr-float-wa{background:rgba(53,168,82,.065);border-color:rgba(79,156,105,.24)}
+.rr-float:hover{background:#a13b2e;color:#fffaf3;border-color:#a13b2e;transform:translateY(-1px)}
+.rr-float-wa:hover{background:#427e51;color:white;border-color:#427e51}
+.rr-glaze-line{background:linear-gradient(180deg,transparent,rgba(161,59,46,.26),transparent)}
+.rr-glaze-line::after{background:radial-gradient(ellipse,rgba(180,135,73,.16),transparent 68%)}
+.rr-spark{background:#b48749;box-shadow:0 0 12px 1px rgba(180,135,73,.25)}
+.rr-form-submit{transition:transform 160ms ease-out,background 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out}
+.rr-field{transition:border-color 180ms ease-out,background 180ms ease-out}
+.rr-budget-chip{transition:background 180ms ease-out,color 180ms ease-out,border-color 180ms ease-out}
+.rr-contact-action,.rr-contact-icon{transition:transform 180ms ease-out,border-color 180ms ease-out,background 180ms ease-out,box-shadow 180ms ease-out,color 180ms ease-out}
+
+@media(hover:hover) and (pointer:fine){
+  .rr-footer-cta-orbit:hover{transform:rotate(-3deg) scale(1.015)}
+  .rr-footer-cta-orbit:hover:before{transform:rotate(10deg) scale(.97)}
+  .rr-footer-cta-orbit:hover svg{transform:translate(3px,-3px)}
+}
+@media(hover:none){
+  .rr-portfolio-grid .group:hover img,.rr-portfolio-grid .group:hover video{transform:none}
+  .rr-contact-action:hover,.rr-form-submit:hover,.rr-budget-chip:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .rr-header,.rr-nav-link,.rr-nav-cta,.rr-mobile-toggle,.rr-footer-cta-orbit,.rr-footer-cta-orbit:before,.rr-footer-cta-orbit svg,.rr-float,.rr-form-submit,.rr-field,.rr-budget-chip,.rr-contact-action,.rr-contact-icon{transition:none!important}
+  .rr-glaze-line::after,.rr-spark{animation:none!important}
+}
