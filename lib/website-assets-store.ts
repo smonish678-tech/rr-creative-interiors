@@ -94,6 +94,8 @@ export async function removeWebsiteAsset(id: string): Promise<void> {
   const assigned = WEBSITE_ASSET_SLOT_OPTIONS.find((slot) => config.assignments[slot.key] === id);
   if (assigned) throw new Error(`This image is assigned to “${assigned.label}”. Replace or clear that slot before deleting it.`);
   const token = storageToken();
-  await del(asset.url, { token });
+  // Remove the manifest entry first. If blob deletion then fails, the result is an orphaned file,
+  // never a broken public site assignment or a manifest pointing at a deleted object.
   await saveWebsiteAssetConfig({ ...config, assets: config.assets.filter((item) => item.id !== id) });
+  await del(asset.url, { token });
 }
