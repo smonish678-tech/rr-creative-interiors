@@ -428,7 +428,7 @@ export default function Page() {
                   </div>
                 </Reveal>
                 <Reveal className="group relative min-h-[300px] overflow-hidden">
-                  <img src={images.bedroom} alt="Bedroom interior design" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-[1.045]" />
+                  <img src={images.bedroom} alt="Bedroom interior design" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   <div className="absolute bottom-0 p-7">
                     <p className="text-[9px] uppercase tracking-[.2em] text-white/90">Private · Thought through</p>
@@ -474,8 +474,8 @@ export default function Page() {
                         className="block h-auto w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
                       />
                     )}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
-                    <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 transition-opacity duration-220 ease-out group-hover:opacity-100" />
+                    <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between translate-y-2 opacity-0 transition duration-220 ease-out group-hover:translate-y-0 group-hover:opacity-100">
                       <span className="text-[8px] uppercase tracking-[.18em] text-white">{item.id || item.project ? `${item.project || "RR project"}${item.title ? ` · ${item.title}` : ""}` : "Interior design reference"}</span>
                       <ArrowUpRight size={14} className="text-[#edca83]" />
                     </div>
