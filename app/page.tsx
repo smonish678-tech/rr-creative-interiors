@@ -714,7 +714,7 @@ export default function Page() {
           </div>
         </div>
         <div className="border-t border-[#27231e]/15 px-6 py-5 text-[8px] uppercase tracking-[.18em] text-[#63584e] md:px-10">
-          © 2026 RR Creative Interiors · Bengaluru · Demo experience — replace visual references with real RR work before launch
+          © 2026 RR Creative Interiors · Bengaluru · Fully customised interiors · Thoughtfully priced · Bengaluru
         </div>
       </footer>
     </>
