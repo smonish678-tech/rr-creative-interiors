@@ -396,30 +396,30 @@ export default function Page() {
       <main id="top">
         <MorphScrollHero assets={siteAssets} />
 
-        <section id="about" className="relative bg-[#eee5d9] text-[#1d1713]">
+        <section id="about" className="relative bg-[#f7f4ee] text-[#27231f]">
           <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-28 md:px-10 lg:grid-cols-[.8fr_1.2fr] lg:py-40">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-[#98764d]">05 · The studio</p>
-              <h2 className="mt-5 max-w-xl font-serif text-5xl leading-[.94] tracking-[-.04em] md:text-7xl">A room should feel inevitable.</h2>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#98683f]">THE RR APPROACH</p>
+              <h2 className="mt-5 max-w-xl font-serif text-5xl leading-[.94] tracking-[-.04em] md:text-7xl">Designed around you. Not a package.</h2>
             </Reveal>
             <Reveal delay={0.1}>
               <div className="max-w-3xl">
-                <p className="text-xl leading-9 text-[#62564e]">Not staged. Not overloaded. Not designed for a photograph before it is designed for a life.</p>
-                <p className="mt-8 text-base leading-8 text-[#6c6056]">RR Creative Interiors works from the inside out: understand the person, solve the plan, choose the material, then carry the idea through the site.</p>
+                <p className="text-xl leading-9 text-[#51463d]">Fully customised interiors, thoughtfully priced.</p>
+                <p className="mt-8 text-base leading-8 text-[#63584e]">We shape each project around your routines, preferences and priorities—from layout and storage to finishes and made-to-measure furniture. We discuss the scope and the budget together, so you can decide where to invest and what can wait.</p>
               </div>
             </Reveal>
           </div>
         </section>
 
-        <section id="spaces" className="bg-[#15100d] text-white">
+        <section id="spaces" className="bg-[#eee8de] text-[#27231f]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">06 · Spatial studies</p>
-                  <h2 className="mt-5 max-w-2xl font-serif text-5xl leading-[.94] md:text-7xl">The mood is part of the architecture.</h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">SPACES, SHAPED WITH INTENT</p>
+                  <h2 className="mt-5 max-w-2xl font-serif text-5xl leading-[.94] md:text-7xl">The details should fit the life.</h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-white/48 md:block">Temporary demo imagery — these are visual studies, not claimed RR projects. Replace with real project shoots as they arrive.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#63584e] md:block">A space comes together through the everyday decisions: how it flows, what it stores, how light falls, and which finishes earn their place.</p>
               </div>
             </Reveal>
 
@@ -455,15 +455,15 @@ export default function Page() {
         </section>
 
 
-        <section id="portfolio" className="relative overflow-hidden bg-[#e8ded1] text-[#1d1713]">
+        <section id="portfolio" className="relative overflow-hidden bg-[#f7f4ee] text-[#27231f]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-40">
             <Reveal>
               <div className="flex items-end justify-between gap-10">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">07 · Portfolio studies</p>
-                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">A growing library of<br /><em className="text-[#9d1714]">spaces, details & ideas.</em></h2>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">{hasUploadedPortfolio ? "SELECTED RR WORK" : "FORM · FINISH · LIGHT"}</p>
+                  <h2 className="mt-5 max-w-4xl font-serif text-6xl leading-[.9] tracking-[-.045em] md:text-8xl">{hasUploadedPortfolio ? <>Made for a brief.<br /><em className="text-[#9d352a]">Built around real life.</em></> : <>A visual vocabulary of<br /><em className="text-[#9d352a]">form, finish & light.</em></>}</h2>
                 </div>
-                <p className="hidden max-w-sm text-sm leading-7 text-[#685b51] md:block">Your uploaded RR reference images are blended into the experience without removing the existing editorial photography.</p>
+                <p className="hidden max-w-sm text-sm leading-7 text-[#63584e] md:block">{hasUploadedPortfolio ? "Published images from the Portfolio library appear here. Add or replace them in the admin whenever a project is ready to share." : "These are visual references, not a claim that every image is a completed RR project. Publish your own photography through the Portfolio library to replace them."}</p>
               </div>
             </Reveal>
 
@@ -499,18 +499,18 @@ export default function Page() {
             </div>
 
             <div className="mt-12 flex items-center justify-between border-t border-[#1d1713]/15 pt-5">
-              <span className="text-[8px] uppercase tracking-[.18em] text-[#8c6f4f]">21 uploaded visual references</span>
+              <span className="text-[8px] uppercase tracking-[.18em] text-[#98683f]">{hasUploadedPortfolio ? `${portfolioItems.length} published project images` : "Visual references · awaiting your project photography"}</span>
               <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
             </div>
           </div>
         </section>
 
-        <section id="eye" className="relative overflow-hidden bg-[#16100d] text-white">
+        <section id="eye" className="relative overflow-hidden bg-[#eee8de] text-[#27231f]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">08 · The designer&apos;s eye</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">We see the<br /><em className="text-[#e3bd71]">quiet decisions.</em></h2>
-              <p className="mt-8 max-w-md text-sm leading-7 text-white/48">A premium room rarely announces why it works. The proportion, the visual axis, the light, the edge of a material — those are the decisions we want you to notice only after you feel them.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">HOW WE MAKE THE DECISIONS</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.88] tracking-[-.04em] md:text-8xl">Good design lives<br /><em className="text-[#9d352a]">in the decisions.</em></h2>
+              <p className="mt-8 max-w-md text-sm leading-7 text-[#63584e]">The design is more than a finish. Proportion, light, storage and the way materials meet make a room feel resolved. We look at those decisions alongside the cost of building them.</p>
             </Reveal>
 
             <div className="grid gap-8">
@@ -535,11 +535,11 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="philosophy" className="bg-[#e9dfd2] text-[#1d1713]">
+        <section id="philosophy" className="bg-[#f7f4ee] text-[#27231f]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.7fr_1.3fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">09 · Philosophy</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">The room before the room.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">WHAT WE BELIEVE</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Fully customised.<br /><em className="text-[#9d352a]">Thought through.</em></h2>
             </Reveal>
             <Reveal delay={0.08}>
               <div className="grid gap-0 border-t border-[#1d1713]/15">
@@ -555,12 +555,12 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="services" className="bg-[#17110e] text-white">
+        <section id="services" className="bg-[#eee8de] text-[#27231f]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
               <div className="flex items-end justify-between gap-8">
-                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">10 · Services</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">Everything beneath the surface.</h2></div>
-                <p className="hidden max-w-md text-sm leading-7 text-white/45 md:block">A complete design and execution vocabulary — without forcing every project into the same mould.</p>
+                <div><p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">ONE STUDIO · THE RIGHT SCOPE</p><h2 className="mt-5 font-serif text-5xl leading-[.94] md:text-7xl">The service should fit the project.</h2></div>
+                <p className="hidden max-w-md text-sm leading-7 text-[#63584e] md:block">From one focused room to a complete turnkey brief, we tailor the work to what your property actually needs.</p>
               </div>
             </Reveal>
 
@@ -580,15 +580,15 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="process" className="bg-[#eee5d9] text-[#1d1713]">
+        <section id="process" className="bg-[#f7f4ee] text-[#27231f]">
           <div className="mx-auto grid max-w-[1380px] gap-14 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.62fr_1.38fr]">
             <Reveal className="lg:sticky lg:top-28 lg:self-start">
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">11 · Process</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Clear enough to trust.</h2>
-              <p className="mt-7 max-w-md text-sm leading-7 text-[#695d53]">The goal is not to make the process feel complicated. It is to make complex work feel calm from the outside.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">A CLEAR WAY FORWARD</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Clear decisions.<br />Better control.</h2>
+              <p className="mt-7 max-w-md text-sm leading-7 text-[#63584e]">You should know what is being designed, what is included and what needs a decision next. We keep those conversations visible as the work progresses.</p>
             </Reveal>
             <div className="border-t border-[#1d1713]/15">
-              {[["01","Discover","Understand the property, the people, the routine, the constraints and the ambition."],["02","Design","Layout, 3D, materials, lighting and details are refined into one visual language."],["03","Build","Fabrication, site coordination and quality checks keep the design honest in the real world."],["04","Handover","The final space is resolved down to the small things before it becomes yours."]].map(([n,h,p],i)=>(
+              {[["01","Understand","Your property, requirements, priorities, budget and what you want to change."],["02","Design & cost","Develop the layout, finishes and custom details; review the scope and estimate together."],["03","Approve","Confirm the design, inclusions, materials and milestones before execution begins."],["04","Execute & hand over","Coordinate the agreed work, check the finish and resolve details before handover."]].map(([n,h,p],i)=>(
                 <Reveal delay={i*.05} key={n} className="grid gap-5 border-b border-[#1d1713]/15 py-10 md:grid-cols-[70px_240px_1fr]">
                   <span className="text-[10px] tracking-[.2em] text-[#a17745]">{n}</span>
                   <h3 className="font-serif text-3xl md:text-4xl">{h}</h3>
@@ -599,28 +599,28 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="bg-[#16100d] text-white">
+        <section className="bg-[#eee8de] text-[#27231f]">
           <div className="mx-auto grid max-w-[1380px] gap-8 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#dcb66d]">12 · Material study</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Texture is where the design becomes physical.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">MATERIALS · FINISH · MAINTENANCE</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Choose the finish.<br /><em className="text-[#9d352a]">Understand the trade-off.</em></h2>
             </Reveal>
             <Reveal delay={0.08} className="relative min-h-[540px] overflow-hidden">
               <img src={sitePhotos.moodboard} alt="Luxury materials moodboard visual reference" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#f7f4ee]/90 via-[#f7f4ee]/8 to-transparent" />
               <div className="absolute bottom-7 left-7 right-7 flex items-end justify-between">
-                <div><p className="text-[9px] uppercase tracking-[.2em] text-[#e3c27d]">Marble · timber · brass · stone</p><p className="mt-2 max-w-md text-sm leading-6 text-white/70">Temporary moodboard reference. The live site can later use RR&apos;s actual material library and site photography.</p></div>
-                <span className="font-serif text-5xl text-white/35">RR</span>
+                <div><p className="text-[9px] uppercase tracking-[.2em] text-[#87552f]">Marble · timber · metal · stone</p><p className="mt-2 max-w-md text-sm leading-6 text-[#51463d]">We weigh appearance against durability, maintenance and the cost of the finish—not just how it looks in a photograph.</p></div>
+                <span className="font-serif text-5xl text-[#27231f]/35">RR</span>
               </div>
             </Reveal>
           </div>
         </section>
 
-        <section id="journal" className="bg-[#e8ded1] text-[#1d1713]">
+        <section id="journal" className="bg-[#f7f4ee] text-[#27231f]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">13 · Journal</p>
-              <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">Ideas worth living with.</h2>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">DESIGN & BUDGET, CONSIDERED</p>
+              <h2 className="mt-5 max-w-3xl font-serif text-6xl leading-[.9] md:text-8xl">Useful things to decide early.</h2>
             </Reveal>
             <div className="mt-14 grid gap-0 border-t border-[#1d1713]/15 md:grid-cols-3">
               {journal.map(([n,h,p])=>(
@@ -628,19 +628,19 @@ export default function Page() {
                   <span className="text-[9px] tracking-[.2em] text-[#a17745]">{n}</span>
                   <h3 className="mt-12 font-serif text-3xl leading-tight">{h}</h3>
                   <p className="mt-5 text-sm leading-7 text-[#695d53]">{p}</p>
-                  <a href="https://rrcreativeinteriors.in/" target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 text-[9px] uppercase tracking-[.16em]">Read the studio journal <ChevronRight size={14} /></a>
+                  <a href="#contact" className="mt-8 inline-flex items-center gap-2 text-[9px] uppercase tracking-[.16em] text-[#9d352a]">Discuss your brief <ChevronRight size={14} /></a>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="contact" className="bg-[#f1e9dc] text-[#1d1713]">
+        <section id="contact" className="bg-[#eee8de] text-[#27231f]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-36 lg:grid-cols-[.82fr_1.18fr]">
             <Reveal>
-              <p className="text-[10px] uppercase tracking-[.25em] text-[#8c6f4f]">14 · Start a project</p>
-              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Let&apos;s make room for what matters.</h2>
-              <p className="mt-8 max-w-xl text-lg leading-8 text-[#695d53]">Tell us about the home, office, retail space or turnkey project you have in mind.</p>
+              <p className="text-[10px] uppercase tracking-[.25em] text-[#98683f]">START WITH A CONVERSATION</p>
+              <h2 className="mt-5 font-serif text-6xl leading-[.9] md:text-8xl">Tell us what you have in mind.</h2>
+              <p className="mt-8 max-w-xl text-lg leading-8 text-[#63584e]">What do you need, what do you love, and what would you like us to work within? We will start with your brief—not a ready-made package.</p>
               <div className="mt-10 grid gap-3 text-sm">
                 <a href="tel:+919901592929" className="inline-flex items-center gap-3"><Phone size={16} /> +91 99015 92929</a>
                 <a href="https://wa.me/919901592929" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3">WhatsApp enquiry ↗</a>
@@ -669,8 +669,8 @@ export default function Page() {
           <div className="rr-footer-cta-glow" aria-hidden="true" />
           <div className="rr-footer-cta-inner">
             <div>
-              <p className="rr-footer-kicker">13 · Start something worth keeping</p>
-              <h2>Give your space<br /><em>a point of view.</em></h2>
+              <p className="rr-footer-kicker">FULLY CUSTOMISED · THOUGHTFULLY PRICED</p>
+              <h2>Made for you.<br /><em>Planned with care.</em></h2>
             </div>
             <a href="#contact" className="rr-footer-cta-orbit" aria-label="Start a project">
               <span>START<br />A PROJECT</span>
@@ -678,8 +678,8 @@ export default function Page() {
             </a>
           </div>
           <div className="rr-footer-cta-line">
-            <span>Residential · Commercial · Turnkey</span>
-            <span>Bangalore · Karnataka</span>
+            <span>Residential · Commercial · Design-only · Turnkey</span>
+            <span>Bengaluru · Karnataka</span>
           </div>
         </section>
 
@@ -695,8 +695,8 @@ export default function Page() {
             </p>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Explore</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/62">
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#98683f]">Explore</p>
+            <div className="mt-5 grid gap-3 text-sm text-[#63584e]">
               <a href="#spaces">Spaces</a>
               <a href="#eye">The Eye</a>
               <a href="#services">Services</a>
@@ -705,7 +705,7 @@ export default function Page() {
             </div>
           </div>
           <div>
-            <p className="text-[9px] uppercase tracking-[.2em] text-[#dcb66d]">Contact</p>
+            <p className="text-[9px] uppercase tracking-[.2em] text-[#98683f]">Contact</p>
             <div className="mt-5 grid gap-3 text-sm text-white/62">
               <a href="tel:+919901592929">+91 99015 92929</a>
               <a href="mailto:sales@rrcreativeinteriors.in">sales@rrcreativeinteriors.in</a>
