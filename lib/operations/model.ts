@@ -292,11 +292,11 @@ export function checkGate(stage: ProjectStage, facts: {
   acceptedQuote?: boolean;
   bookingSigned?: boolean;
   bookingPaymentVerified?: boolean;
-  designApproved?: boolean;
+  designDocumentReady?: boolean;\n  designApproved?: boolean;
   finalQuoteAccepted?: boolean;
   worksContractSigned?: boolean;
   productionMilestonesVerified?: boolean;
-  requiredProcurementComplete?: boolean;
+  requiredProcurementComplete?: boolean;\n  requiredProductionComplete?: boolean;
   qualityPassed?: boolean;
   dispatchPaymentVerified?: boolean;
   siteReady?: boolean;
@@ -307,12 +307,12 @@ export function checkGate(stage: ProjectStage, facts: {
   warrantyRegistered?: boolean;
 }): GateResult {
   const required: Partial<Record<ProjectStage, Array<[keyof typeof facts, string]>>> = {
-    design: [["acceptedQuote", "An accepted quote is required before design work starts."], ["bookingSigned", "The booking form must be signed."]],
-    design_approval: [["designApproved", "The current design revision must be approved."]],
+    design: [["acceptedQuote", "An accepted quote is required before design work starts."], ["bookingSigned", "The booking form must be signed."], ["bookingPaymentVerified", "The booking payment must be verified."]],
+    design_approval: [["designDocumentReady", "A reviewable design approval document must be issued."]],
     contract: [["designApproved", "An approved design is required."], ["finalQuoteAccepted", "The final quotation must be accepted."]],
     production_ready: [["designApproved", "The design must be approved."], ["finalQuoteAccepted", "The final quotation must be accepted."], ["worksContractSigned", "The works contract must be signed."], ["productionMilestonesVerified", "The required production milestone payment must be verified."]],
     production: [["requiredProcurementComplete", "Required procurement checks must be complete."]],
-    quality_check: [["requiredProcurementComplete", "Procurement must be complete."]],
+    quality_check: [["requiredProductionComplete", "Required production checks must be complete."]],
     dispatch: [["qualityPassed", "The required quality checks must pass."], ["dispatchPaymentVerified", "The applicable dispatch payment must be verified."]],
     installation: [["siteReady", "Site readiness must be confirmed."]],
     handover: [["installationComplete", "Installation must be marked complete."], ["snagsResolvedOrAccepted", "Snags must be resolved or explicitly accepted."], ["financeReconciled", "Project finances must be reconciled."], ["handoverAcknowledged", "Handover acknowledgement must be recorded."]],
