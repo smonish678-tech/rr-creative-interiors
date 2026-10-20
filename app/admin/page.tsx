@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PortfolioManager from "@/components/admin/portfolio-manager";
-import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Filter, LayoutDashboard, LogOut, Mail, Plus, Search, Settings, Users, Wallet, X, FolderOpen } from "lucide-react";
+import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Filter, LayoutDashboard, LogOut, Mail, Plus, Search, Settings, Users, Wallet, X, FolderOpen, Wrench } from "lucide-react";
 
 type Stage = "New enquiry" | "Contacted" | "Site visit" | "Proposal sent" | "Negotiation" | "Won" | "Lost";
 type Lead = { id:string; name:string; email:string; phone:string; project:string; source:string; budget:string; status:Stage; date:string; notes:string };
