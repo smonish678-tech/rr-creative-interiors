@@ -19,7 +19,9 @@ export default function OperationsPage() {
   const [documents,setDocuments]=useState<Row[]>([]);
   const [messages,setMessages]=useState<Row[]>([]);
   const [approvalLink,setApprovalLink]=useState("");
-  const [tasks,setTasks]=useState<Row[]>([]);\n  const [checklistItems,setChecklistItems]=useState<Row[]>([]);\n  const [warranties,setWarranties]=useState<Row[]>([]);
+  const [tasks,setTasks]=useState<Row[]>([]);
+  const [checklistItems,setChecklistItems]=useState<Row[]>([]);
+  const [warranties,setWarranties]=useState<Row[]>([]);
   const [selectedCustomer,setSelectedCustomer]=useState("");
   const [selectedProject,setSelectedProject]=useState("");
   const [reports,setReports]=useState<Row|null>(null);
