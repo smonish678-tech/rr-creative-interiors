@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   let processed = 0; let retried = 0; let deadLettered = 0;
   try {
     // Create one idempotent event for each payment milestone that has become due.
+    await sql`UPDATE rr_payment_milestones SET status='due', updated_at=now(), version=version+1 WHERE status='not_due' AND due_at <= current_date`;
     const due = await sql`SELECT id, project_id, label, amount_minor, due_at FROM rr_payment_milestones WHERE status IN ('due','partially_paid') AND due_at <= current_date LIMIT 100`;
     for (const milestone of due) {
       const key = `payment-milestone-due:${milestone.id}:${new Date().toISOString().slice(0,10)}`;
@@ -40,7 +41,8 @@ export async function GET(request: Request) {
           const rows = await sql`SELECT p.customer_id, p.id AS project_id FROM rr_quotes q JOIN rr_projects p ON p.id=q.project_id WHERE q.id=${event.aggregate_id}::uuid LIMIT 1`;
           if (rows.length) { customerId = String(rows[0].customer_id); projectId = String(rows[0].project_id); templateKey = "quote_ready"; }
         } else if (event.event_type === "warranty.claim_received") {
-          const rows = await sql`SELECT wc.customer_id, wc.project_id FROM rr_warranty_claims wc WHERE wc.warranty_id=${event.aggregate_id}::uuid LIMIT 1`;
+          const claimId = String(payload.claimId || '');
+          const rows = await sql`SELECT wc.customer_id, wc.project_id FROM rr_warranty_claims wc WHERE wc.id=${claimId}::uuid LIMIT 1`;
           if (rows.length) { customerId = String(rows[0].customer_id); projectId = String(rows[0].project_id); templateKey = "warranty_claim_update"; }
         } else if (event.event_type === "payment.milestone_due") {
           const milestoneId = String(payload.milestoneId || "");
@@ -72,7 +74,7 @@ export async function GET(request: Request) {
         const attempt = Number(event.attempt_count || 0) + 1;
         const dead = attempt >= 5;
         const delayMinutes = Math.min(1440, Math.pow(2, attempt) * 5);
-        await sql`UPDATE rr_events SET delivery_state=${dead ? "dead_letter" : "retry"}, attempt_count=${attempt}, next_attempt_at=now() + (${delayMinutes} || ' minutes')::interval, last_error=${(error instanceof Error ? error.message : "Unknown event error").slice(0,500)}, updated_at=now() WHERE id=${event.id}::uuid`;
+        await sql`UPDATE rr_events SET delivery_state=${dead ? "dead_letter" : "retry"}, attempt_count=${attempt}, next_attempt_at=now() + make_interval(mins => ${delayMinutes}), last_error=${(error instanceof Error ? error.message : "Unknown event error").slice(0,500)}, updated_at=now() WHERE id=${event.id}::uuid`;
         if (dead) deadLettered++; else retried++;
       }
     }
