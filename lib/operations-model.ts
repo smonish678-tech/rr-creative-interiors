@@ -23,6 +23,8 @@ export type OpsCustomer = {
   billingAddress: string;
   gstin: string;
   pan: string;
+  identityReviewRequired: boolean;
+  identityReviewReason: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -349,6 +351,8 @@ export type OpsBundle = {
   checklists: OpsChecklist[];
   warranties: OpsWarranty[];
   warrantyClaims: OpsWarrantyClaim[];
+  events: OpsEvent[];
+  backups: OpsBackup[];
   settings: OperationsSettings;
 };
 
