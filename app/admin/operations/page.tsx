@@ -5,7 +5,8 @@ import { ArrowLeft, CheckCircle2, CircleAlert, RefreshCw, ShieldCheck } from "lu
 
 type Row = Record<string, unknown>;
 type Health = { ready?: boolean; message?: string };
-type QuoteLineDraft = { room: string; description: string; quantity: string; unit: string; unitPrice: string; taxCode: string; taxRate: string };\ntype MilestoneDraft = { label: string; percent: string; trigger: string };
+type QuoteLineDraft = { room: string; description: string; quantity: string; unit: string; unitPrice: string; taxCode: string; taxRate: string };
+type MilestoneDraft = { label: string; percent: string; trigger: string };
 const tabs = ["Today","Enquiries","Customers","Projects","Quotes","Documents","Messages","Tasks","Production","Warranty","Reports"] as const;
 type Tab = (typeof tabs)[number];
 const text = (r: Row, k: string) => String(r[k] ?? "");
