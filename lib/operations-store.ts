@@ -175,7 +175,7 @@ export async function loadOpsBundle(): Promise<OpsBundle> {
   ]);
   return {
     customers, projects, quotes, milestones, transactions, documents, approvals,
-    tasks, messages, checklists, warranties, warrantyClaims, settings: settings || defaultOperationsSettings(),
+    tasks, messages, checklists, warranties, warrantyClaims,\n    events: await listOpsRecords<OpsEvent>("events", 2000),\n    backups: await listOpsRecords<OpsBackup>("backups", 100),\n    settings: settings || defaultOperationsSettings(),
   };
 }
 
