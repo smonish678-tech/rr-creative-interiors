@@ -10,7 +10,8 @@ type MilestoneDraft = { label: string; percent: string; trigger: string };
 const tabs = ["Today","Enquiries","Customers","Projects","Quotes","Payments","Documents","Messages","Tasks","Production","Warranty","Reports"] as const;
 type Tab = (typeof tabs)[number];
 const text = (r: Row, k: string) => String(r[k] ?? "");
-const date = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN") : "—";\nconst moneyText = (minor: number) => new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(minor/100);
+const date = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN") : "—";
+const moneyText = (minor: number) => new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(minor/100);
 
 export default function OperationsPage() {
   const [tab,setTab]=useState<Tab>("Today");
