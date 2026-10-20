@@ -3,16 +3,11 @@ import { loadOperationsWorkspace, type WorkspaceRecord } from "@/lib/workspace-s
 import {
   DEFAULT_CHECKLISTS,
   PROJECT_STAGES,
-  calcQuote,
-  createQuoteLine,
-  defaultOperationsSettings,
   deriveMilestoneStatus,
-  getPhase0Blockers,
   getStageTransitionGate,
   newId,
   nowIso,
   safeRecordId,
-  type ChecklistItem,
   type OpsBundle,
   type OpsChecklist,
   type OpsCustomer,
@@ -304,7 +299,7 @@ async function updateProject(input: Record<string, unknown>) {
   }
   updated.updatedAt = nowIso();
   await updateOpsRecord("projects", updated, expectedUpdatedAt || undefined);
-  await recordEvent("project.updated", "project", projectId, projectId, "Project details updated", "project-updated:" + projectId + ":" + updated.updatedAt, { changedFields: allowed.filter((field) => patch[field] !== undefined) as unknown as Record<string, unknown> });
+  await recordEvent("project.updated", "project", projectId, projectId, "Project details updated", "project-updated:" + projectId + ":" + updated.updatedAt, { changedFields: allowed.filter((field) => patch[field] !== undefined).map(String).reduce<Record<string, boolean>>((acc, field) => { acc[field] = true; return acc; }, {}) });
   return { project: updated };
 }
 
