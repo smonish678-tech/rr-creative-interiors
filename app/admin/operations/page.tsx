@@ -13,9 +13,12 @@ const date = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN")
 export default function OperationsPage() {
   const [tab,setTab]=useState<Tab>("Today");
   const [health,setHealth]=useState<Health|null>(null);
-  const [customers,setCustomers]=useState<Row[]>([]);\n  const [leads,setLeads]=useState<Row[]>([]);
+  const [customers,setCustomers]=useState<Row[]>([]);
+  const [leads,setLeads]=useState<Row[]>([]);
   const [projects,setProjects]=useState<Row[]>([]);
-  const [documents,setDocuments]=useState<Row[]>([]);\n  const [messages,setMessages]=useState<Row[]>([]);\n  const [approvalLink,setApprovalLink]=useState("");
+  const [documents,setDocuments]=useState<Row[]>([]);
+  const [messages,setMessages]=useState<Row[]>([]);
+  const [approvalLink,setApprovalLink]=useState("");
   const [tasks,setTasks]=useState<Row[]>([]);
   const [selectedCustomer,setSelectedCustomer]=useState("");
   const [selectedProject,setSelectedProject]=useState("");
