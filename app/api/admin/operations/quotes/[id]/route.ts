@@ -19,17 +19,32 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!["issued","accepted","rejected","expired"].includes(target)) return NextResponse.json({ error: "Only issue, accept, reject or expire are supported actions." }, { status: 400 });
   try {
     const sql = getSql();
-    const rows = await sql`SELECT q.*, p.customer_id, p.name AS project_name, p.project_code, c.display_name AS customer_name FROM rr_quotes q JOIN rr_projects p ON p.id=q.project_id JOIN rr_customers c ON c.id=p.customer_id WHERE q.id=${id}::uuid LIMIT 1`;
+    const rows = await sql`SELECT q.*, p.customer_id, p.name AS project_name, p.project_code, p.project_type, c.display_name AS customer_name FROM rr_quotes q JOIN rr_projects p ON p.id=q.project_id JOIN rr_customers c ON c.id=p.customer_id WHERE q.id=${id}::uuid LIMIT 1`;
     if (!rows.length) return NextResponse.json({ error: "Quote not found." }, { status: 404 });
     const q = rows[0];
     if (target === "issued") {
       if (q.status !== "draft") return NextResponse.json({ error: "Only a draft quote can be issued. Create a new revision for corrections." }, { status: 409 });
       const lines = q.lines as QuoteLine[];
       const mathErrors = assertQuoteMath({ lines, subtotalMinor: Number(q.subtotal_minor), taxMinor: Number(q.tax_minor), totalMinor: Number(q.total_minor) });
-      const milestones = await sql`SELECT label, amount_minor FROM rr_payment_milestones WHERE quote_id=${id}::uuid ORDER BY sequence`;
+      const milestones = await sql`SELECT label, trigger, amount_minor FROM rr_payment_milestones WHERE quote_id=${id}::uuid ORDER BY sequence`;
       const milestoneErrors = assertMilestoneSchedule(milestones.map((m) => ({ label: m.label, amountMinor: Number(m.amount_minor) })), Number(q.total_minor));
       const policy = await sql`SELECT value, policy_version FROM rr_settings WHERE setting_key='commercial_policy' LIMIT 1`;
       const errors = [...mathErrors, ...milestoneErrors];
+      const policyValue = policy.length && policy[0].value && typeof policy[0].value === "object" ? policy[0].value as Record<string, unknown> : {};
+      const configuredMilestones = Array.isArray(policyValue.paymentMilestones) ? policyValue.paymentMilestones as Array<Record<string, unknown>> : [];
+      if (configuredMilestones.length !== milestones.length) {
+        errors.push("Payment milestones must match the approved commercial policy: milestone count differs.");
+      } else {
+        let allocated = 0;
+        configuredMilestones.forEach((rule, index) => {
+          const expected = index === configuredMilestones.length - 1 ? Number(q.total_minor) - allocated : Math.round(Number(q.total_minor) * Number(rule.percent) / 100);
+          allocated += expected;
+          const actual = milestones[index];
+          if (!actual || Number(actual.amount_minor) !== expected || String(actual.trigger) !== String(rule.trigger) || String(actual.label).trim() !== String(rule.label).trim()) {
+            errors.push("Payment milestone " + (index + 1) + " does not match the approved label, trigger and percentage.");
+          }
+        });
+      }
       if (!policy.length) errors.push("The approved Phase 0 commercial/payment policy has not been configured.");
       if (lines.some((line) => line.taxCode === "UNCONFIRMED")) errors.push("At least one line has an unconfirmed tax code.");
       if (!q.valid_until) errors.push("Set a quote validity date before issuing.");
