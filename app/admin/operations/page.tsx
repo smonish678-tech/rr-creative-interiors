@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, CircleAlert, RefreshCw, ShieldCheck } from "lucide-react";
 
 type Row = Record<string, unknown>;
-type Health = { ready?: boolean; message?: string };
+type Health = { ready?: boolean; message?: string };\ntype QuoteLineDraft = { room: string; description: string; quantity: string; unit: string; unitPrice: string; taxCode: string; taxRate: string };\ntype MilestoneDraft = { label: string; percent: string; trigger: string };
 const tabs = ["Today","Enquiries","Customers","Projects","Quotes","Documents","Messages","Tasks","Production","Warranty","Reports"] as const;
 type Tab = (typeof tabs)[number];
 const text = (r: Row, k: string) => String(r[k] ?? "");
@@ -16,7 +16,7 @@ export default function OperationsPage() {
   const [customers,setCustomers]=useState<Row[]>([]);
   const [leads,setLeads]=useState<Row[]>([]);
   const [projects,setProjects]=useState<Row[]>([]);
-  const [documents,setDocuments]=useState<Row[]>([]);
+  const [documents,setDocuments]=useState<Row[]>([]);\n  const [quotes,setQuotes]=useState<Row[]>([]);\n  const [milestones,setMilestones]=useState<Row[]>([]);\n  const [transactions,setTransactions]=useState<Row[]>([]);\n  const [quoteLines,setQuoteLines]=useState<QuoteLineDraft[]>([{room:"",description:"",quantity:"1",unit:"item",unitPrice:"",taxCode:"UNCONFIRMED",taxRate:""}]);\n  const [milestoneDrafts,setMilestoneDrafts]=useState<MilestoneDraft[]>([{label:"Booking",percent:"",trigger:"booking"},{label:"Design sign-off",percent:"",trigger:"design_signoff"},{label:"Production release",percent:"",trigger:"production_release"},{label:"Handover",percent:"",trigger:"handover"}]);
   const [messages,setMessages]=useState<Row[]>([]);
   const [approvalLink,setApprovalLink]=useState("");
   const [tasks,setTasks]=useState<Row[]>([]);
@@ -42,11 +42,11 @@ export default function OperationsPage() {
       const response=await fetch("/api/admin/operations/health",{cache:"no-store"});
       const h=await response.json() as Health;setHealth(h);
       if(!h.ready)return;
-      const results=await Promise.all([api("/api/admin/operations/customers"),api("/api/admin/operations/projects"),api("/api/admin/operations/documents"),api("/api/admin/operations/tasks"),api("/api/admin/operations/reports"),api("/api/admin/operations/leads"),api("/api/admin/operations/messages"),api("/api/admin/operations/warranties")]);
+      const results=await Promise.all([api("/api/admin/operations/customers"),api("/api/admin/operations/projects"),api("/api/admin/operations/documents"),api("/api/admin/operations/tasks"),api("/api/admin/operations/reports"),api("/api/admin/operations/leads"),api("/api/admin/operations/messages"),api("/api/admin/operations/warranties"),api("/api/admin/operations/quotes"),api("/api/admin/operations/transactions"),api("/api/admin/operations/milestones")]);
       const c=Array.isArray(results[0].customers)?results[0].customers as Row[]:[];
       const p=Array.isArray(results[1].projects)?results[1].projects as Row[]:[];
       setCustomers(c);setProjects(p);setDocuments(Array.isArray(results[2].documents)?results[2].documents as Row[]:[]);
-      setTasks(Array.isArray(results[3].tasks)?results[3].tasks as Row[]:[]);setReports(results[4]);setLeads(Array.isArray(results[5].leads)?results[5].leads as Row[]:[]);setMessages(Array.isArray(results[6].messages)?results[6].messages as Row[]:[]);setWarranties(Array.isArray(results[7].warranties)?results[7].warranties as Row[]:[]);
+      setTasks(Array.isArray(results[3].tasks)?results[3].tasks as Row[]:[]);setReports(results[4]);setLeads(Array.isArray(results[5].leads)?results[5].leads as Row[]:[]);setMessages(Array.isArray(results[6].messages)?results[6].messages as Row[]:[]);setWarranties(Array.isArray(results[7].warranties)?results[7].warranties as Row[]:[]);setQuotes(Array.isArray(results[8].quotes)?results[8].quotes as Row[]:[]);setTransactions(Array.isArray(results[9].transactions)?results[9].transactions as Row[]:[]);setMilestones(Array.isArray(results[10].milestones)?results[10].milestones as Row[]:[]);
       if(!selectedCustomer&&c.length)setSelectedCustomer(text(c[0],"id"));
       if(!selectedProject&&p.length)setSelectedProject(text(p[0],"id"));
     }catch(e){setError(e instanceof Error?e.message:"Could not load operations.");}
@@ -69,6 +69,25 @@ export default function OperationsPage() {
     e.preventDefault();const fd=new FormData(e.currentTarget);
     await act(async()=>{const result=await api("/api/admin/operations/projects",{method:"POST",body:JSON.stringify({customerId:fd.get("customerId"),name:fd.get("name"),projectType:fd.get("type"),address:fd.get("address"),apartment:fd.get("apartment"),floor:fd.get("floor")})});setSelectedProject(text((result.project||{}) as Row,"id"));},"Project created and linked to its customer.");
   }
+  async function submitQuote(e:FormEvent<HTMLFormElement>){
+    e.preventDefault();const fd=new FormData(e.currentTarget);
+    const lines=quoteLines.map((line,index)=>({id:"line-"+(index+1),room:line.room,description:line.description,quantity:Number(line.quantity),unit:line.unit,unitPriceMinor:Math.round(Number(line.unitPrice)*100),taxCode:line.taxCode||"UNCONFIRMED",taxRateBps:Math.round(Number(line.taxRate)*100),included:true}));
+    if(lines.some(line=>!line.description||!Number.isFinite(line.quantity)||line.quantity<=0||!Number.isSafeInteger(line.unitPriceMinor)||line.unitPriceMinor<0||!Number.isFinite(line.taxRateBps)||line.taxRateBps<0)){setError("Complete each quote line with a description, quantity, INR rate and tax rate.");return;}
+    const subtotal=lines.reduce((sum,line)=>sum+Math.round(line.quantity*line.unitPriceMinor),0);
+    const tax=lines.reduce((sum,line)=>sum+Math.round(Math.round(line.quantity*line.unitPriceMinor)*line.taxRateBps/10000),0);
+    const total=subtotal+tax;
+    const filled=milestoneDrafts.filter(m=>m.percent.trim()!=="");
+    let milestonePayload:Row[]=[];
+    if(filled.length){
+      const percentSum=filled.reduce((sum,m)=>sum+Number(m.percent),0);
+      if(Math.abs(percentSum-100)>0.001){setError("Payment milestone percentages must sum to exactly 100%. Leave the schedule blank for a draft without milestones.");return;}
+      let allocated=0;
+      milestonePayload=filled.map((m,index)=>{const amount=index===filled.length-1?total-allocated:Math.round(total*Number(m.percent)/100);allocated+=amount;return {label:m.label,amountMinor:amount,trigger:m.trigger};});
+    }
+    await act(()=>api("/api/admin/operations/quotes",{method:"POST",body:JSON.stringify({projectId:fd.get("projectId"),lines,milestones:milestonePayload,validUntil:fd.get("validUntil"),exclusions:String(fd.get("exclusions")||"").split("\n").map(v=>v.trim()).filter(Boolean),assumptions:String(fd.get("assumptions")||"").split("\n").map(v=>v.trim()).filter(Boolean)})}),"Quote draft saved after server-side arithmetic checks.");
+  }
+  function updateQuoteLine(index:number,key:keyof QuoteLineDraft,value:string){setQuoteLines(current=>current.map((line,i)=>i===index?{...line,[key]:value}:line));}
+  function updateMilestone(index:number,key:keyof MilestoneDraft,value:string){setMilestoneDrafts(current=>current.map((item,i)=>i===index?{...item,[key]:value}:item));}
   async function submitDoc(e:FormEvent<HTMLFormElement>){
     e.preventDefault();const fd=new FormData(e.currentTarget);
     await act(()=>api("/api/admin/operations/documents",{method:"POST",body:JSON.stringify({projectId:fd.get("projectId"),kind:fd.get("kind"),title:fd.get("title"),snapshot:{notes:fd.get("notes")}})}),"Document draft saved.");
