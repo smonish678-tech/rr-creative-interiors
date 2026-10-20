@@ -175,7 +175,7 @@ function ContactForm() {
   const [error, setError] = useState("");
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
-  const [submissionKey] = useState(() => `rr-web-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const [submissionKey, setSubmissionKey] = useState(() => `rr-web-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const [values, setValues] = useState({
     name: "",
     phone: "",
