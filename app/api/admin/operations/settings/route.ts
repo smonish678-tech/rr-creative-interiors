@@ -11,7 +11,7 @@ function validPolicy(key: string, value: Record<string, unknown>): string | null
   if (key === "commercial_policy") {
     if (!Array.isArray(value.paymentMilestones) || value.paymentMilestones.length < 2) return "Commercial policy must include at least two payment milestones.";
     const milestones = value.paymentMilestones as Array<Record<string, unknown>>;
-    if (milestones.some((item) => typeof item.label !== "string" || !item.label.trim() || !Number.isFinite(Number(item.percent)) || Number(item.percent) < 0 || Number(item.percent) > 100)) return "Each payment milestone needs a label and percentage between 0 and 100.";
+    if (milestones.some((item) => typeof item.label !== "string" || !item.label.trim() || !Number.isFinite(Number(item.percent)) || Number(item.percent) < 0 || Number(item.percent) > 100 || !["booking","design_signoff","production_release","dispatch","handover","custom"].includes(String(item.trigger)))) return "Each payment milestone needs a label, valid trigger and percentage between 0 and 100.";
     const total = milestones.reduce((sum, item) => sum + Number(item.percent), 0);
     if (Math.abs(total - 100) > 0.001) return "Payment milestone percentages must sum to exactly 100%.";
     if (!value.deliveryClock || typeof value.deliveryClock !== "object") return "Define the delivery clock rules.";
