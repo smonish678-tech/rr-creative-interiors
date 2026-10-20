@@ -72,7 +72,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       acceptedQuote: acceptedQuote.length > 0,
       bookingSigned: bookingSigned.length > 0,
       bookingPaymentVerified: verifiedBookingPayment.length > 0,
-      bookingPaymentVerified: verifiedBookingPayment.length > 0,
       designDocumentReady: designDocumentReady.length > 0,
       designApproved: designApproved.length > 0,
       finalQuoteAccepted: finalQuoteAccepted.length > 0,
