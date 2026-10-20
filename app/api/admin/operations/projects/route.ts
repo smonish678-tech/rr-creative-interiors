@@ -54,3 +54,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: safeDatabaseError(error) }, { status: 503 });
   }
 }
+
+
+export async function PATCH(request: Request) {
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Administrator sign-in is required." }, { status: 401 });
+  let body: { id?: unknown; siteReady?: unknown; siteReadinessNotes?: unknown; designerId?: unknown };
+  try { body = await request.json() as typeof body; }
+  catch { return NextResponse.json({ error: "Project update is required." }, { status: 400 }); }
+  const id = typeof body.id === "string" ? body.id : "";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Project ID is invalid." }, { status: 400 });
+  if (typeof body.siteReady !== "boolean") return NextResponse.json({ error: "Site readiness must be explicitly confirmed true or false." }, { status: 400 });
+  const notes = typeof body.siteReadinessNotes === "string" ? body.siteReadinessNotes.trim().slice(0,1000) : "";
+  if (!body.siteReady && !notes) return NextResponse.json({ error: "Add a reason if the site is not ready." }, { status: 400 });
+  try {
+    const sql = getSql();
+    const rows = await sql`UPDATE rr_projects SET site_ready=${body.siteReady}, updated_at=now(), version=version+1 WHERE id=${id}::uuid RETURNING *`;
+    if (!rows.length) return NextResponse.json({ error: "Project not found." }, { status: 404 });
+    await sql`INSERT INTO rr_audit_log (actor_id, action, entity_type, entity_id, after_state, reason) VALUES ('admin', 'site_readiness_update', 'project', ${id}, ${JSON.stringify({ siteReady: body.siteReady })}::jsonb, ${notes || null})`;
+    return NextResponse.json({ project: rows[0] }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) { return NextResponse.json({ error: safeDatabaseError(error) }, { status: 503 }); }
+}
