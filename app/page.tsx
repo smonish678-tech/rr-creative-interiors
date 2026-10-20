@@ -222,15 +222,15 @@ function ContactForm() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result.ok !== true) {
-        whatsappWindow?.close();
-        setError(result.error || "We couldn't save your enquiry just now. Please call or WhatsApp the studio directly.");
+        if (whatsappWindow) whatsappWindow.location.href = nextWhatsappUrl;
+        setError((result.error || "We couldn't save your enquiry just now.") + " WhatsApp has been opened as a fallback; please send the message there or call the studio.");
         return;
       }
       setSent(true);
       if (whatsappWindow) whatsappWindow.location.href = nextWhatsappUrl;
     } catch {
-      whatsappWindow?.close();
-      setError("We couldn't reach the enquiry service. Please use the WhatsApp or phone options to contact the studio directly.");
+      if (whatsappWindow) whatsappWindow.location.href = nextWhatsappUrl;
+      setError("We couldn't confirm that your enquiry was saved to our system. WhatsApp has been opened as a fallback; please send the message there or call the studio.");
     } finally {
       setSending(false);
     }
