@@ -48,8 +48,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (target === "on_hold" && !reason) return NextResponse.json({ error: "Add a reason before placing a project on hold." }, { status: 400 });
     if (target === "cancelled" && !reason) return NextResponse.json({ error: "Add a cancellation reason. Review the signed contract before confirming cancellation." }, { status: 400 });
 
-    const [acceptedQuote, bookingSigned, verifiedBookingPayment, designDocumentReady, designApproved, finalQuoteAccepted, contractSigned, paidProductionMilestone, procurementComplete, productionComplete, qualityPassed, paidDispatchMilestone, siteReady, installationComplete, snagStatus, handoverSigned, unverifiedTransactions, warrantyActive] = await Promise.all([
-      sql`SELECT id FROM rr_quotes WHERE project_id=${id}::uuid AND status='accepted' LIMIT 1`,
+    const [acceptedQuote, bookingSigned, verifiedBookingPayment, designDocumentReady, designApproved, finalQuoteAccepted, contractSigned, paidProductionMilestone, procurementComplete, productionComplete, qualityPassed, paidDispatchMilestone, siteReady, installationComplete, snagStatus, handoverSigned, unverifiedTransactions, financeTotals, warrantyActive] = await Promise.all([
+      sql`SELECT id, total_minor FROM rr_quotes WHERE project_id=${id}::uuid AND status='accepted' ORDER BY revision DESC LIMIT 1`,
       sql`SELECT id FROM rr_documents WHERE project_id=${id}::uuid AND kind='booking_form' AND status='signed' LIMIT 1`,
       sql`SELECT t.id FROM rr_transactions t JOIN rr_payment_milestones m ON m.id=t.milestone_id WHERE t.project_id=${id}::uuid AND t.direction='in' AND t.verification='verified' AND m.trigger='booking' LIMIT 1`,
       sql`SELECT id FROM rr_documents WHERE project_id=${id}::uuid AND kind='design_approval' AND status IN ('issued','sent','viewed') LIMIT 1`,
@@ -66,6 +66,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       sql`SELECT count(*)::int AS total, count(*) FILTER (WHERE status IN ('passed','not_applicable'))::int AS done FROM rr_checklist_items WHERE project_id=${id}::uuid AND phase='snag' AND required=true`,
       sql`SELECT id FROM rr_documents WHERE project_id=${id}::uuid AND kind='handover_pack' AND status='signed' LIMIT 1`,
       sql`SELECT id FROM rr_transactions WHERE project_id=${id}::uuid AND verification='unverified' LIMIT 1`,
+      sql`SELECT (COALESCE(sum(amount_minor) FILTER (WHERE direction='in' AND verification='verified'),0) - COALESCE(sum(amount_minor) FILTER (WHERE direction='out' AND kind='refund' AND verification='verified'),0))::bigint AS net_received_minor FROM rr_transactions WHERE project_id=${id}::uuid`,
       sql`SELECT id FROM rr_warranties WHERE project_id=${id}::uuid AND status='active' LIMIT 1`
     ]);
     const facts = {
@@ -85,7 +86,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       installationComplete: Number(installationComplete[0]?.total) > 0 && installationComplete[0]?.total === installationComplete[0]?.done,
       snagsResolvedOrAccepted: Number(snagStatus[0]?.total) > 0 && snagStatus[0]?.total === snagStatus[0]?.done,
       handoverAcknowledged: handoverSigned.length > 0,
-      financeReconciled: unverifiedTransactions.length === 0,
+      financeReconciled: unverifiedTransactions.length === 0 && acceptedQuote.length > 0 && Number(financeTotals[0]?.net_received_minor || 0) >= Number(acceptedQuote[0]?.total_minor || 0),
       warrantyRegistered: warrantyActive.length > 0
     };
     const gate = checkGate(target, facts);
