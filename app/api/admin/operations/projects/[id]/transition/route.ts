@@ -70,7 +70,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     ]);
     const facts = {
       acceptedQuote: acceptedQuote.length > 0,
-      bookingSigned: bookingSigned.length > 0,
+      bookingSigned: bookingSigned.length > 0,\n      bookingPaymentVerified: verifiedBookingPayment.length > 0,
       bookingPaymentVerified: verifiedBookingPayment.length > 0,
       designDocumentReady: designDocumentReady.length > 0,
       designApproved: designApproved.length > 0,
