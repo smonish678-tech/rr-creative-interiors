@@ -292,11 +292,13 @@ export function checkGate(stage: ProjectStage, facts: {
   acceptedQuote?: boolean;
   bookingSigned?: boolean;
   bookingPaymentVerified?: boolean;
-  designDocumentReady?: boolean;\n  designApproved?: boolean;
+  designDocumentReady?: boolean;
+  designApproved?: boolean;
   finalQuoteAccepted?: boolean;
   worksContractSigned?: boolean;
   productionMilestonesVerified?: boolean;
-  requiredProcurementComplete?: boolean;\n  requiredProductionComplete?: boolean;
+  requiredProcurementComplete?: boolean;
+  requiredProductionComplete?: boolean;
   qualityPassed?: boolean;
   dispatchPaymentVerified?: boolean;
   siteReady?: boolean;
