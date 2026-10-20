@@ -23,6 +23,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (before[0].verification !== "unverified") return NextResponse.json({ error: "This transaction has already been finalised. Create a correction/refund transaction instead of editing history." }, { status: 409 });
     const rows = await sql`UPDATE rr_transactions SET verification=${body.verification}, verified_by='admin', verified_at=now(), notes=concat_ws(E'\n', notes, ${reason || "Verified against actual bank/UPI credit"}), updated_at=now(), version=version+1 WHERE id=${id}::uuid AND verification='unverified' RETURNING *`;
     if (!rows.length) return NextResponse.json({ error: "Transaction was updated by another request. Reload and review the ledger." }, { status: 409 });
+    if (body.verification === "verified" && rows[0].milestone_id) {
+      await sql`UPDATE rr_payment_milestones m SET status=CASE
+        WHEN (SELECT COALESCE(sum(t.amount_minor),0) FROM rr_transactions t WHERE t.milestone_id=m.id AND t.direction='in' AND t.verification='verified') >= m.amount_minor THEN 'paid'
+        WHEN (SELECT COALESCE(sum(t.amount_minor),0) FROM rr_transactions t WHERE t.milestone_id=m.id AND t.direction='in' AND t.verification='verified') > 0 THEN 'partially_paid'
+        ELSE 'due' END, updated_at=now(), version=version+1 WHERE m.id=${rows[0].milestone_id}::uuid`;
+    }
     let receipt = null;
     if (body.verification === "verified" && before[0].direction === "in" && before[0].kind !== "refund") {
       const docId = randomUUID();
