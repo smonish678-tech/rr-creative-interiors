@@ -48,15 +48,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (target === "on_hold" && !reason) return NextResponse.json({ error: "Add a reason before placing a project on hold." }, { status: 400 });
     if (target === "cancelled" && !reason) return NextResponse.json({ error: "Add a cancellation reason. Review the signed contract before confirming cancellation." }, { status: 400 });
 
-    const [acceptedQuote, bookingSigned, verifiedBookingPayment, designApproved, finalQuoteAccepted, contractSigned, paidProductionMilestone, procurementComplete, qualityPassed, paidDispatchMilestone, siteReady, installationComplete, snagStatus, handoverSigned, unverifiedTransactions, warrantyActive] = await Promise.all([
+    const [acceptedQuote, bookingSigned, verifiedBookingPayment, designDocumentReady, designApproved, finalQuoteAccepted, contractSigned, paidProductionMilestone, procurementComplete, productionComplete, qualityPassed, paidDispatchMilestone, siteReady, installationComplete, snagStatus, handoverSigned, unverifiedTransactions, warrantyActive] = await Promise.all([
       sql`SELECT id FROM rr_quotes WHERE project_id=${id}::uuid AND status='accepted' LIMIT 1`,
       sql`SELECT id FROM rr_documents WHERE project_id=${id}::uuid AND kind='booking_form' AND status='signed' LIMIT 1`,
-      sql`SELECT id FROM rr_transactions WHERE project_id=${id}::uuid AND direction='in' AND verification='verified' LIMIT 1`,
+      sql`SELECT t.id FROM rr_transactions t JOIN rr_payment_milestones m ON m.id=t.milestone_id WHERE t.project_id=${id}::uuid AND t.direction='in' AND t.verification='verified' AND m.trigger='booking' LIMIT 1`,
+      sql`SELECT id FROM rr_documents WHERE project_id=${id}::uuid AND kind='design_approval' AND status IN ('issued','sent','viewed') LIMIT 1`,
       sql`SELECT a.id FROM rr_approvals a JOIN rr_documents d ON d.id=a.document_id WHERE a.project_id=${id}::uuid AND a.status='approved' AND d.kind='design_approval' LIMIT 1`,
       sql`SELECT id FROM rr_quotes WHERE project_id=${id}::uuid AND status='accepted' AND revision=(SELECT max(q2.revision) FROM rr_quotes q2 WHERE q2.project_id=${id}::uuid) LIMIT 1`,
       sql`SELECT id FROM rr_documents WHERE project_id=${id}::uuid AND kind='works_contract' AND status='signed' LIMIT 1`,
       sql`SELECT id FROM rr_payment_milestones WHERE project_id=${id}::uuid AND trigger IN ('production_release','design_signoff') AND status='paid' LIMIT 1`,
       sql`SELECT count(*)::int AS total, count(*) FILTER (WHERE status IN ('passed','not_applicable'))::int AS done FROM rr_checklist_items WHERE project_id=${id}::uuid AND phase='procurement' AND required=true`,
+      sql`SELECT count(*)::int AS total, count(*) FILTER (WHERE status IN ('passed','not_applicable'))::int AS done FROM rr_checklist_items WHERE project_id=${id}::uuid AND phase='production' AND required=true`,
       sql`SELECT count(*)::int AS total, count(*) FILTER (WHERE status='passed')::int AS done FROM rr_checklist_items WHERE project_id=${id}::uuid AND phase='quality' AND required=true`,
       sql`SELECT id FROM rr_payment_milestones WHERE project_id=${id}::uuid AND trigger='dispatch' AND status='paid' LIMIT 1`,
       sql`SELECT site_ready FROM rr_projects WHERE id=${id}::uuid LIMIT 1`,
@@ -70,11 +72,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       acceptedQuote: acceptedQuote.length > 0,
       bookingSigned: bookingSigned.length > 0,
       bookingPaymentVerified: verifiedBookingPayment.length > 0,
+      designDocumentReady: designDocumentReady.length > 0,
       designApproved: designApproved.length > 0,
       finalQuoteAccepted: finalQuoteAccepted.length > 0,
       worksContractSigned: contractSigned.length > 0,
       productionMilestonesVerified: paidProductionMilestone.length > 0,
       requiredProcurementComplete: Number(procurementComplete[0]?.total) > 0 && procurementComplete[0]?.total === procurementComplete[0]?.done,
+      requiredProductionComplete: Number(productionComplete[0]?.total) > 0 && productionComplete[0]?.total === productionComplete[0]?.done,
       qualityPassed: Number(qualityPassed[0]?.total) > 0 && qualityPassed[0]?.total === qualityPassed[0]?.done,
       dispatchPaymentVerified: paidDispatchMilestone.length > 0,
       siteReady: siteReady[0]?.site_ready === true,
