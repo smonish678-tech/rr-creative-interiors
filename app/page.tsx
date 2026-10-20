@@ -171,6 +171,11 @@ function Nav() {
 
 function ContactForm() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [submissionKey] = useState(() => `rr-web-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const [values, setValues] = useState({
     name: "",
     phone: "",
@@ -183,9 +188,11 @@ function ContactForm() {
   const update = (key: keyof typeof values, value: string) =>
     setValues((current) => ({ ...current, [key]: value }));
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-
+    if (sending) return;
+    setSending(true);
+    setError("");
     const text = [
       "Hello RR Creative Interiors,",
       "Name: " + values.name,
@@ -195,13 +202,38 @@ function ContactForm() {
       "Budget: " + values.budget,
       "Message: " + values.message
     ].join("\n");
-
-    window.open(
-      "https://wa.me/919901592929?text=" + encodeURIComponent(text),
-      "_blank",
-      "noopener,noreferrer"
-    );
-    setSent(true);
+    const nextWhatsappUrl = "https://wa.me/919901592929?text=" + encodeURIComponent(text);
+    setWhatsappUrl(nextWhatsappUrl);
+    // Open synchronously so the browser doesn't block the WhatsApp handoff after the network request.
+    const whatsappWindow = window.open("about:blank", "_blank");
+    try {
+      const response = await fetch("/api/enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Idempotency-Key": submissionKey },
+        body: JSON.stringify({
+          name: values.name,
+          phone: values.phone,
+          email: values.email,
+          projectType: values.type,
+          budget: values.budget,
+          message: values.message,
+          companyWebsite
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok !== true) {
+        whatsappWindow?.close();
+        setError(result.error || "We couldn't save your enquiry just now. Please call or WhatsApp the studio directly.");
+        return;
+      }
+      setSent(true);
+      if (whatsappWindow) whatsappWindow.location.href = nextWhatsappUrl;
+    } catch {
+      whatsappWindow?.close();
+      setError("We couldn't reach the enquiry service. Please use the WhatsApp or phone options to contact the studio directly.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const budgetOptions = ["₹10–20L", "₹20–40L", "₹40–70L", "₹70L+"];
@@ -238,31 +270,15 @@ function ContactForm() {
         <div className="rr-field-grid">
           <label className="rr-field">
             <span>01 · Name</span>
-            <input
-              required
-              value={values.name}
-              onChange={(e) => update("name", e.target.value)}
-              placeholder="Your name"
-            />
+            <input required maxLength={160} value={values.name} onChange={(e) => update("name", e.target.value)} placeholder="Your name" />
           </label>
           <label className="rr-field">
             <span>02 · Phone</span>
-            <input
-              required
-              type="tel"
-              value={values.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              placeholder="+91"
-            />
+            <input required type="tel" maxLength={40} value={values.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+91" />
           </label>
           <label className="rr-field">
             <span>03 · Email</span>
-            <input
-              type="email"
-              value={values.email}
-              onChange={(e) => update("email", e.target.value)}
-              placeholder="you@email.com"
-            />
+            <input type="email" maxLength={254} value={values.email} onChange={(e) => update("email", e.target.value)} placeholder="you@email.com" />
           </label>
           <label className="rr-field">
             <span>04 · Project</span>
@@ -281,12 +297,7 @@ function ContactForm() {
           <div className="rr-budget-label"><span>05 · Indicative budget</span><strong>{values.budget || "Choose a range"}</strong></div>
           <div className="rr-budget-grid">
             {budgetOptions.map((item) => (
-              <button
-                type="button"
-                key={item}
-                className={values.budget === item ? "rr-budget-chip is-selected" : "rr-budget-chip"}
-                onClick={() => update("budget", item)}
-              >
+              <button type="button" key={item} className={values.budget === item ? "rr-budget-chip is-selected" : "rr-budget-chip"} onClick={() => update("budget", item)}>
                 {item}
               </button>
             ))}
@@ -295,37 +306,35 @@ function ContactForm() {
 
         <label className="rr-field rr-field-message">
           <span>06 · Tell us about the space</span>
-          <textarea
-            required
-            rows={4}
-            value={values.message}
-            onChange={(e) => update("message", e.target.value)}
-            placeholder="Property, approximate size, what you are planning, and when you'd like to begin."
-          />
+          <textarea required maxLength={4000} rows={4} value={values.message} onChange={(e) => update("message", e.target.value)} placeholder="Property, approximate size, what you are planning, and when you'd like to begin." />
+        </label>
+        <label aria-hidden="true" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)" }}>
+          Website
+          <input tabIndex={-1} autoComplete="off" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} />
         </label>
 
         <div className="rr-form-foot">
           <div className="rr-form-note">
             <span className="rr-signal"></span>
-            Usually easier to begin on WhatsApp — this form prepares the enquiry for you.
+            Your enquiry is saved to our project system before WhatsApp opens.
           </div>
-          <button type="submit" className="rr-form-submit">
-            <span>Send enquiry</span>
+          <button type="submit" className="rr-form-submit" disabled={sending}>
+            <span>{sending ? "Saving enquiry…" : "Send enquiry"}</span>
             <MessageCircle size={18} />
             <ArrowUpRight size={16} />
           </button>
         </div>
 
+        {error && <p role="alert" className="rr-form-success">{error}</p>}
         {sent && (
-          <p className="rr-form-success">
-            Your WhatsApp enquiry is ready in a new tab.
+          <p role="status" className="rr-form-success">
+            Enquiry received. We&apos;ve added it to our follow-up queue. If WhatsApp didn&apos;t open, <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">continue the conversation here</a>.
           </p>
         )}
       </form>
     </div>
   );
 }
-
 export default function Page() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioCard[]>(PORTFOLIO);
 
