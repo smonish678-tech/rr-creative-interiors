@@ -219,7 +219,7 @@ export default function OperationsConsole() {
           <button type="button" className="rr-secondary" onClick={() => void refresh()} disabled={loading || busy}>
             {loading ? <LoaderCircle size={15} className="rr-spin" /> : <RefreshCw size={15} />} Refresh
           </button>
-          <button type="button" className="rr-primary" onClick={() => setCreateProjectOpen(true)} disabled={!customers.length}> <Plus size={16} /> New project</button>
+          <button type="button" className="rr-secondary" onClick={() => setCreateCustomerOpen(true)}><Users size={15}/> Add customer</button><button type="button" className="rr-primary" onClick={() => setCreateProjectOpen(true)} disabled={!customers.length}> <Plus size={16} /> New project</button>
         </div>
       </div>
 
@@ -308,7 +308,7 @@ export default function OperationsConsole() {
                   <div className="rr-ops-detail-next"><div><span>NEXT ACTION</span><b>{selectedProject.nextAction || "No next action set"}</b></div><div><span>CREATED</span><b>{dateLabel(selectedProject.createdAt)}</b></div></div>
                   <div className="rr-ops-transition">
                     <div><span className="rr-eyebrow">STAGE GATE</span><p>Choose the next stage. RR will validate evidence and explain any blockers before the status changes.</p></div>
-                    <div className="rr-ops-transition-actions"><select id="rr-ops-stage-target" defaultValue={nextStages[0] || ""} disabled={!nextStages.length || busy}><option value="">Choose next stage</option>{nextStages.map((stage) => <option key={stage} value={stage}>{PROJECT_STAGE_LABELS[stage]}</option>)}{selectedProject.stage !== "complete" && selectedProject.stage !== "on-hold" && <option value="on-hold">On hold</option>}</select><button type="button" className="rr-primary" disabled={busy} onClick={() => { const select = document.getElementById("rr-ops-stage-target") as HTMLSelectElement | null; if (select?.value) void moveStage(select.value as ProjectStage); }}>Check & move <ArrowRight size={15}/></button></div>
+                    <div className="rr-ops-transition-actions"><select key={selectedProject.id} id="rr-ops-stage-target" defaultValue={nextStages[0] || ""} disabled={!nextStages.length || busy}><option value="">Choose next stage</option>{nextStages.map((stage) => <option key={stage} value={stage}>{PROJECT_STAGE_LABELS[stage]}</option>)}{selectedProject.stage !== "complete" && selectedProject.stage !== "on-hold" && <option value="on-hold">On hold</option>}</select><button type="button" className="rr-primary" disabled={busy} onClick={() => { const select = document.getElementById("rr-ops-stage-target") as HTMLSelectElement | null; if (select?.value) void moveStage(select.value as ProjectStage); }}>Check & move <ArrowRight size={15}/></button></div>
                   </div>
                   <div className="rr-ops-subsection-head"><div><h3>Project tasks</h3><p>{projectTasksForSelected.filter((task) => !["done","cancelled"].includes(task.status)).length} open of {projectTasksForSelected.length}</p></div><button type="button" className="rr-secondary" onClick={() => setNewTaskOpen((open) => !open)}><Plus size={15}/> Add task</button></div>
                   {newTaskOpen && <form className="rr-ops-task-form" onSubmit={saveTask}>
