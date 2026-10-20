@@ -509,7 +509,7 @@ export function getStageTransitionGate(project: OpsProject, target: ProjectStage
   const openDesignTasks = bundle.tasks.some((task) => task.projectId === project.id && task.category === "design" && !["done", "cancelled"].includes(task.status));
 
   if (project.stage === "booking" && target === "design") {
-    if (!hasDocument(bundle, project.id, "booking-form") || !hasApprovedDocumentApproval(bundle, project.id, "quote")) blockers.push("The booking form and initial quotation approval must be recorded.");
+    if (!bundle.documents.some((doc) => doc.projectId === project.id && doc.kind === "booking-form" && doc.status === "signed") || !hasApprovedDocumentApproval(bundle, project.id, "quote")) blockers.push("The booking form must be signed and the initial quotation approved.");
     if (!hasVerifiedFunds) blockers.push("Record and independently verify the booking payment.");
     if (!bundle.settings.companyProfileApproved) blockers.push("Approve the RR legal entity/profile before activating the project.");
   }
