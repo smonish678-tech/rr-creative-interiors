@@ -56,9 +56,9 @@ export default function OperationsPage() {
     finally{setBusy(false);}
   }
   async function submitCustomer(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();const fd=new FormData(e.currentTarget);
+    e.preventDefault();const formElement=e.currentTarget;const fd=new FormData(formElement);
     await act(()=>api("/api/admin/operations/customers",{method:"POST",body:JSON.stringify({displayName:fd.get("name"),email:fd.get("email"),phone:fd.get("phone"),communicationPreference:fd.get("preference"),notes:fd.get("notes")})}),"Customer saved.");
-    e.currentTarget.reset();
+    formElement.reset();
   }
   async function submitProject(e:FormEvent<HTMLFormElement>){
     e.preventDefault();const fd=new FormData(e.currentTarget);
