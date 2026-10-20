@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, CircleAlert, RefreshCw, ShieldCheck } from "lucide-react";
 
 type Row = Record<string, unknown>;
-type Health = { ready?: boolean; message?: string };\ntype QuoteLineDraft = { room: string; description: string; quantity: string; unit: string; unitPrice: string; taxCode: string; taxRate: string };\ntype MilestoneDraft = { label: string; percent: string; trigger: string };
+type Health = { ready?: boolean; message?: string };
+type QuoteLineDraft = { room: string; description: string; quantity: string; unit: string; unitPrice: string; taxCode: string; taxRate: string };\ntype MilestoneDraft = { label: string; percent: string; trigger: string };
 const tabs = ["Today","Enquiries","Customers","Projects","Quotes","Documents","Messages","Tasks","Production","Warranty","Reports"] as const;
 type Tab = (typeof tabs)[number];
 const text = (r: Row, k: string) => String(r[k] ?? "");
@@ -16,7 +17,12 @@ export default function OperationsPage() {
   const [customers,setCustomers]=useState<Row[]>([]);
   const [leads,setLeads]=useState<Row[]>([]);
   const [projects,setProjects]=useState<Row[]>([]);
-  const [documents,setDocuments]=useState<Row[]>([]);\n  const [quotes,setQuotes]=useState<Row[]>([]);\n  const [milestones,setMilestones]=useState<Row[]>([]);\n  const [transactions,setTransactions]=useState<Row[]>([]);\n  const [quoteLines,setQuoteLines]=useState<QuoteLineDraft[]>([{room:"",description:"",quantity:"1",unit:"item",unitPrice:"",taxCode:"UNCONFIRMED",taxRate:""}]);\n  const [milestoneDrafts,setMilestoneDrafts]=useState<MilestoneDraft[]>([{label:"Booking",percent:"",trigger:"booking"},{label:"Design sign-off",percent:"",trigger:"design_signoff"},{label:"Production release",percent:"",trigger:"production_release"},{label:"Handover",percent:"",trigger:"handover"}]);
+  const [documents,setDocuments]=useState<Row[]>([]);
+  const [quotes,setQuotes]=useState<Row[]>([]);
+  const [milestones,setMilestones]=useState<Row[]>([]);
+  const [transactions,setTransactions]=useState<Row[]>([]);
+  const [quoteLines,setQuoteLines]=useState<QuoteLineDraft[]>([{room:"",description:"",quantity:"1",unit:"item",unitPrice:"",taxCode:"UNCONFIRMED",taxRate:""}]);
+  const [milestoneDrafts,setMilestoneDrafts]=useState<MilestoneDraft[]>([{label:"Booking",percent:"",trigger:"booking"},{label:"Design sign-off",percent:"",trigger:"design_signoff"},{label:"Production release",percent:"",trigger:"production_release"},{label:"Handover",percent:"",trigger:"handover"}]);
   const [messages,setMessages]=useState<Row[]>([]);
   const [approvalLink,setApprovalLink]=useState("");
   const [tasks,setTasks]=useState<Row[]>([]);
