@@ -105,8 +105,34 @@ export default function OperationsControlPanel() {
   }, []);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    fetch("/api/admin/workspace", { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Could not load the admin workspace.");
+        if (!data.workspace || !(data.revision === null || typeof data.revision === "string")) {
+          throw new Error("The workspace response is missing its current revision.");
+        }
+        return data as Snapshot;
+      })
+      .then((data) => {
+        if (!active) return;
+        setSnapshot(data);
+        setLoadError("");
+        setAddressDrafts((previous) => {
+          const next = { ...previous };
+          for (const property of data.workspace.properties) {
+            const id = asText(property.id);
+            if (id && next[id] === undefined) next[id] = asText(property.addressText);
+          }
+          return next;
+        });
+      })
+      .catch((error: unknown) => {
+        if (active) setLoadError(error instanceof Error ? error.message : "Could not load operations.");
+      });
+    return () => { active = false; };
+  }, []);
 
   const workspace = snapshot?.workspace;
   const percentTotal = useMemo(
