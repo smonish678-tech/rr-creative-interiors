@@ -82,14 +82,15 @@ export default function OperationsControlPanel() {
   const [addressDrafts, setAddressDrafts] = useState<Record<string, string>>({});
 
   const reload = useCallback(async () => {
-    setLoadError("");
-    const response = await fetch("/api/admin/workspace", { cache: "no-store" });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Could not load the admin workspace.");
-    if (!data.workspace || !(data.revision === null || typeof data.revision === "string")) {
-      throw new Error("The workspace response is missing its current revision.");
-    }
-    setSnapshot(data as Snapshot);
+    try {
+      const response = await fetch("/api/admin/workspace", { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not load the admin workspace.");
+      if (!data.workspace || !(data.revision === null || typeof data.revision === "string")) {
+        throw new Error("The workspace response is missing its current revision.");
+      }
+      setLoadError("");
+      setSnapshot(data as Snapshot);
     setAddressDrafts((previous) => {
       const next = { ...previous };
       for (const property of data.workspace.properties as RecordItem[]) {
@@ -97,11 +98,14 @@ export default function OperationsControlPanel() {
         if (id && next[id] === undefined) next[id] = asText(property.addressText);
       }
       return next;
-    });
+      });
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "Could not load operations.");
+    }
   }, []);
 
   useEffect(() => {
-    void reload().catch((error) => setLoadError(error instanceof Error ? error.message : "Could not load operations."));
+    void reload();
   }, [reload]);
 
   const workspace = snapshot?.workspace;
@@ -129,6 +133,8 @@ export default function OperationsControlPanel() {
       if (!response.ok) throw new Error(data.error || "The operations change could not be saved.");
       setNotice("Saved. Refreshing the workspace to synchronise all admin views.");
       window.location.reload();
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "The operations change could not be saved.");
     } finally {
       setBusy(false);
     }
