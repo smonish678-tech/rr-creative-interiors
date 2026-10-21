@@ -8,7 +8,7 @@ import WebsiteAssetsManager from "@/components/admin/website-assets-manager";
 import PipelineConfigurator from "@/components/admin/pipeline-configurator";
 import { DEFAULT_SALES_PIPELINE, PIPELINE_FIELD_OPTIONS, normalizeSalesPipeline, type PipelineAutomationTrigger, type PipelineField, type SalesPipelineStage } from "@/lib/sales-pipeline";
 import { normalizeCustomerEmail, normalizeCustomerPhone, resolveCustomerIdentity, type CustomerRecord } from "@/lib/customer-matching";
-import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Filter, LayoutDashboard, LogOut, Mail, Plus, Search, Settings, Users, Wallet, X, FolderOpen, SlidersHorizontal, Palette } from "lucide-react";
+import { AlertCircle, ArrowLeft, Bell, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Filter, LayoutDashboard, LogOut, Mail, Plus, Search, Settings, Users, Wallet, X, FolderOpen, SlidersHorizontal, Palette } from "lucide-react";
 
 type Stage = string;
 type AgreementStatus = "not-started" | "sent" | "signed";
