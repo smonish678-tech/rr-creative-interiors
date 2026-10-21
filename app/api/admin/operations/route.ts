@@ -317,6 +317,7 @@ export async function POST(request: Request) {
       } else if (currentIndex === 3) {
         if (!docHas(documents, "handover_acceptance", project.id, project.sourceOpportunityId)) missing.push("customer handover acceptance");
         if (!docHas(documents, "warranty_certificate", project.id, project.sourceOpportunityId)) missing.push("warranty certificate based on an approved warranty master");
+        if (!docHas(documents, "project_closure", project.id, project.sourceOpportunityId)) missing.push("project closure record with final account / outstanding actions reviewed");
       }
       if (missing.length) return respondError(`Milestone blocked. Missing requirements: ${missing.join(", ")}.`, 422, "PROJECT_MILESTONE_BLOCKED");
       const updated: OperationProject = {
