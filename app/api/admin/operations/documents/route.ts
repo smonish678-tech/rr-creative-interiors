@@ -139,7 +139,7 @@ export async function POST(request: Request) {
     const version = previousVersions + 1;
     const id = randomUUID();
     const pathname = `rr-creative-interiors/operations-documents/${id}/v${version}-${cleanFilename(file.name)}`;
-    const blob = await put(pathname, bytes, {
+    const blob = await put(pathname, file, {
       access: "private",
       token: privateToken,
       contentType: "application/pdf",
