@@ -364,11 +364,11 @@ export function validateFinanceDocumentChanges(
     });
     const allocatedCents = newlyVerifiedReceipts.reduce((sum, document) => sum + moneyCents(document.amount), 0);
 
+    const totalCents = invoiceTotalCents(invoice);
+    if (newPaid > totalCents) return `Invoice “${invoice.id}” cannot have receipts allocated beyond its total.`;
     if (allocationDelta !== allocatedCents) {
       return `Invoice “${invoice.id}” received amount must change by exactly the value of receipts newly verified against it; expected ₹${(allocationDelta / 100).toFixed(2)} in newly verified receipts, found ₹${(allocatedCents / 100).toFixed(2)}.`;
     }
-    const totalCents = invoiceTotalCents(invoice);
-    if (newPaid > totalCents) return `Invoice “${invoice.id}” cannot have receipts allocated beyond its total.`;
     const pendingAllocations = next
       .filter((document) => document.type === "Cash receipt" &&
         document.appliesToInvoiceId === invoice.id &&
