@@ -54,6 +54,13 @@ export type FinanceDocument = Record<string, unknown> & {
   status: string;
 };
 
+export type OperationCommercialPolicy = Record<string, unknown> & {
+  id: string;
+  version: number;
+  status: "draft" | "awaiting_rr_approval" | "awaiting_ca_approval" | "awaiting_legal_approval" | "approved" | "superseded";
+  paymentMilestones?: Array<Record<string, unknown>>;
+};
+
 export type OperationProperty = {
   id: string;
   customerId: string;
@@ -158,7 +165,25 @@ function signedContractEvidenceExists(lead: OperationLead, documents: OperationD
   });
 }
 
-function verifiedAdvanceEvidenceExists(lead: OperationLead, financeDocuments: FinanceDocument[]): boolean {
+function hasApprovedAdvancePolicy(document: FinanceDocument, policies: OperationCommercialPolicy[]): boolean {
+  const policyId = value(document, "paymentPolicyId");
+  const milestoneId = value(document, "paymentMilestoneId");
+  const version = Number(document.paymentPolicyVersion);
+  if (!policyId || !milestoneId || !Number.isInteger(version) || version < 1) return false;
+  const policy = policies.find((item) => item.id === policyId && item.version === version && item.status === "approved");
+  if (!policy || !Array.isArray(policy.paymentMilestones)) return false;
+  return policy.paymentMilestones.some((milestone) =>
+    value(milestone, "id") === milestoneId &&
+    value(milestone, "purpose") === "booking_advance" &&
+    milestone.active !== false
+  );
+}
+
+function verifiedAdvanceEvidenceExists(
+  lead: OperationLead,
+  financeDocuments: FinanceDocument[],
+  commercialPolicies: OperationCommercialPolicy[],
+): boolean {
   const id = value(lead, "verifiedAdvanceTransactionId");
   if (!id) return false;
   return financeDocuments.some((document) =>
@@ -166,6 +191,8 @@ function verifiedAdvanceEvidenceExists(lead: OperationLead, financeDocuments: Fi
     document.type === "Cash receipt" &&
     document.clientId === lead.clientId &&
     document.leadId === lead.id &&
+    value(document, "paymentPurpose") === "booking_advance" &&
+    hasApprovedAdvancePolicy(document, commercialPolicies) &&
     value(document, "paymentVerificationStatus") === "verified" &&
     Boolean(value(document, "paymentVerificationReference")) &&
     Boolean(value(document, "paymentVerifiedAt")) &&
@@ -182,6 +209,7 @@ export function validateLeadStageTransitions(input: {
   customers: OperationCustomer[];
   documents: OperationDocument[];
   financeDocuments: FinanceDocument[];
+  commercialPolicies: OperationCommercialPolicy[];
 }): string | null {
   const nextIds = new Set<string>();
   for (const lead of input.nextLeads) {
@@ -230,7 +258,7 @@ export function validateLeadStageTransitions(input: {
       if (!signedContractEvidenceExists(lead, input.documents)) {
         return `Cannot activate a project from lead “${lead.id}”: the linked contract is not a signed, versioned document with signature evidence for this customer and opportunity.`;
       }
-      if (!verifiedAdvanceEvidenceExists(lead, input.financeDocuments)) {
+      if (!verifiedAdvanceEvidenceExists(lead, input.financeDocuments, input.commercialPolicies)) {
         return `Cannot activate a project from lead “${lead.id}”: link a bank-verified advance receipt with its reference and verification timestamp.`;
       }
     }
@@ -239,7 +267,11 @@ export function validateLeadStageTransitions(input: {
 }
 
 /** Validate changes to the legacy invoice/receipt array before writing it back. */
-export function validateFinanceDocumentChanges(previous: FinanceDocument[], next: FinanceDocument[]): string | null {
+export function validateFinanceDocumentChanges(
+  previous: FinanceDocument[],
+  next: FinanceDocument[],
+  options: { allowVerifiedReceiptTransition?: boolean } = {},
+): string | null {
   const previousById = new Map(previous.map((document) => [document.id, document]));
   const nextById = new Map<string, FinanceDocument>();
 
@@ -272,8 +304,15 @@ export function validateFinanceDocumentChanges(previous: FinanceDocument[], next
         return `Financial document “${prior.id}” cannot be relinked to a different customer, opportunity or invoice.`;
       }
     }
+    const verifiedReceiptTransition = options.allowVerifiedReceiptTransition === true &&
+      prior.type === "Cash receipt" && current.type === "Cash receipt" &&
+      value(prior, "paymentVerificationStatus") === "awaiting_verification" &&
+      value(current, "paymentVerificationStatus") === "verified" &&
+      !value(prior, "paymentVerificationReference") && Boolean(value(current, "paymentVerificationReference")) &&
+      !value(prior, "paymentVerifiedAt") && Boolean(value(current, "paymentVerifiedAt")) &&
+      !value(prior, "paymentVerifiedBy") && Boolean(value(current, "paymentVerifiedBy"));
     for (const field of ["paymentVerificationStatus", "paymentVerificationReference", "paymentVerifiedAt", "paymentVerifiedBy", "paymentVerificationNotes"]) {
-      if (prior[field] !== current[field]) {
+      if (prior[field] !== current[field] && !verifiedReceiptTransition) {
         return `Payment verification fields on “${prior.id}” can only be changed through the audited verification workflow.`;
       }
     }
@@ -301,17 +340,27 @@ export function validateFinanceDocumentChanges(previous: FinanceDocument[], next
     const newPaid = moneyCents(invoice.paid);
     if (newPaid < oldPaid) return `Received amount on invoice “${invoice.id}” cannot decrease. Use an authorised adjustment/credit-note workflow.`;
     const allocationDelta = newPaid - oldPaid;
-    const newAllocatedReceipts = next.filter((document) =>
-      document.type === "Cash receipt" &&
-      !previousById.has(document.id) &&
-      document.appliesToInvoiceId === invoice.id
-    );
-    const allocatedCents = newAllocatedReceipts.reduce((sum, document) => sum + moneyCents(document.amount), 0);
+    const newlyVerifiedReceipts = next.filter((document) => {
+      if (document.type !== "Cash receipt" || document.appliesToInvoiceId !== invoice.id ||
+        value(document, "paymentVerificationStatus") !== "verified") return false;
+      const earlier = previousById.get(document.id);
+      return !earlier || value(earlier, "paymentVerificationStatus") !== "verified";
+    });
+    const allocatedCents = newlyVerifiedReceipts.reduce((sum, document) => sum + moneyCents(document.amount), 0);
 
     if (allocationDelta !== allocatedCents) {
-      return `Invoice “${invoice.id}” received amount must change by exactly the amount of new receipts allocated to it; expected ₹${(allocationDelta / 100).toFixed(2)} in newly allocated receipts, found ₹${(allocatedCents / 100).toFixed(2)}.`;
+      return `Invoice “${invoice.id}” received amount must change by exactly the value of receipts newly verified against it; expected ₹${(allocationDelta / 100).toFixed(2)} in newly verified receipts, found ₹${(allocatedCents / 100).toFixed(2)}.`;
     }
-    if (newPaid > invoiceTotalCents(invoice)) return `Invoice “${invoice.id}” cannot have receipts allocated beyond its total.`;
+    const totalCents = invoiceTotalCents(invoice);
+    if (newPaid > totalCents) return `Invoice “${invoice.id}” cannot have receipts allocated beyond its total.`;
+    const pendingAllocations = next
+      .filter((document) => document.type === "Cash receipt" &&
+        document.appliesToInvoiceId === invoice.id &&
+        value(document, "paymentVerificationStatus") === "awaiting_verification")
+      .reduce((sum, document) => sum + moneyCents(document.amount), 0);
+    if (newPaid + pendingAllocations > totalCents) {
+      return `Invoice “${invoice.id}” has pending receipts that exceed its remaining balance. Review the pending receipts before adding another allocation.`;
+    }
   }
   return null;
 }
