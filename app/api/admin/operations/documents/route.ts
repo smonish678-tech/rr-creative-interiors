@@ -13,7 +13,7 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_PDF_BYTES = 15 * 1024 * 1024;
+const MAX_PDF_BYTES = 4 * 1024 * 1024;
 const SIGNED_TYPES = new Set([
   "works_contract",
   "final_contract",
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
     if (!(file instanceof File)) return errorResponse("Choose a PDF document to upload.", 400);
     if (!ALLOWED_TYPES.has(documentType)) return errorResponse("Choose a supported operations document type.", 400);
-    if (file.size <= 0 || file.size > MAX_PDF_BYTES) return errorResponse("PDFs must be between 1 byte and 15 MB.", 413);
+    if (file.size <= 0 || file.size > MAX_PDF_BYTES) return errorResponse("PDFs must be between 1 byte and 4 MB.", 413);
     if (file.type && file.type !== "application/pdf") return errorResponse("Only PDF uploads are accepted for contracts and project evidence.", 415);
     const bytes = new Uint8Array(await file.arrayBuffer());
     if (new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") return errorResponse("The uploaded file does not have a valid PDF signature.", 415);
