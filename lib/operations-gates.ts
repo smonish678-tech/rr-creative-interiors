@@ -296,7 +296,7 @@ export function validateFinanceDocumentChanges(
   for (const prior of previous) {
     const current = nextById.get(prior.id);
     if (!current) return `Issued financial document “${prior.id}” cannot be deleted from the operations history.`;
-    const immutableFields = ["type", "client", "email", "phone", "project", "date", "due", "description", "amount", "tax"];
+    const immutableFields = ["type", "client", "email", "phone", "project", "date", "due", "description", "amount", "tax", "paymentPurpose", "paymentPolicyId", "paymentPolicyVersion", "paymentMilestoneId"];
     for (const field of immutableFields) {
       if (prior[field] !== undefined && prior[field] !== null && prior[field] !== "" && prior[field] !== current[field]) {
         return `Financial document “${prior.id}” is historical. Its ${field} field cannot be rewritten; create a correction/credit note workflow instead.`;
