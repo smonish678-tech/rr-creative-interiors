@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import {
   isApprovedBookingAdvanceReceipt,
-  type OperationCommercialPolicy,
   type OperationProject,
   type OperationProperty,
 } from "@/lib/operations-gates";
@@ -278,7 +277,7 @@ export async function POST(request: Request) {
         const leadReceipt = workspace.invoices.find((item) => item.id === lead?.verifiedAdvanceTransactionId);
         if (!leadReceipt || leadReceipt.type !== "Cash receipt" ||
           (leadReceipt as WorkspaceRecord).paymentVerificationStatus !== "verified" ||
-          !isApprovedBookingAdvanceReceipt(leadReceipt as never, workspace.commercialPolicies as unknown as OperationCommercialPolicy[])) {
+          !isApprovedBookingAdvanceReceipt(leadReceipt as never, workspace.commercialPolicies as never)) {
           missing.push("advance linked to a versioned approved payment policy");
         }
       } else if (currentIndex === 1) {
