@@ -171,13 +171,13 @@ export function hasDuplicateVerifiedPaymentReference(
   receiptId: string,
   reference: string,
 ): boolean {
-  const normalized = reference.trim().toLocaleUpperCase().replace(/\\s+/g, "");
+  const normalized = reference.trim().toLocaleUpperCase().replace(/\s+/g, "");
   if (!normalized) return false;
   return documents.some((document) =>
     document.type === "Cash receipt" &&
     document.id !== receiptId &&
     value(document, "paymentVerificationStatus") === "verified" &&
-    value(document, "paymentVerificationReference").toLocaleUpperCase().replace(/\\s+/g, "") === normalized
+    value(document, "paymentVerificationReference").toLocaleUpperCase().replace(/\s+/g, "") === normalized
   );
 }
 
