@@ -68,6 +68,17 @@ export async function POST(request: Request) {
     if (!receipt) return errorResponse("The selected receipt does not exist in this workspace.", 404);
 
     const currentStatus = typeof receipt.paymentVerificationStatus === "string" ? receipt.paymentVerificationStatus : "";
+    const normalizedReference = reference.toLocaleUpperCase().replace(/\\s+/g, "");
+    const duplicateReference = documents.find((item) =>
+      item.type === "Cash receipt" &&
+      item.id !== receipt.id &&
+      item.paymentVerificationStatus === "verified" &&
+      typeof item.paymentVerificationReference === "string" &&
+      item.paymentVerificationReference.toLocaleUpperCase().replace(/\\s+/g, "") === normalizedReference
+    );
+    if (duplicateReference) {
+      return errorResponse("This bank/gateway reference is already attached to another verified receipt. Reconcile the transaction before continuing.", 409, "DUPLICATE_PAYMENT_REFERENCE");
+    }
     if (currentStatus === "verified") {
       if (receipt.paymentVerificationReference === reference) {
         return NextResponse.json({
