@@ -214,7 +214,7 @@ export async function POST(request: Request) {
         headers: { "Cache-Control": "no-store" },
       });
     } catch (error) {
-      await del(blob.pathname, { access: "private", token: privateToken }).catch(() => null);
+      await del(blob.pathname, { token: privateToken }).catch(() => null);
       uploadedPath = null;
       throw error;
     }
