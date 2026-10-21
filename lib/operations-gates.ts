@@ -261,7 +261,10 @@ export function validateLeadStageTransitions(input: {
     if (value(lead, "clientId") && !customerIds.has(value(lead, "clientId"))) {
       return `Lead “${lead.id}” links to a customer record that does not exist.`;
     }
-    if (!changedStage) continue;
+    // A lead already marked Won must keep its qualifying evidence on every save,
+    // not only on the transition into Won. Otherwise a later edit could silently
+    // unlink the signed contract or verified advance while leaving the sale Won.
+    if (!changedStage && nextStage?.kind !== "won") continue;
     if (!nextStage) return `Choose a recognised sales stage for lead “${lead.id}” before saving.`;
     if (nextStage.active === false) return `Lead “${lead.id}” cannot move into the inactive stage “${nextStage.name}”.`;
 
