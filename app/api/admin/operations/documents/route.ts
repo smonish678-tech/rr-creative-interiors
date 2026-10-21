@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       return errorResponse("Add the external approval reference for this evidence. Uploading alone does not approve scope, specifications, QC or warranty terms.", 422, "APPROVAL_EVIDENCE_REQUIRED");
     }
     if (documentType === "policy_approval") {
-      if (!policyId || !["RR", "CA", "Legal"].includes(approvalRole) || !approverName || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(approverEmail)) {
+      if (!policyId || !["RR", "CA", "Legal"].includes(approvalRole) || !approverName || !approverEmail.includes("@") || !approverEmail.split("@")[1]?.includes(".")) {
         return errorResponse("For a policy approval, select the policy, review role, approver name and email.", 422, "POLICY_APPROVAL_DETAILS_REQUIRED");
       }
     }
