@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   deriveOperationsAuditEvents,
+  isApprovedBookingAdvanceReceipt,
   materializeAcceptedProjects,
   validateFinanceDocumentChanges,
   validateLeadStageTransitions,
@@ -229,4 +230,17 @@ test("audit records that a receipt was entered but not treated as bank settlemen
   assert.ok(receiptEvent);
   assert.equal(receiptEvent?.after?.verificationStatus, "awaiting_verification");
   assert.match(receiptEvent?.reason ?? "", /not proof of bank settlement/i);
+});
+
+test("a superseded policy only qualifies receipts verified while that version was active", () => {
+  const superseded = {
+    ...approvedPaymentPolicy,
+    status: "superseded",
+    approvedAt: "2026-10-01T00:00:00.000Z",
+    supersededAt: "2026-10-21T12:00:00.000Z",
+  };
+  const historicReceipt = { ...verifiedReceipt, paymentVerifiedAt: "2026-10-20T11:00:00.000Z" };
+  const lateReceipt = { ...verifiedReceipt, paymentVerifiedAt: "2026-10-22T11:00:00.000Z" };
+  assert.equal(isApprovedBookingAdvanceReceipt(historicReceipt, [superseded]), true);
+  assert.equal(isApprovedBookingAdvanceReceipt(lateReceipt, [superseded]), false);
 });
