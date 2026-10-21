@@ -20,6 +20,8 @@ const SIGNED_TYPES = new Set([
   "signed_design_approval",
   "installation_signoff",
   "handover_acceptance",
+  "warranty_certificate",
+  "policy_approval",
 ]);
 const ALLOWED_TYPES = new Set([
   "works_contract",
@@ -33,6 +35,7 @@ const ALLOWED_TYPES = new Set([
   "handover_acceptance",
   "warranty_certificate",
   "project_closure",
+  "policy_approval",
 ]);
 
 function errorResponse(message: string, status: number, code?: string) {
@@ -75,6 +78,10 @@ export async function POST(request: Request) {
     const signedAtInput = str(form.get("signedAt"), 80);
     const signatureEvidenceRef = str(form.get("signatureEvidenceRef"), 1000);
     const approvalEvidenceRef = str(form.get("approvalEvidenceRef"), 1000);
+    const policyId = str(form.get("policyId"), 160);
+    const approvalRole = str(form.get("approvalRole"), 20);
+    const approverName = str(form.get("approverName"), 160);
+    const approverEmail = str(form.get("approverEmail"), 254).toLowerCase();
 
     if (!(file instanceof File)) return errorResponse("Choose a PDF document to upload.", 400);
     if (!ALLOWED_TYPES.has(documentType)) return errorResponse("Choose a supported operations document type.", 400);
@@ -90,16 +97,31 @@ export async function POST(request: Request) {
     if (signedAtInput && (!parsedSignedAt || Number.isNaN(parsedSignedAt.getTime()))) {
       return errorResponse("The signed date is invalid.", 400);
     }
-    if (documentType === "approved_quotation" && !approvalEvidenceRef) {
-      return errorResponse("Add the external RR approval reference for this quotation. Uploading alone does not approve a quotation.", 422, "APPROVAL_EVIDENCE_REQUIRED");
+    if (["approved_quotation", "production_specification", "production_qc", "warranty_certificate"].includes(documentType) && !approvalEvidenceRef) {
+      return errorResponse("Add the external approval reference for this evidence. Uploading alone does not approve scope, specifications, QC or warranty terms.", 422, "APPROVAL_EVIDENCE_REQUIRED");
+    }
+    if (documentType === "policy_approval") {
+      if (!policyId || !["RR", "CA", "Legal"].includes(approvalRole) || !approverName || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(approverEmail)) {
+        return errorResponse("For a policy approval, select the policy, review role, approver name and email.", 422, "POLICY_APPROVAL_DETAILS_REQUIRED");
+      }
     }
 
     const snapshot = await loadOperationsWorkspaceSnapshot();
     if (snapshot.revision !== expectedRevision) return errorResponse("The workspace changed in another session. Refresh and try again.", 409, "WORKSPACE_CONFLICT");
     const workspace = snapshot.workspace;
     const lead = leadId ? workspace.leads.find((item) => item.id === leadId) : undefined;
+    const policy = policyId ? workspace.commercialPolicies.find((item) => item.id === policyId) as Record<string, unknown> | undefined : undefined;
     const project = projectId ? workspace.projects.find((item) => item.id === projectId) as WorkspaceRecord | undefined : undefined;
     if (leadId && !lead) return errorResponse("The linked CRM opportunity was not found.", 404);
+    if (policyId && !policy) return errorResponse("The linked commercial policy was not found.", 404);
+    if (documentType === "policy_approval") {
+      const expectedRole = policy?.status === "awaiting_rr_approval" ? "RR"
+        : policy?.status === "awaiting_ca_approval" ? "CA"
+          : policy?.status === "awaiting_legal_approval" ? "Legal" : "";
+      if (!expectedRole || expectedRole !== approvalRole) {
+        return errorResponse("This policy is not waiting for the selected reviewer role.", 409, "POLICY_REVIEW_STAGE_MISMATCH");
+      }
+    }
     if (projectId && !project) return errorResponse("The linked project was not found.", 404);
     if ((documentType === "works_contract" || documentType === "final_contract" || documentType === "approved_quotation" || documentType === "signed_design_approval") && !lead) {
       return errorResponse("Link contracts, quotations and design approval to a CRM opportunity.", 422);
@@ -112,7 +134,7 @@ export async function POST(request: Request) {
     const customerId = str(lead?.clientId as string || (project?.customerId as string) || "", 160);
     const previousVersions = workspace.documents
       .filter((document) => document.documentType === documentType &&
-        ((leadId && document.leadId === leadId) || (projectId && document.projectId === projectId)))
+        ((leadId && document.leadId === leadId) || (projectId && document.projectId === projectId) || (policyId && document.policyId === policyId)))
       .reduce((max, document) => Math.max(max, Number(document.version) || 0), 0);
     const version = previousVersions + 1;
     const id = randomUUID();
@@ -137,7 +159,10 @@ export async function POST(request: Request) {
       projectId: project?.id || "",
       customerId,
       version,
-      status: documentType === "approved_quotation" ? "approved" : isSigned ? "signed" : "uploaded",
+      status: isSigned ? "signed" :
+        ["approved_quotation", "production_specification", "production_qc", "warranty_certificate"].includes(documentType) ? "approved" : "uploaded",
+      ...(policyId ? { policyId } : {}),
+      ...(approvalRole ? { approvalRole, approverName, approverEmail } : {}),
       ...(isSigned ? { signedAt: parsedSignedAt!.toISOString(), signatureEvidenceRef } : {}),
       ...(approvalEvidenceRef ? { approvalEvidenceRef } : {}),
       uploadedAt: new Date().toISOString(),
