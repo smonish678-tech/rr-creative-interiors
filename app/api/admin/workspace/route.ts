@@ -158,6 +158,7 @@ export async function POST(request: Request) {
       customers: nextClients,
       documents: existingWorkspace.documents as OperationDocument[],
       financeDocuments: nextInvoices,
+      commercialPolicies: existingWorkspace.commercialPolicies as never,
     });
     if (leadError) {
       return NextResponse.json({ error: leadError, code: "STAGE_GATE_BLOCKED" }, {
@@ -166,9 +167,29 @@ export async function POST(request: Request) {
       });
     }
 
+    // Receipt creation records a claim of payment only. Normalize new receipt
+    // records server-side, reject client-asserted verification, and only then
+    // validate the invoice allocation and pending balance.
+    const persistedInvoiceIds = new Set(existingWorkspace.invoices.map((document) =>
+      typeof document.id === "string" ? document.id : "",
+    ));
+    for (const document of invoices as FinanceDocument[]) {
+      if (document.type === "Cash receipt" && !persistedInvoiceIds.has(document.id) &&
+        document.paymentVerificationStatus !== undefined &&
+        document.paymentVerificationStatus !== "awaiting_verification") {
+        return NextResponse.json({ error: "A new receipt must begin in Awaiting verification. Verify it through the audited payment workflow after reconciling it to bank/gateway evidence.", code: "PAYMENT_VERIFICATION_REQUIRED" }, {
+          status: 422,
+          headers: { "Cache-Control": "no-store" },
+        });
+      }
+    }
+    const markedInvoices = nextInvoices.map((document) => {
+      if (document.type !== "Cash receipt" || persistedInvoiceIds.has(document.id)) return document;
+      return { ...document, status: "Awaiting verification", paymentVerificationStatus: "awaiting_verification" };
+    });
     const financeError = validateFinanceDocumentChanges(
       existingWorkspace.invoices as FinanceDocument[],
-      nextInvoices,
+      markedInvoices,
     );
     if (financeError) {
       return NextResponse.json({ error: financeError, code: "FINANCE_VALIDATION_FAILED" }, {
@@ -176,16 +197,6 @@ export async function POST(request: Request) {
         headers: { "Cache-Control": "no-store" },
       });
     }
-
-    // Receipt creation records a claim of payment only. It starts awaiting
-    // bank/gateway verification; no client request can set it to verified.
-    const persistedInvoiceIds = new Set(existingWorkspace.invoices.map((document) =>
-      typeof document.id === "string" ? document.id : "",
-    ));
-    const markedInvoices = nextInvoices.map((document) => {
-      if (document.type !== "Cash receipt" || persistedInvoiceIds.has(document.id)) return document;
-      return { ...document, paymentVerificationStatus: "awaiting_verification" };
-    });
 
     const generated = materializeAcceptedProjects({
       previousLeads: existingWorkspace.leads as OperationLead[],
@@ -224,6 +235,7 @@ export async function POST(request: Request) {
       projects: generated.projects as unknown as Record<string, unknown>[],
       documents: existingWorkspace.documents,
       auditEvents: [...existingWorkspace.auditEvents, ...auditEvents as unknown as Record<string, unknown>[]],
+      commercialPolicies: existingWorkspace.commercialPolicies,
       studioName: studioName.trim(),
       studioEmail: studioEmail.trim(),
       pipelineStages: nextPipeline,
