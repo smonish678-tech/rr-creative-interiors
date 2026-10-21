@@ -136,6 +136,7 @@ test("a new stage transition with a dangling customer ID is rejected", () => {
     customers: [customer],
     documents: [],
     financeDocuments: [],
+    commercialPolicies: [],
   });
   assert.match(error ?? "", /customer record that does not exist/i);
 });
@@ -144,7 +145,7 @@ test("receipt allocation must exactly support an increase in invoice paid amount
   const invoice = { id: "INV-1", type: "Invoice", clientId: customer.id, leadId: oldLead.id, project: oldLead.project, amount: 10000, tax: 0, paid: 0, status: "Draft" };
   const changedInvoice = { ...invoice, paid: 1000, status: "Partially paid" };
   const error = validateFinanceDocumentChanges([invoice], [changedInvoice]);
-  assert.match(error ?? "", /newly allocated receipts/i);
+  assert.match(error ?? "", /newly verified receipts/i/i);
 });
 
 test("receipt cannot be allocated beyond the invoice total", () => {
