@@ -53,7 +53,7 @@ function pipelineTone(lead: Lead, pipeline: SalesPipelineStage[]): string {
 }
 
 function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineField[] {
-  const immutableGateFields: PipelineField[] = stage.kind === "won"
+  const immutableGateFields: Array<PipelineField | "clientId"> = stage.kind === "won"
     ? ["agreementSigned", "advanceConfirmed", "signedContractEvidence", "verifiedAdvanceEvidence", "clientId", "location"]
     : stage.kind === "lost" || stage.kind === "disqualified"
       ? ["lostReason"]
@@ -86,7 +86,7 @@ function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineF
   });
 }
 
-function fieldLabel(field: PipelineField): string {
+function fieldLabel(field: PipelineField | "clientId"): string {
   return PIPELINE_FIELD_OPTIONS.find((option) => option.key === field)?.label || field;
 }
 
