@@ -117,6 +117,19 @@ test("moving a lead to Won is blocked without signed-version and bank-verificati
   assert.match(error ?? "", /signed contract|verified advance|linked contract/i);
 });
 
+test("an existing Won lead cannot lose its signed-contract or verified-advance evidence on an ordinary save", () => {
+  const error = validateLeadStageTransitions({
+    previousLeads: [validWonLead],
+    nextLeads: [{ ...validWonLead }],
+    stages,
+    customers: [customer],
+    documents: [],
+    financeDocuments: [],
+    commercialPolicies: [],
+  });
+  assert.match(error ?? "", /signed contract|verified advance|linked contract/i);
+});
+
 test("valid Won transition requires matching signed contract and verified receipt evidence", () => {
   const error = validateLeadStageTransitions({
     previousLeads: [oldLead],
