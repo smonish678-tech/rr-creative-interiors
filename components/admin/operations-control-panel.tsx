@@ -62,6 +62,7 @@ export default function OperationsControlPanel() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [policyName, setPolicyName] = useState("Interior project payment schedule");
+  const [policyFamilyId, setPolicyFamilyId] = useState("");
   const [policyNotes, setPolicyNotes] = useState("");
   const [milestones, setMilestones] = useState<MilestoneDraft[]>([
     { name: "Booking advance", purpose: "booking_advance", percentage: "10" },
@@ -184,6 +185,7 @@ export default function OperationsControlPanel() {
     await postAction({
       action: "create-policy-draft",
       name: policyName,
+      familyId: policyFamilyId || undefined,
       notes: policyNotes,
       paymentMilestones: milestones.map((item, index) => ({
         id: `MILESTONE-${index + 1}`,
@@ -192,6 +194,27 @@ export default function OperationsControlPanel() {
         percentage: Number(item.percentage),
       })),
     });
+  }
+
+  function startPolicyRevision(policy: RecordItem) {
+    if (!asText(policy.familyId)) {
+      setLoadError("This policy has no stable version family. Create a new independent policy draft instead.");
+      return;
+    }
+    setPolicyFamilyId(asText(policy.familyId));
+    setPolicyName(asText(policy.name));
+    setPolicyNotes(`New draft version based on policy ${asText(policy.id)} (v${String(policy.version || 1)}). Record the approved changes and attach fresh RR, CA and Legal evidence.`);
+    const oldMilestones = Array.isArray(policy.paymentMilestones) ? policy.paymentMilestones as RecordItem[] : [];
+    if (oldMilestones.length) {
+      setMilestones(oldMilestones.map((item, index) => ({
+        name: asText(item.name) || `Milestone ${index + 1}`,
+        purpose: ["booking_advance", "milestone", "final"].includes(asText(item.purpose))
+          ? asText(item.purpose) as MilestoneDraft["purpose"] : "milestone",
+        percentage: String(item.percentage ?? ""),
+      })));
+    }
+    setNotice("Draft form prepared for the next version. The approved/historic version is not being edited.");
+    setLoadError("");
   }
 
   async function submitPolicy(policy: RecordItem) {
@@ -295,7 +318,7 @@ export default function OperationsControlPanel() {
       </form>
       <div className="rr-table-wrap"><table className="rr-table"><thead><tr><th>POLICY / VERSION</th><th>STAGE</th><th>TOTAL</th><th>APPROVALS</th><th>ACTION</th></tr></thead><tbody>
         {workspace.commercialPolicies.length === 0 && <tr><td colSpan={5}>No commercial policies yet. Create a draft from the form above.</td></tr>}
-        {workspace.commercialPolicies.map((policy) => <tr key={String(policy.id)}><td><b>{asText(policy.name) || asText(policy.id)}</b><small>v{String(policy.version || 1)} · {asText(policy.familyId)}</small></td><td>{asText(policy.status).replaceAll("_", " ")}</td><td>{moneyPercent(Number(policy.totalPercentage))}</td><td>{Array.isArray(policy.approvals) ? (policy.approvals as RecordItem[]).map((approval) => asText(approval.role)).join(" · ") : "None"}</td><td>{policy.status === "draft" ? <button className="rr-secondary" disabled={busy || Math.round(Number(policy.totalPercentage) * 100) !== 10000} onClick={() => void submitPolicy(policy)}>Submit for review</button> : ["awaiting_rr_approval", "awaiting_ca_approval", "awaiting_legal_approval"].includes(asText(policy.status)) ? <button className="rr-secondary" disabled={busy} onClick={() => void recordApproval(policy)}>Record signed {asText(policy.status).includes("rr") ? "RR" : asText(policy.status).includes("ca") ? "CA" : "Legal"} approval</button> : <span>Approved record</span>}</td></tr>)}
+        {workspace.commercialPolicies.map((policy) => <tr key={String(policy.id)}><td><b>{asText(policy.name) || asText(policy.id)}</b><small>v{String(policy.version || 1)} · {asText(policy.familyId)}</small></td><td>{asText(policy.status).replaceAll("_", " ")}</td><td>{moneyPercent(Number(policy.totalPercentage))}</td><td>{Array.isArray(policy.approvals) ? (policy.approvals as RecordItem[]).map((approval) => asText(approval.role)).join(" · ") : "None"}</td><td>{policy.status === "draft" && <button className="rr-secondary" disabled={busy || Math.round(Number(policy.totalPercentage) * 100) !== 10000} onClick={() => void submitPolicy(policy)}>Submit for review</button>}{["awaiting_rr_approval", "awaiting_ca_approval", "awaiting_legal_approval"].includes(asText(policy.status)) && <button className="rr-secondary" disabled={busy} onClick={() => void recordApproval(policy)}>Record signed {asText(policy.status).includes("rr") ? "RR" : asText(policy.status).includes("ca") ? "CA" : "Legal"} approval</button>}{policy.familyId && <button className="rr-secondary" disabled={busy} onClick={() => startPolicyRevision(policy)}>Create next version</button>}</td></tr>)}
       </tbody></table></div>
     </section>
 
