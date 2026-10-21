@@ -33,7 +33,7 @@ Never use `NEXT_PUBLIC_` prefixes for credentials or session secrets. Do not com
 
 Create a **separate private Vercel Blob store** for contracts, signed approvals, quotations, production evidence and warranty documents. Do not reuse the public media store for customer documents. Configure the private store token as the server-only environment variable `OPERATIONS_PRIVATE_BLOB_READ_WRITE_TOKEN` in both Preview and Production. Never expose it with a `NEXT_PUBLIC_` prefix.
 
-The Operations & documents area stores uploaded PDFs in private Blob storage and versioned metadata in the encrypted workspace. Downloads pass through the authenticated server route. Uploads are limited to PDFs up to 15 MB. If the private store token is missing, uploads fail closed rather than falling back to public storage.
+The Operations & documents area stores uploaded PDFs in private Blob storage and versioned metadata in the encrypted workspace. Downloads pass through the authenticated server route. Uploads are limited to PDFs up to 4 MB through the server-upload path (to remain below typical serverless request limits). If the private store token is missing, uploads fail closed rather than falling back to public storage.
 
 ### Operations control area
 
