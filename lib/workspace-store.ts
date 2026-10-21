@@ -13,6 +13,7 @@ export type OperationsWorkspace = {
   projects: WorkspaceRecord[];
   documents: WorkspaceRecord[];
   auditEvents: WorkspaceRecord[];
+  commercialPolicies: WorkspaceRecord[];
   studioName: string;
   studioEmail: string;
   pipelineStages: SalesPipelineStage[];
@@ -95,6 +96,7 @@ function decryptWorkspace(serialized: string, token: string): OperationsWorkspac
     projects: Array.isArray(data.projects) ? data.projects.filter(isRecord) : [],
     documents: Array.isArray(data.documents) ? data.documents.filter(isRecord) : [],
     auditEvents: Array.isArray(data.auditEvents) ? data.auditEvents.filter(isRecord) : [],
+    commercialPolicies: Array.isArray(data.commercialPolicies) ? data.commercialPolicies.filter(isRecord) : [],
     studioName: typeof data.studioName === "string" ? data.studioName : "RR Creative Interiors",
     studioEmail: typeof data.studioEmail === "string" ? data.studioEmail : "accounts@rrcreativeinteriors.in",
     pipelineStages: normalizeSalesPipeline(data.pipelineStages),
@@ -235,7 +237,7 @@ async function loadStoredWorkspace(token: string): Promise<OperationsWorkspaceSn
     return {
       revision: null,
       workspace: {
-        leads: [], invoices: [], clients: [], properties: [], projects: [], documents: [], auditEvents: [],
+        leads: [], invoices: [], clients: [], properties: [], projects: [], documents: [], auditEvents: [], commercialPolicies: [],
         studioName: "RR Creative Interiors", studioEmail: "accounts@rrcreativeinteriors.in",
         pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields], automationTriggers: [...stage.automationTriggers] })),
       },
