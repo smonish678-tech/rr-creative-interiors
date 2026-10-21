@@ -300,7 +300,7 @@ export default function OperationsControlPanel() {
     </section>
 
     <section className="rr-panel rr-settings-panel">
-      <div className="rr-settings-head"><div className="rr-setting-symbol"><FileText size={22}/></div><div><h2>Upload private project evidence</h2><p>PDFs are stored privately and versioned. Signed/approved labels require accompanying evidence references.</p></div></div>
+      <div className="rr-settings-head"><div className="rr-setting-symbol"><FileText size={22}/></div><div><h2>Upload private project evidence</h2><p>PDFs are stored privately and versioned. Signed/approved labels require accompanying evidence references. Current server upload limit is 4 MB.</p></div></div>
       <form className="rr-modal-form" onSubmit={(event) => void uploadDocument(event)}>
         <label>Document type</label>
         <select value={documentType} onChange={(event) => setDocumentType(event.target.value as DocumentType)}>{DOCUMENT_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
@@ -332,7 +332,7 @@ export default function OperationsControlPanel() {
         {DOCUMENT_OPTIONS.find((item) => item.value === documentType)?.approved && <>
           <label>External approval reference</label><input required maxLength={1000} value={approvalEvidenceRef} onChange={(event) => setApprovalEvidenceRef(event.target.value)} placeholder="Signed quote/reference or approved specification ID"/>
         </>}
-        <label>PDF file (max 15 MB)</label><input required type="file" accept="application/pdf,.pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} />
+        <label>PDF file (max 4 MB)</label><input required type="file" accept="application/pdf,.pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} />
         <button type="submit" className="rr-primary" disabled={busy || !file}><Upload size={16}/>{busy ? "Saving…" : "Upload private PDF"}</button>
       </form>
       <div className="rr-table-wrap"><table className="rr-table"><thead><tr><th>DOCUMENT</th><th>VERSION / STATUS</th><th>LINKED RECORD</th><th>FILE</th></tr></thead><tbody>
