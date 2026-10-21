@@ -52,7 +52,7 @@ function pipelineTone(lead: Lead, pipeline: SalesPipelineStage[]): string {
   return stageForLead(lead, pipeline)?.tone || "stone";
 }
 
-function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineField[] {
+function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): Array<PipelineField | "clientId"> {
   const immutableGateFields: Array<PipelineField | "clientId"> = stage.kind === "won"
     ? ["agreementSigned", "advanceConfirmed", "signedContractEvidence", "verifiedAdvanceEvidence", "clientId", "location"]
     : stage.kind === "lost" || stage.kind === "disqualified"
