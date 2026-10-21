@@ -188,7 +188,21 @@ export async function POST(request: Request) {
         releaseBlocker: nextStatus === "approved" ? "" : `Waiting for ${nextStatus === "awaiting_ca_approval" ? "CA" : "Legal"} approval evidence.`,
         ...(nextStatus === "approved" ? { approvedAt: now } : {}),
       };
-      const policies = [...workspace.commercialPolicies];
+      const policies = workspace.commercialPolicies.map((item) => {
+        if (nextStatus === "approved" && policy.familyId && item.familyId === policy.familyId &&
+          item.id !== policyId && item.status === "approved") {
+          auditEvents.push({
+            id: randomUUID(), occurredAt: now, actor: "admin-session", action: "commercial_policy.version_superseded",
+            entityType: "workspace", entityId: item.id,
+            before: { status: "approved" },
+            after: { status: "superseded", supersededByPolicyId: policyId },
+            reason: "A newer version completed the final Legal evidence step. This historical version remains eligible only for receipts verified while it was approved.",
+          });
+          return { ...item, status: "superseded", supersededAt: now, updatedAt: now, releaseBlocked: true,
+            releaseBlocker: `Superseded by approved policy version ${String(policy.version)}; retained for historical receipts.` };
+        }
+        return item;
+      });
       policies[policyIndex] = updatedPolicy;
       nextWorkspace = { ...workspace, commercialPolicies: policies };
       auditEvents.push({
