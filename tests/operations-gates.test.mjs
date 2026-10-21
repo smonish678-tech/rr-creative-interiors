@@ -39,9 +39,21 @@ const signedContract = {
   signedAt: "2026-10-20T10:00:00.000Z",
   signatureEvidenceRef: "audit://signature/1",
 };
+const approvedPaymentPolicy = {
+  id: "POLICY-1",
+  version: 1,
+  status: "approved",
+  paymentMilestones: [
+    { id: "BOOKING-ADVANCE", purpose: "booking_advance", percentage: 10, active: true },
+  ],
+};
 const verifiedReceipt = {
   id: "REC-1",
   type: "Cash receipt",
+  paymentPurpose: "booking_advance",
+  paymentPolicyId: approvedPaymentPolicy.id,
+  paymentPolicyVersion: approvedPaymentPolicy.version,
+  paymentMilestoneId: "BOOKING-ADVANCE",
   clientId: customer.id,
   leadId: oldLead.id,
   appliesToInvoiceId: "INV-1",
@@ -98,6 +110,7 @@ test("moving a lead to Won is blocked without signed-version and bank-verificati
     customers: [customer],
     documents: [],
     financeDocuments: [],
+    commercialPolicies: [],
   });
   assert.match(error ?? "", /signed contract|verified advance/i);
 });
@@ -110,6 +123,7 @@ test("valid Won transition requires matching signed contract and verified receip
     customers: [customer],
     documents: [signedContract],
     financeDocuments: [verifiedReceipt],
+    commercialPolicies: [approvedPaymentPolicy],
   });
   assert.equal(error, null);
 });
@@ -151,6 +165,17 @@ test("duplicate finance document IDs are rejected instead of double-counted", ()
   const first = { id: "REC-1", type: "Cash receipt", clientId: customer.id, project: oldLead.project, amount: 500, tax: 0, paid: 500, status: "Paid" };
   const error = validateFinanceDocumentChanges([], [first, { ...first }]);
   assert.match(error ?? "", /Duplicate financial document ID/i);
+});
+
+test("verified receipt transition atomically releases only the amount reconciled to it", () => {
+  const invoice = { id: "INV-VERIFY", type: "Invoice", clientId: customer.id, leadId: oldLead.id, project: oldLead.project, amount: 10000, tax: 0, paid: 0, status: "Draft" };
+  const invoicePaid = { ...invoice, paid: 1000, status: "Partially paid" };
+  const pending = { id: "REC-VERIFY", type: "Cash receipt", clientId: customer.id, leadId: oldLead.id, appliesToInvoiceId: invoice.id, project: oldLead.project, amount: 1000, tax: 0, paid: 1000, status: "Awaiting verification", paymentVerificationStatus: "awaiting_verification" };
+  const verified = { ...pending, status: "Paid", paymentVerificationStatus: "verified", paymentVerificationReference: "BANK-UTR-55", paymentVerifiedAt: "2026-10-21T10:00:00.000Z", paymentVerifiedBy: "admin-session" };
+  const withoutExplicitWorkflow = validateFinanceDocumentChanges([invoice, pending], [invoicePaid, verified]);
+  assert.match(withoutExplicitWorkflow ?? "", /audited verification workflow/i);
+  const accepted = validateFinanceDocumentChanges([invoice, pending], [invoicePaid, verified], { allowVerifiedReceiptTransition: true });
+  assert.equal(accepted, null);
 });
 
 test("accepted sale creates one blocked project exactly once", () => {
