@@ -488,9 +488,10 @@ function addBill(e:FormEvent){
  if(!Number.isFinite(amount)||amount<=0){setBillFormError("Enter an amount greater than zero.");return;}
  const receipt=billForm.type==="Cash receipt";
  const tax=receipt?0:Number(billForm.tax);
- const paid=receipt?amount:Number(billForm.paid);
+ const reportedPaid=receipt?amount:Number(billForm.paid);
+ const paid=receipt?amount:0;
  const grand=amount*(1+tax/100);
- if(paid<0||paid>grand){setBillFormError("The amount already received cannot be negative or greater than the document total.");return;}
+ if(!Number.isFinite(reportedPaid)||reportedPaid<0||reportedPaid>grand){setBillFormError("The amount reported received cannot be negative or greater than the document total.");return;}
  let nextInvoices=[...invoices];
  let sourceInvoice:Invoice|undefined;
  if(receipt&&billForm.linkedInvoiceId&&billForm.linkedInvoiceId!=="__none__"){
@@ -550,21 +551,28 @@ function addBill(e:FormEvent){
   if(invoiceLead)linkedLead=invoiceLead;
  }
  if(sourceInvoice){
-  const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid);
-  if(amount>balance+0.009){setBillFormError(`This receipt exceeds the linked invoice balance of ${money(balance)}.`);return;}
-  const updatedPaid=Math.min(total(sourceInvoice),sourceInvoice.paid+amount);
-  const updatedSource:Invoice={...sourceInvoice,clientId:customer.id,leadId:sourceInvoice.leadId||linkedLead?.id,paid:updatedPaid,status:updatedPaid>=total(sourceInvoice)?"Paid":updatedPaid>0?"Partially paid":"Draft"};
-  nextInvoices=nextInvoices.map(item=>item.id===sourceInvoice!.id?updatedSource:item);
+  const pendingAllocated=nextInvoices.filter(item=>item.type==="Cash receipt"&&item.appliesToInvoiceId===sourceInvoice!.id&&item.paymentVerificationStatus==="awaiting_verification").reduce((sum,item)=>sum+item.amount,0);
+  const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid-pendingAllocated);
+  if(amount>balance+0.009){setBillFormError("This receipt exceeds the available balance after other pending receipts: "+money(balance)+".");return;}
  }
  const year=new Date().getFullYear();
  const nextNumber=nextInvoices.filter(item=>item.type===billForm.type).length+1;
- const document:Invoice={id:`RR-${receipt?"REC":"INV"}-${year}-${String(nextNumber).padStart(3,"0")}`,clientId:customer.id,leadId:linkedLead?.id,appliesToInvoiceId:sourceInvoice?.id,client:billForm.client.trim(),email:billForm.email.trim(),phone:billForm.phone.trim(),project:billForm.project.trim(),date:billForm.date,due:billForm.due,description:billForm.description.trim(),amount,tax,paid,type:billForm.type,status:receipt||paid>=grand?"Paid":paid>0?"Partially paid":"Draft"};
+ const selectedPolicy=commercialPolicies.find(policy=>policy.id===billForm.paymentPolicyId&&policy.status==="approved");
+ const document:Invoice={id:`RR-${receipt?"REC":"INV"}-${year}-${String(nextNumber).padStart(3,"0")}`,clientId:customer.id,leadId:linkedLead?.id,appliesToInvoiceId:sourceInvoice?.id,client:billForm.client.trim(),email:billForm.email.trim(),phone:billForm.phone.trim(),project:billForm.project.trim(),date:billForm.date,due:billForm.due,description:billForm.description.trim(),amount,tax,paid,type:billForm.type,status:receipt?"Awaiting verification":"Draft",...(receipt?{paymentVerificationStatus:"awaiting_verification" as const,paymentPurpose:billForm.paymentPurpose,...(billForm.paymentPurpose==="booking_advance"&&selectedPolicy&&billForm.paymentMilestoneId?{paymentPolicyId:selectedPolicy.id,paymentPolicyVersion:selectedPolicy.version,paymentMilestoneId:billForm.paymentMilestoneId}:{})}:{})};
  nextInvoices=[document,...nextInvoices];
+ let pendingReceiptId="";
+ if(!receipt&&reportedPaid>0){
+  const receiptNumber=nextInvoices.filter(item=>item.type==="Cash receipt").length+1;
+  pendingReceiptId="RR-REC-"+year+"-"+String(receiptNumber).padStart(3,"0");
+  const initialReceipt:Invoice={id:pendingReceiptId,clientId:customer.id,leadId:linkedLead?.id,appliesToInvoiceId:document.id,client:document.client,email:document.email,phone:document.phone,project:document.project,date:billForm.date,due:billForm.date,description:"Payment reported with invoice "+document.id,amount:reportedPaid,tax:0,paid:reportedPaid,type:"Cash receipt",status:"Awaiting verification",paymentVerificationStatus:"awaiting_verification",paymentPurpose:"unassigned"};
+  nextInvoices=[initialReceipt,...nextInvoices];
+ }
  let updatedLead:Lead|undefined;
  if(linkedLead){
-  updatedLead=linkedLead;
-  if(receipt){updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
-  else {updatedLead=applyPipelineTrigger(updatedLead,"invoice_saved");if(paid>0)updatedLead=applyPipelineTrigger(updatedLead,"receipt_saved");}
+  updatedLead=receipt
+   ?{...linkedLead,nextAction:"Verify receipt "+document.id+" against bank/gateway evidence",nextFollowUpDate:dateAfterDays(0)}
+   :applyPipelineTrigger(linkedLead,"invoice_saved");
+  if(!receipt&&pendingReceiptId)updatedLead={...updatedLead,nextAction:"Verify receipt "+pendingReceiptId+" against bank/gateway evidence",nextFollowUpDate:dateAfterDays(0)};
  }
  setClients(nextCustomers);
  setInvoices(nextInvoices);
@@ -574,10 +582,10 @@ function addBill(e:FormEvent){
  }
  setInvoiceModal(false);setSelectedInvoice(document);
  setBillFormError("");
- setBillForm({client:"",email:"",phone:"",project:"",leadId:"",linkedInvoiceId:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice"});
- const stageMessage=updatedLead?` CRM updated to “${updatedLead.status}” for ${updatedLead.name}.`: " No CRM stage moved because this document was not linked to a specific CRM opportunity.";
- const paymentMessage=sourceInvoice?` Applied ${money(amount)} to ${sourceInvoice.id}.`:"";
- setNotice(`${receipt?"Cash receipt":"Invoice"} saved and linked to customer ${customer.name}.${paymentMessage}${stageMessage}`);
+ setBillForm({client:"",email:"",phone:"",project:"",leadId:"",linkedInvoiceId:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice",paymentPurpose:"unassigned",paymentPolicyId:"",paymentMilestoneId:""});
+ const stageMessage=updatedLead?" Next action: "+updatedLead.nextAction+".":" No CRM stage moved because this document was not linked to a specific CRM opportunity.";
+ const paymentMessage=receipt?" Receipt "+document.id+" is Awaiting verification; any linked invoice balance remains unchanged until verification.":pendingReceiptId?" Payment was recorded as receipt "+pendingReceiptId+", Awaiting verification; the invoice balance will change only after bank/gateway reconciliation.":"";
+ setNotice((receipt?"Cash receipt":"Invoice")+" saved for customer "+customer.name+"."+paymentMessage+stageMessage);
 }
 function draftEmail(i:Invoice){
  if(i.type==="Cash receipt"&&i.paymentVerificationStatus!=="verified"){setNotice("This receipt is awaiting bank/gateway verification. Verify it before preparing a payment acknowledgement.");return;}
