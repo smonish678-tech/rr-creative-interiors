@@ -226,6 +226,6 @@ test("audit records that a receipt was entered but not treated as bank settlemen
   });
   const receiptEvent = events.find((event) => event.action === "receipt.recorded_awaiting_verification");
   assert.ok(receiptEvent);
-  assert.equal((receiptEvent?.after as Record<string, unknown>)?.verificationStatus, "awaiting_verification");
+  assert.equal(receiptEvent?.after?.verificationStatus, "awaiting_verification");
   assert.match(receiptEvent?.reason ?? "", /not proof of bank settlement/i);
 });
