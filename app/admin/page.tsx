@@ -589,7 +589,7 @@ function addBill(e:FormEvent){
  const paymentMessage=receipt?" Receipt "+document.id+" is Awaiting verification; any linked invoice balance remains unchanged until verification.":pendingReceiptId?" Payment was recorded as receipt "+pendingReceiptId+", Awaiting verification; the invoice balance will change only after bank/gateway reconciliation.":"";
  setNotice((receipt?"Cash receipt":"Invoice")+" saved for customer "+customer.name+"."+paymentMessage+stageMessage);
 }
-async async function verifySelectedReceipt(){
+async function verifySelectedReceipt(){
  if(!selectedInvoice||selectedInvoice.type!=="Cash receipt")return;
  const reference=verificationReference.trim();
  if(!reference){setVerificationError("Enter the bank UTR, gateway transaction reference or other reconciliation reference.");return;}
