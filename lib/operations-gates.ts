@@ -165,7 +165,11 @@ function signedContractEvidenceExists(lead: OperationLead, documents: OperationD
   });
 }
 
-function hasApprovedAdvancePolicy(document: FinanceDocument, policies: OperationCommercialPolicy[]): boolean {
+export function isApprovedBookingAdvanceReceipt(
+  document: FinanceDocument,
+  policies: OperationCommercialPolicy[],
+): boolean {
+  if (document.type !== "Cash receipt" || value(document, "paymentPurpose") !== "booking_advance") return false;
   const policyId = value(document, "paymentPolicyId");
   const milestoneId = value(document, "paymentMilestoneId");
   const version = Number(document.paymentPolicyVersion);
@@ -191,8 +195,7 @@ function verifiedAdvanceEvidenceExists(
     document.type === "Cash receipt" &&
     document.clientId === lead.clientId &&
     document.leadId === lead.id &&
-    value(document, "paymentPurpose") === "booking_advance" &&
-    hasApprovedAdvancePolicy(document, commercialPolicies) &&
+    isApprovedBookingAdvanceReceipt(document, commercialPolicies) &&
     value(document, "paymentVerificationStatus") === "verified" &&
     Boolean(value(document, "paymentVerificationReference")) &&
     Boolean(value(document, "paymentVerifiedAt")) &&
