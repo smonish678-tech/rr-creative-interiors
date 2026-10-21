@@ -587,6 +587,33 @@ function addBill(e:FormEvent){
  const paymentMessage=receipt?" Receipt "+document.id+" is Awaiting verification; any linked invoice balance remains unchanged until verification.":pendingReceiptId?" Payment was recorded as receipt "+pendingReceiptId+", Awaiting verification; the invoice balance will change only after bank/gateway reconciliation.":"";
  setNotice((receipt?"Cash receipt":"Invoice")+" saved for customer "+customer.name+"."+paymentMessage+stageMessage);
 }
+async function verifySelectedReceipt(){
+ if(!selectedInvoice||selectedInvoice.type!=="Cash receipt")return;
+ const reference=verificationReference.trim();
+ if(!reference){setVerificationError("Enter the bank UTR, gateway transaction reference or other reconciliation reference.");return;}
+ if(workspaceStatus!=="saved"){setVerificationError("Wait for the workspace to finish saving before verifying a receipt.");return;}
+ setVerificationSubmitting(true);setVerificationError("");
+ try{
+  const response=await fetch("/api/admin/payments/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({receiptId:selectedInvoice.id,verificationReference:reference,notes:verificationNotes.trim(),revision:workspaceRevisionRef.current})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"The receipt could not be verified.");
+  if(typeof data.revision==="string"||data.revision===null)workspaceRevisionRef.current=data.revision;
+  const verifiedReceipt=data.receipt as Invoice;
+  const verifiedInvoice=data.invoice as Invoice|null;
+  const updatedLead=data.lead as Lead|null;
+  setInvoices(current=>current.map(item=>item.id===verifiedReceipt.id?verifiedReceipt:verifiedInvoice&&item.id===verifiedInvoice.id?verifiedInvoice:item));
+  setSelectedInvoice(verifiedReceipt);
+  if(updatedLead){setLeads(current=>current.map(item=>item.id===updatedLead.id?updatedLead:item));if(selectedLead?.id===updatedLead.id)setSelectedLead(updatedLead);}
+  setVerificationReference("");setVerificationNotes("");
+  setNotice(data.advanceEligible
+   ?"Receipt verified against the recorded bank/gateway reference and linked to an RR-approved booking-advance policy."
+   :"Receipt verified against the recorded bank/gateway reference. It does not qualify as an approved booking advance until an RR-approved policy milestone is linked.");
+ }catch(error){
+  const message=error instanceof Error?error.message:"Payment verification failed.";
+  setVerificationError(message);
+  if(message.toLowerCase().includes("workspace changed")||message.toLowerCase().includes("another session"))setNotice("Another session changed the workspace. Refresh the admin page before retrying this verification.");
+ }finally{setVerificationSubmitting(false);}
+}
 function draftEmail(i:Invoice){
  if(i.type==="Cash receipt"&&i.paymentVerificationStatus!=="verified"){setNotice("This receipt is awaiting bank/gateway verification. Verify it before preparing a payment acknowledgement.");return;}
  const recipient=invoiceClientEmail(i,clients);
