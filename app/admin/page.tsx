@@ -58,7 +58,7 @@ function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineF
     : stage.kind === "lost" || stage.kind === "disqualified"
       ? ["lostReason"]
       : [];
-  const requiredFields = [...new Set([...stage.requiredFields, ...immutableGateFields])];
+  const requiredFields: Array<PipelineField | "clientId"> = [...new Set([...stage.requiredFields, ...immutableGateFields])];
   return requiredFields.filter((field) => {
     switch (field) {
       case "name": return !lead.name?.trim();
