@@ -497,8 +497,9 @@ function addBill(e:FormEvent){
  if(receipt&&billForm.linkedInvoiceId&&billForm.linkedInvoiceId!=="__none__"){
   sourceInvoice=nextInvoices.find(item=>item.id===billForm.linkedInvoiceId&&item.type==="Invoice");
   if(!sourceInvoice){setBillFormError("The invoice selected for this receipt no longer exists. Refresh the workspace and select it again.");return;}
-  const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid);
-  if(amount>balance+0.009){setBillFormError(`This receipt exceeds the linked invoice balance of ${money(balance)}.`);return;}
+  const pendingAllocated=nextInvoices.filter(item=>item.type==="Cash receipt"&&item.appliesToInvoiceId===sourceInvoice!.id&&item.paymentVerificationStatus==="awaiting_verification").reduce((sum,item)=>sum+item.amount,0);
+  const balance=Math.max(0,total(sourceInvoice)-sourceInvoice.paid-pendingAllocated);
+  if(amount>balance+0.009){setBillFormError("This receipt exceeds the available balance after other pending receipts: "+money(balance)+".");return;}
   if(billForm.leadId&&billForm.leadId!=="__none__"&&sourceInvoice.leadId&&billForm.leadId!==sourceInvoice.leadId){setBillFormError("The receipt invoice and CRM project do not match. Select the invoice again so the receipt remains attached to the correct sale.");return;}
  }
  let linkedLead:Lead|undefined;
@@ -537,7 +538,7 @@ function addBill(e:FormEvent){
   }
  }
  if(receipt&&!sourceInvoice&&billForm.linkedInvoiceId!=="__none__"&&customer){
-  const outstandingInvoices=nextInvoices.filter(item=>item.type==="Invoice"&&item.clientId===customer!.id&&total(item)>item.paid);
+  const outstandingInvoices=nextInvoices.filter(item=>item.type==="Invoice"&&item.clientId===customer!.id&&total(item)>item.paid+nextInvoices.filter(receiptItem=>receiptItem.type==="Cash receipt"&&receiptItem.appliesToInvoiceId===item.id&&receiptItem.paymentVerificationStatus==="awaiting_verification").reduce((sum,receiptItem)=>sum+receiptItem.amount,0));
   const projectMatches=outstandingInvoices.filter(item=>item.project.trim().toLocaleLowerCase()===billForm.project.trim().toLocaleLowerCase());
   if(projectMatches.length>1){setBillFormError("More than one outstanding invoice has this customer and project. Select the exact invoice to apply the receipt.");return;}
   if(projectMatches.length===1)sourceInvoice=projectMatches[0];
@@ -587,7 +588,7 @@ function addBill(e:FormEvent){
  const paymentMessage=receipt?" Receipt "+document.id+" is Awaiting verification; any linked invoice balance remains unchanged until verification.":pendingReceiptId?" Payment was recorded as receipt "+pendingReceiptId+", Awaiting verification; the invoice balance will change only after bank/gateway reconciliation.":"";
  setNotice((receipt?"Cash receipt":"Invoice")+" saved for customer "+customer.name+"."+paymentMessage+stageMessage);
 }
-async function verifySelectedReceipt(){
+async async function verifySelectedReceipt(){
  if(!selectedInvoice||selectedInvoice.type!=="Cash receipt")return;
  const reference=verificationReference.trim();
  if(!reference){setVerificationError("Enter the bank UTR, gateway transaction reference or other reconciliation reference.");return;}
@@ -668,7 +669,7 @@ return <main className="rr-admin"><aside className="rr-sidebar"><Link href="/" c
 {billForm.type==="Invoice"&&<><label>Payment reported received (₹)</label><input type="number" min="0" step="0.01" value={billForm.paid} onChange={e=>setBillForm({...billForm,paid:e.target.value})}/><p className="rr-attach-hint">This creates a separate receipt marked Awaiting verification. The invoice balance changes only after RR matches it to bank/gateway evidence.</p></>}
 {billFormError&&<div className="rr-login-error" role="alert">{billFormError}</div>}
 <div className="rr-total-preview"><span>Document total <small>Tax included where applicable</small></span><b>{money((Number(billForm.amount)||0)*(1+(billForm.type==="Cash receipt"?0:Number(billForm.tax))/100))}</b></div>
-<div className="rr-stage-start-note"><SlidersHorizontal size={16}/><span><b>Connected workflow</b><small>Saving an invoice moves the linked active sale to its configured invoice stage. A linked receipt updates the invoice balance and marks payment received; RR moves the sale to Won only when the signed-agreement and payment gates pass. Name alone is never used to auto-match.</small></span></div>
+<div className="rr-stage-start-note"><SlidersHorizontal size={16}/><span><b>Connected workflow</b><small>Saving an invoice can move the linked active sale to its configured invoice stage. Receipts remain Awaiting verification until reconciled against bank/gateway evidence; only verified receipts update invoice balances. Won requires signed-contract evidence and a verified advance linked to an approved payment policy. Name alone is never used to auto-match.</small></span></div>
 <div className="rr-modal-actions"><button type="button" className="rr-secondary" onClick={()=>setInvoiceModal(false)}>Cancel</button><button type="submit" className="rr-primary">{billForm.type==="Cash receipt"?"Record receipt":"Save invoice"} <Check size={16}/></button></div>
 </form></section></div>}{selectedLead&&<div className="rr-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setSelectedLead(null);}}><section className="rr-modal rr-modal-wide"><div className="rr-modal-head"><div><span className="rr-eyebrow">{selectedLead.id} · LEAD PROFILE</span><h2>{selectedLead.name}</h2><p>{selectedLead.project}</p></div><button onClick={()=>setSelectedLead(null)}><X size={19}/></button></div>
 {selectedLeadError&&<div className="rr-login-error" role="alert">{selectedLeadError}</div>}
