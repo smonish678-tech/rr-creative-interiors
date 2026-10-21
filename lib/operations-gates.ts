@@ -174,8 +174,21 @@ export function isApprovedBookingAdvanceReceipt(
   const milestoneId = value(document, "paymentMilestoneId");
   const version = Number(document.paymentPolicyVersion);
   if (!policyId || !milestoneId || !Number.isInteger(version) || version < 1) return false;
-  const policy = policies.find((item) => item.id === policyId && item.version === version && item.status === "approved");
+  const policy = policies.find((item) => item.id === policyId && item.version === version);
   if (!policy || !Array.isArray(policy.paymentMilestones)) return false;
+
+  // Current approved versions can qualify new receipts. Superseded versions remain
+  // valid only for receipts that were verified during the period they were approved.
+  const verifiedAt = value(document, "paymentVerifiedAt") || value(document, "date");
+  const approvedAt = value(policy, "approvedAt");
+  const supersededAt = value(policy, "supersededAt");
+  const currentApproved = policy.status === "approved";
+  const historicallyApproved = policy.status === "superseded" &&
+    Boolean(verifiedAt && supersededAt) &&
+    Date.parse(verifiedAt) <= Date.parse(supersededAt) &&
+    (!approvedAt || Date.parse(verifiedAt) >= Date.parse(approvedAt));
+  if (!currentApproved && !historicallyApproved) return false;
+
   return policy.paymentMilestones.some((milestone) =>
     value(milestone, "id") === milestoneId &&
     value(milestone, "purpose") === "booking_advance" &&
