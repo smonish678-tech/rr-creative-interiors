@@ -283,16 +283,32 @@ export async function POST(request: Request) {
       const missing: string[] = [];
       if (currentIndex === 0) {
         if (!property || property.addressVerificationStatus !== "confirmed") missing.push("confirmed site address");
-        if (!lead || !lead.signedContractDocumentId) missing.push("linked signed contract");
-        if (!lead || !lead.verifiedAdvanceTransactionId) missing.push("verified booking advance");
+        const signedContract = lead?.signedContractDocumentId
+          ? documents.find((document) => {
+              const type = String(document.documentType || "").toLowerCase().replaceAll("_", "-");
+              return document.id === lead.signedContractDocumentId &&
+                ["works-contract", "final-contract"].includes(type) &&
+                document.status === "signed" &&
+                document.leadId === lead.id &&
+                (document.customerId || document.clientId) === lead.clientId &&
+                typeof document.version === "number" && document.version > 0 &&
+                typeof document.signedAt === "string" && Boolean(document.signedAt) &&
+                typeof document.signatureEvidenceRef === "string" && Boolean(document.signatureEvidenceRef);
+            })
+          : undefined;
+        if (!signedContract) missing.push("linked signed contract with matching customer, opportunity, version and signature evidence");
         for (const type of ["approved_quotation", "signed_design_approval", "production_specification", "production_qc"]) {
           if (!docHas(documents, type, project.id, project.sourceOpportunityId)) missing.push(type.replaceAll("_", " "));
         }
         const leadReceipt = workspace.invoices.find((item) => item.id === lead?.verifiedAdvanceTransactionId);
         if (!leadReceipt || leadReceipt.type !== "Cash receipt" ||
+          leadReceipt.leadId !== lead?.id || leadReceipt.clientId !== lead?.clientId ||
           (leadReceipt as WorkspaceRecord).paymentVerificationStatus !== "verified" ||
+          !String((leadReceipt as WorkspaceRecord).paymentVerificationReference || "").trim() ||
+          !String((leadReceipt as WorkspaceRecord).paymentVerifiedAt || "").trim() ||
+          Number(leadReceipt.amount) <= 0 || Number(leadReceipt.paid) !== Number(leadReceipt.amount) ||
           !isApprovedBookingAdvanceReceipt(leadReceipt as never, workspace.commercialPolicies as never)) {
-          missing.push("advance linked to a versioned approved payment policy");
+          missing.push("advance receipt linked to this customer/opportunity and a versioned approved payment policy");
         }
       } else if (currentIndex === 1) {
         if (!docHas(documents, "production_completion", project.id, project.sourceOpportunityId)) missing.push("production completion / quality-release record");
