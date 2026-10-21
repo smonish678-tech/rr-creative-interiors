@@ -47,7 +47,7 @@ function docHas(documents: WorkspaceRecord[], type: string, projectId: string, l
     document.documentType === type &&
     document.projectId === projectId &&
     (!leadId || document.leadId === leadId) &&
-    document.status === "uploaded"
+    ["uploaded", "signed", "approved"].includes(String(document.status))
   );
 }
 
@@ -140,6 +140,68 @@ export async function POST(request: Request) {
       nextWorkspace.auditEvents = auditEvents;
       const nextRevision = await saveOperationsWorkspace(nextWorkspace, snapshot.revision);
       return NextResponse.json({ saved: true, revision: nextRevision, policy }, { headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (action === "approve-policy") {
+      const policyId = text(body.policyId, 160);
+      const documentId = text(body.approvalDocumentId, 160);
+      const policyIndex = workspace.commercialPolicies.findIndex((item) => item.id === policyId);
+      if (policyIndex < 0) return respondError("Commercial policy not found.", 404);
+      const policy = workspace.commercialPolicies[policyIndex] as WorkspaceRecord;
+      const nextReview: Record<string, { role: string; status: string }> = {
+        awaiting_rr_approval: { role: "RR", status: "awaiting_ca_approval" },
+        awaiting_ca_approval: { role: "CA", status: "awaiting_legal_approval" },
+        awaiting_legal_approval: { role: "Legal", status: "approved" },
+      };
+      const review = nextReview[String(policy.status)];
+      if (!review) return respondError("This policy is not waiting for an approval at this stage.", 409);
+      const evidence = workspace.documents.find((item) =>
+        item.id === documentId &&
+        item.documentType === "policy_approval" &&
+        item.policyId === policyId &&
+        item.approvalRole === review.role &&
+        item.status === "signed" &&
+        typeof item.version === "number" && item.version > 0 &&
+        typeof item.signedAt === "string" && Boolean(item.signedAt) &&
+        typeof item.signatureEvidenceRef === "string" && Boolean(item.signatureEvidenceRef)
+      );
+      if (!evidence) return respondError(`Attach a signed PDF approval record for the ${review.role} review stage first.`, 422, "POLICY_APPROVAL_EVIDENCE_REQUIRED");
+      const approvals = Array.isArray(policy.approvals) ? policy.approvals.filter(record) : [];
+      if (approvals.some((item) => item.role === review.role)) {
+        return respondError(`The ${review.role} approval is already recorded for this policy version. Create a new version to change the terms.`, 409);
+      }
+      const approval = {
+        role: review.role,
+        documentId,
+        signedAt: evidence.signedAt,
+        signatureEvidenceRef: evidence.signatureEvidenceRef,
+        recordedAt: now,
+        recordedBy: "authenticated-admin",
+        limitation: "Approval evidence was uploaded by the administrator. The app does not independently verify the external signer identity or cryptographic signature.",
+      };
+      const nextStatus = review.status;
+      const updatedPolicy: WorkspaceRecord = {
+        ...policy,
+        status: nextStatus,
+        approvals: [...approvals, approval],
+        updatedAt: now,
+        releaseBlocked: nextStatus !== "approved",
+        releaseBlocker: nextStatus === "approved" ? "" : `Waiting for ${nextStatus === "awaiting_ca_approval" ? "CA" : "Legal"} approval evidence.`,
+        ...(nextStatus === "approved" ? { approvedAt: now } : {}),
+      };
+      const policies = [...workspace.commercialPolicies];
+      policies[policyIndex] = updatedPolicy;
+      nextWorkspace = { ...workspace, commercialPolicies: policies };
+      auditEvents.push({
+        id: randomUUID(), occurredAt: now, actor: "admin-session", action: "commercial_policy.approval_evidence_recorded",
+        entityType: "workspace", entityId: policyId,
+        before: { status: policy.status },
+        after: { status: nextStatus, reviewerRole: review.role, approvalDocumentId: documentId },
+        reason: "Status advanced only after a linked signed PDF approval record was present. Reviewer identity/signature are not independently authenticated by this app.",
+      });
+      nextWorkspace.auditEvents = auditEvents;
+      const nextRevision = await saveOperationsWorkspace(nextWorkspace, snapshot.revision);
+      return NextResponse.json({ saved: true, revision: nextRevision, policy: updatedPolicy }, { headers: { "Cache-Control": "no-store" } });
     }
 
     if (action === "submit-policy-for-review") {
