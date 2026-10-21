@@ -303,7 +303,9 @@ export async function saveOperationsWorkspace(workspace: OperationsWorkspace, ex
   } catch (error) {
     if (error instanceof WorkspaceConflictError) throw error;
     const maybe = error as { status?: number; statusCode?: number; code?: string; name?: string; message?: string };
-    if (maybe.status === 412 || maybe.statusCode === 412 || maybe.code === "BLOB_PRECONDITION_FAILED" || maybe.name === "BlobPreconditionFailedError") {
+    if (maybe.status === 412 || maybe.statusCode === 412 || maybe.status === 409 || maybe.statusCode === 409 ||
+      maybe.code === "BLOB_PRECONDITION_FAILED" || maybe.code === "BLOB_ALREADY_EXISTS" ||
+      maybe.name === "BlobPreconditionFailedError" || maybe.name === "BlobAlreadyExistsError") {
       throw new WorkspaceConflictError();
     }
     throw error;
