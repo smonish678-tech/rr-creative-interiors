@@ -112,7 +112,7 @@ test("moving a lead to Won is blocked without signed-version and bank-verificati
     financeDocuments: [],
     commercialPolicies: [],
   });
-  assert.match(error ?? "", /signed contract|verified advance/i);
+  assert.match(error ?? "", /signed contract|verified advance|linked contract/i);
 });
 
 test("valid Won transition requires matching signed contract and verified receipt evidence", () => {
@@ -145,14 +145,15 @@ test("receipt allocation must exactly support an increase in invoice paid amount
   const invoice = { id: "INV-1", type: "Invoice", clientId: customer.id, leadId: oldLead.id, project: oldLead.project, amount: 10000, tax: 0, paid: 0, status: "Draft" };
   const changedInvoice = { ...invoice, paid: 1000, status: "Partially paid" };
   const error = validateFinanceDocumentChanges([invoice], [changedInvoice]);
-  assert.match(error ?? "", /newly verified receipts/i/i);
+  assert.match(error ?? "", /newly verified receipts/i);
 });
 
 test("receipt cannot be allocated beyond the invoice total", () => {
   const invoice = { id: "INV-1", type: "Invoice", clientId: customer.id, leadId: oldLead.id, project: oldLead.project, amount: 10000, tax: 0, paid: 0, status: "Draft" };
   const changedInvoice = { ...invoice, paid: 11000, status: "Paid" };
-  const receipt = { id: "REC-1", type: "Cash receipt", clientId: customer.id, leadId: oldLead.id, appliesToInvoiceId: invoice.id, project: oldLead.project, amount: 11000, tax: 0, paid: 11000, status: "Paid" };
-  const error = validateFinanceDocumentChanges([invoice], [changedInvoice, receipt]);
+  const pending = { id: "REC-1", type: "Cash receipt", clientId: customer.id, leadId: oldLead.id, appliesToInvoiceId: invoice.id, project: oldLead.project, amount: 11000, tax: 0, paid: 11000, status: "Awaiting verification", paymentVerificationStatus: "awaiting_verification" };
+  const receipt = { ...pending, status: "Paid", paymentVerificationStatus: "verified", paymentVerificationReference: "BANK-UTR-OVER", paymentVerifiedAt: "2026-10-21T10:00:00.000Z", paymentVerifiedBy: "admin-session" };
+  const error = validateFinanceDocumentChanges([invoice, pending], [changedInvoice, receipt], { allowVerifiedReceiptTransition: true });
   assert.match(error ?? "", /beyond its total/i);
 });
 
