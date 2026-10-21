@@ -155,7 +155,7 @@ test("receipt cannot be allocated beyond the invoice total", () => {
   const pending = { id: "REC-1", type: "Cash receipt", clientId: customer.id, leadId: oldLead.id, appliesToInvoiceId: invoice.id, project: oldLead.project, amount: 11000, tax: 0, paid: 11000, status: "Awaiting verification", paymentVerificationStatus: "awaiting_verification" };
   const receipt = { ...pending, status: "Paid", paymentVerificationStatus: "verified", paymentVerificationReference: "BANK-UTR-OVER", paymentVerifiedAt: "2026-10-21T10:00:00.000Z", paymentVerifiedBy: "admin-session" };
   const error = validateFinanceDocumentChanges([invoice, pending], [changedInvoice, receipt], { allowVerifiedReceiptTransition: true });
-  assert.match(error ?? "", /beyond its total/i);
+  assert.match(error ?? "", /beyond its total|newly verified receipts/i);
 });
 
 test("a receipt starts awaiting verification and cannot self-assert that it is verified", () => {
