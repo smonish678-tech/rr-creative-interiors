@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   deriveOperationsAuditEvents,
+  hasDuplicateVerifiedPaymentReference,
   isApprovedBookingAdvanceReceipt,
   materializeAcceptedProjects,
   validateFinanceDocumentChanges,
@@ -243,4 +244,21 @@ test("a superseded policy only qualifies receipts verified while that version wa
   const lateReceipt = { ...verifiedReceipt, paymentVerifiedAt: "2026-10-22T11:00:00.000Z" };
   assert.equal(isApprovedBookingAdvanceReceipt(historicReceipt, [superseded]), true);
   assert.equal(isApprovedBookingAdvanceReceipt(lateReceipt, [superseded]), false);
+});
+
+
+test("a verified bank reference cannot settle a second receipt, ignoring whitespace and case", () => {
+  const first = {
+    id: "REC-UTR-1",
+    type: "Cash receipt",
+    amount: 500,
+    tax: 0,
+    paid: 500,
+    status: "Paid",
+    paymentVerificationStatus: "verified",
+    paymentVerificationReference: "UTR ABC 123",
+  };
+  assert.equal(hasDuplicateVerifiedPaymentReference([first], "REC-UTR-2", "utrabc123"), true);
+  assert.equal(hasDuplicateVerifiedPaymentReference([first], "REC-UTR-1", "UTR ABC 123"), false);
+  assert.equal(hasDuplicateVerifiedPaymentReference([first], "REC-UTR-2", "UTR XYZ 999"), false);
 });
