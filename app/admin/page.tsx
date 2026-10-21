@@ -17,6 +17,7 @@ type Lead = {
   id:string; clientId?:string; name:string; email:string; phone:string; project:string; source:string; budget:string; status:Stage; date:string; notes:string;
   stageId?:string; serviceType?:string; location?:string; area?:string; timeline?:string; nextAction?:string; nextFollowUpDate?:string;
   lostReason?:string; agreementStatus?:AgreementStatus; advanceStatus?:AdvanceStatus; advanceExceptionReason?:string;
+  signedContractDocumentId?:string; verifiedAdvanceTransactionId?:string;
 };
 type Invoice = { id:string; clientId?:string; leadId?:string; appliesToInvoiceId?:string; client:string; email:string; phone?:string; project:string; date:string; due:string; description:string; amount:number; tax:number; paid:number; type:"Invoice"|"Cash receipt"; status:"Draft"|"Partially paid"|"Paid" };
 
@@ -45,7 +46,7 @@ function pipelineTone(lead: Lead, pipeline: SalesPipelineStage[]): string {
 
 function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineField[] {
   const immutableGateFields: PipelineField[] = stage.kind === "won"
-    ? ["agreementSigned", "advanceConfirmed"]
+    ? ["agreementSigned", "advanceConfirmed", "signedContractEvidence", "verifiedAdvanceEvidence", "clientId", "location"]
     : stage.kind === "lost" || stage.kind === "disqualified"
       ? ["lostReason"]
       : [];
@@ -69,6 +70,9 @@ function missingPipelineFields(lead: Lead, stage: SalesPipelineStage): PipelineF
       case "advanceConfirmed":
         return lead.advanceStatus !== "received" &&
           !(lead.advanceStatus === "waived" && Boolean(lead.advanceExceptionReason?.trim()));
+      case "signedContractEvidence": return !lead.signedContractDocumentId?.trim();
+      case "verifiedAdvanceEvidence": return !lead.verifiedAdvanceTransactionId?.trim();
+      case "clientId": return !lead.clientId?.trim();
       default: return false;
     }
   });
@@ -169,7 +173,7 @@ const [search,setSearch]=useState(""),[stageFilter,setStageFilter]=useState("All
 const [selectedLead,setSelectedLead]=useState<Lead|null>(null),[selectedInvoice,setSelectedInvoice]=useState<Invoice|null>(null),[selectedLeadError,setSelectedLeadError]=useState(""),[leadFormError,setLeadFormError]=useState(""),[notice,setNotice]=useState("");
 const [studioName,setStudioName]=useState("RR Creative Interiors"),[studioEmail,setStudioEmail]=useState("accounts@rrcreativeinteriors.in");
 const [workspaceLoaded,setWorkspaceLoaded]=useState(false),[workspaceStatus,setWorkspaceStatus]=useState("loading");
-const saveQueueRef=useRef<Promise<void>>(Promise.resolve());const leadsRef=useRef<Lead[]>([]);const clientsRef=useRef<CustomerRecord[]>([]);
+const saveQueueRef=useRef<Promise<void>>(Promise.resolve());const workspaceRevisionRef=useRef<string|null>(null);const leadsRef=useRef<Lead[]>([]);const clientsRef=useRef<CustomerRecord[]>([]);
 const [leadForm,setLeadForm]=useState({name:"",email:"",phone:"",project:"",serviceType:"",location:"",area:"",timeline:"",source:"Website enquiry",budget:"",notes:"",nextAction:""});
 const [billForm,setBillForm]=useState({client:"",email:"",phone:"",project:"",leadId:"",linkedInvoiceId:"",date:localDateValue(),due:dateAfterDays(7),description:"Interior design services",amount:"",tax:"18",paid:"0",type:"Invoice" as "Invoice"|"Cash receipt"});const [billFormError,setBillFormError]=useState("");
 const activeStages = useMemo(()=>pipelineStages.filter(stage=>stage.active || leads.some(lead=>lead.stageId===stage.id || lead.status===stage.name)),[pipelineStages,leads]);
@@ -196,6 +200,7 @@ useEffect(()=>{
  }).then(data=>{
   if(!active)return;
   const workspace=data.workspace;
+  workspaceRevisionRef.current=typeof data.revision==="string"?data.revision:null;
   if(workspace){
    let loadedStages=normalizeSalesPipeline(workspace.pipelineStages);
    const rawLeads=Array.isArray(workspace.leads)?workspace.leads as Lead[]:[];
@@ -235,9 +240,10 @@ useEffect(()=>{
  const timer=window.setTimeout(()=>{
   setWorkspaceStatus("saving");
   saveQueueRef.current=saveQueueRef.current.then(async()=>{
-   const response=await fetch("/api/admin/workspace",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+   const response=await fetch("/api/admin/workspace",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,revision:workspaceRevisionRef.current})});
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.error||"Workspace changes could not be saved.");
+   if(typeof data.revision==="string"||data.revision===null)workspaceRevisionRef.current=data.revision;
   }).then(()=>{setWorkspaceStatus("saved");}).catch(error=>{
    setWorkspaceStatus("error");
    setNotice(error instanceof Error?error.message:"Workspace changes could not be saved.");
@@ -289,7 +295,8 @@ function maybePromoteLeadToWon(lead:Lead):Lead{
  return missingPipelineFields(candidate,wonStage).length===0?candidate:lead;
 }
 function applyPipelineTrigger(lead:Lead,trigger:PipelineAutomationTrigger):Lead{
- const updated:Lead=trigger==="receipt_saved"?{...lead,advanceStatus:"received"}:lead;
+ // A recorded receipt is not proof of bank settlement; verification is a separate audited action.
+ const updated:Lead=lead;
  const current=stageForLead(updated,pipelineStages);
  // An explicit invoice on a previously lost/disqualified opportunity is a deliberate reactivation.
  // Keep already-won projects won when another milestone invoice is issued.
