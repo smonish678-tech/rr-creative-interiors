@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       const totals = quoteTotals(quote.lines, next.policy.gst.approved ? next.policy.gst.rate : null);
       if (Math.abs(quote.subtotal - totals.subtotal) > 0.02) errors.push(`Quote ${quote.id}: subtotal doesn't match its line items.`);
       if (quote.status !== "draft" && (!quote.preflightPassed || quote.preflightErrors.length)) errors.push(`Quote ${quote.id} cannot be issued or accepted until preflight passes.`);
-      if (quote.status === "issued" && !next.policy.approved) errors.push(`Quote ${quote.id} can only be issued after Phase 0 commercial terms are approved.`);
+      if (quote.status === "issued" && quote.kind !== "initial" && !next.policy.approved) errors.push(`Final/change quote ${quote.id} can only be issued after Phase 0 commercial terms are approved.`);
       const old = oldQuotes.get(quote.id);
       if (old && old.status === "draft" && quote.status === "accepted" && !old.preflightPassed) errors.push(`Quote ${quote.id} has not passed preflight and cannot be accepted.`);
     }
