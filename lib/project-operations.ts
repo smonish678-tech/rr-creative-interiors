@@ -206,10 +206,12 @@ export function quotePreflight(quote: QuoteVersion, policy: BusinessPolicy) {
   if (!quote.lines.length) errors.push("Add at least one priced line item.");
   if (quote.lines.some((line) => !line.description.trim() || !Number.isFinite(line.qty) || line.qty <= 0 || !Number.isFinite(line.unitPrice) || line.unitPrice < 0)) errors.push("Every quote line must have a description, quantity above zero and a non-negative unit price.");
   const totals = quoteTotals(quote.lines, policy.gst.approved ? policy.gst.rate : null);
-  if (!policy.gst.approved || policy.gst.rate === null) errors.push("CA-approved GST treatment/rate is missing; this quote can only remain a draft.");
-  if (!policy.delivery.approved) errors.push("Delivery terms are not approved.");
-  if (!policy.paymentMilestones.length || Math.abs(policy.paymentMilestones.reduce((sum, milestone) => sum + milestone.percent, 0) - 100) > 0.01) errors.push("Approved payment milestones must add up to 100%.");
-  if (!policy.contract.approved) errors.push("Approved commercial/contract terms are missing.");
+  if (quote.kind !== "initial") {
+    if (!policy.gst.approved || policy.gst.rate === null) errors.push("CA-approved GST treatment/rate is missing; this quote can only remain a draft.");
+    if (!policy.delivery.approved) errors.push("Delivery terms are not approved.");
+    if (!policy.paymentMilestones.length || Math.abs(policy.paymentMilestones.reduce((sum, milestone) => sum + milestone.percent, 0) - 100) > 0.01) errors.push("Approved payment milestones must add up to 100%.");
+    if (!policy.contract.approved) errors.push("Approved commercial/contract terms are missing.");
+  }
   return { ...totals, errors, passed: errors.length === 0 };
 }
 
