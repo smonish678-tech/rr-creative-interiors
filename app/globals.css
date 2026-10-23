@@ -998,3 +998,7 @@ html,body{background:#f7f3ec;color:#29211b}
  .rr-ops-tabs button,.rr-ops-create select,.rr-ops-form-grid input,.rr-ops-form-grid select,.rr-ops-form-grid textarea,.rr-ops-project-row,.rr-ops-quote-add input,.rr-ops-task-row select{transition:none!important}
  .rr-ops-spin{animation:none!important}
 }
+
+.rr-enquiry-consent{display:flex;align-items:flex-start;gap:10px;margin:12px 0 15px;color:#786958;font-size:11px;line-height:1.55;cursor:pointer}
+.rr-enquiry-consent input{accent-color:#a13b2e;flex:0 0 15px;width:15px;height:15px;margin-top:1px}
+.rr-form-submit:disabled{opacity:.48;cursor:not-allowed;transform:none}
