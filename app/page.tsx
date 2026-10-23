@@ -178,6 +178,7 @@ function ContactForm() {
   const [submissionError, setSubmissionError] = useState("");
   const [whatsAppHref, setWhatsAppHref] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
+  const [contactConsent, setContactConsent] = useState(false);
   const [values, setValues] = useState({ name: "", phone: "", email: "", type: "", budget: "", message: "" });
 
   const update = (key: keyof typeof values, value: string) => {
@@ -200,7 +201,7 @@ function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           submissionId, name: values.name, phone: values.phone, email: values.email,
-          serviceType: values.type, budget: values.budget, message: values.message, companyWebsite,
+          serviceType: values.type, budget: values.budget, message: values.message, companyWebsite, contactConsent,
         }),
       });
       const result = await response.json().catch(() => ({}));
@@ -305,12 +306,14 @@ function ContactForm() {
           <textarea required minLength={10} maxLength={2500} rows={4} value={values.message} onChange={(event) => update("message", event.target.value)} placeholder="Property, approximate size, what you are planning, and when you&apos;d like to begin." />
         </label>
 
+        <label className="rr-enquiry-consent"><input type="checkbox" required checked={contactConsent} onChange={(event) => setContactConsent(event.target.checked)} /><span>I agree RR Creative Interiors may contact me about this project enquiry.</span></label>
+
         <div className="rr-form-foot">
           <div className="rr-form-note">
             <span className="rr-signal"></span>
             A thoughtful first conversation. No package pitch.
           </div>
-          <button type="submit" className="rr-form-submit" disabled={saving || sent}>
+          <button type="submit" className="rr-form-submit" disabled={saving || sent || !contactConsent}>
             <span>{saving ? "Saving enquiry…" : sent ? "Enquiry received" : "Send enquiry"}</span>
             <MessageCircle size={18} />
             <ArrowUpRight size={16} />
