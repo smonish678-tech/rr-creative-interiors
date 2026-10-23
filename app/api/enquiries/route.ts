@@ -166,7 +166,9 @@ export async function POST(request: Request) {
     const reference = `LD-WEB-${submissionId.replace(/-/g, "").slice(0, 16).toUpperCase()}`;
     return NextResponse.json({ accepted: true, duplicate: result === "duplicate", reference, store: "legacy-inbox" }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not save your enquiry.";
-    return NextResponse.json({ error: message }, { status: message.includes("match multiple") || message.includes("conflicts") ? 409 : 503, headers: { "Cache-Control": "no-store" } });
+    const rawMessage = error instanceof Error ? error.message : "Could not save your enquiry.";
+    const identityConflict = rawMessage.includes("match multiple") || rawMessage.includes("conflicts");
+    const message = identityConflict ? rawMessage : safeDatabaseError(error);
+    return NextResponse.json({ error: message }, { status: identityConflict ? 409 : 503, headers: { "Cache-Control": "no-store" } });
   }
 }
