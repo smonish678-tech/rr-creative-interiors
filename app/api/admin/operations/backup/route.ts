@@ -1,91 +1,71 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { loadOperationsWorkspace, saveOperationsWorkspace, type OperationsWorkspace } from "@/lib/workspace-store";
-import { loadProjectOperations, saveProjectOperations } from "@/lib/operations-store";
-import { normalizeOperationsData, validateOperationsData } from "@/lib/project-operations";
+import { getSql, safeDatabaseError } from "@/lib/operations/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-function isWorkspace(value: unknown): value is OperationsWorkspace {
-  if (!isObject(value)) return false;
-  return Array.isArray(value.leads) && Array.isArray(value.invoices) && Array.isArray(value.clients) &&
-    typeof value.studioName === "string" && typeof value.studioEmail === "string" && Array.isArray(value.pipelineStages) &&
-    value.leads.every(isObject) && value.invoices.every(isObject) && value.clients.every(isObject);
-}
+const tables = [
+  "rr_customers","rr_contacts","rr_projects","rr_leads","rr_quotes","rr_payment_milestones",
+  "rr_documents","rr_transactions","rr_approvals","rr_tasks","rr_events","rr_checklist_items",
+  "rr_warranties","rr_warranty_claims","rr_message_jobs","rr_settings","rr_audit_log"
+] as const;
 
 export async function GET(request: Request) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "Administrator sign-in is required." }, { status: 401 });
   try {
-    const [crmWorkspace, operations] = await Promise.all([loadOperationsWorkspace(), loadProjectOperations()]);
-    const backup = {
-      format: "rr-creative-interiors-full-backup",
-      schemaVersion: 1,
-      createdAt: new Date().toISOString(),
-      warning: "This file contains confidential customer and project data. Store it privately.",
-      crmWorkspace,
-      operations,
-    };
-    return new Response(JSON.stringify(backup, null, 2), {
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Content-Disposition": `attachment; filename="rr-operations-backup-${new Date().toISOString().slice(0,10)}.json"`,
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
-      },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not create the backup.";
-    return NextResponse.json({ error: message }, { status: 503 });
-  }
+    const sql = getSql();
+    const [schema, ...records] = await Promise.all([
+      sql`SELECT to_regclass('public.rr_customers') AS customers_table, to_regclass('public.rr_projects') AS projects_table`,
+      ...tables.map((table) => {
+        switch (table) {
+          case "rr_customers": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_customers t`;
+          case "rr_contacts": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_contacts t`;
+          case "rr_projects": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_projects t`;
+          case "rr_leads": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_leads t`;
+          case "rr_quotes": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_quotes t`;
+          case "rr_payment_milestones": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_payment_milestones t`;
+          case "rr_documents": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_documents t`;
+          case "rr_transactions": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_transactions t`;
+          case "rr_approvals": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_approvals t`;
+          case "rr_tasks": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_tasks t`;
+          case "rr_events": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_events t`;
+          case "rr_checklist_items": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_checklist_items t`;
+          case "rr_warranties": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_warranties t`;
+          case "rr_warranty_claims": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_warranty_claims t`;
+          case "rr_message_jobs": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_message_jobs t`;
+          case "rr_settings": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_settings t`;
+          case "rr_audit_log": return sql`SELECT coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) AS data FROM rr_audit_log t`;
+        }
+      })
+    ]);
+    if (!schema[0]?.customers_table || !schema[0]?.projects_table) return NextResponse.json({ error: "Operations schema is not installed; no backup was produced." }, { status: 503 });
+    const data: Record<string, unknown> = {};
+    tables.forEach((table, index) => { data[table] = records[index]?.[0]?.data ?? []; });
+    const backup = { format: "rr-operations-backup", schemaVersion: 1, createdAt: new Date().toISOString(), tables: data };
+    await sql`INSERT INTO rr_audit_log (actor_id, action, entity_type, entity_id, after_state) VALUES ('admin', 'export_backup', 'database', 'operations', ${JSON.stringify({ schemaVersion: 1, tableCounts: Object.fromEntries(tables.map((table) => [table, Array.isArray(data[table]) ? (data[table] as unknown[]).length : 0])) })}::jsonb)`;
+    return new NextResponse(JSON.stringify(backup, null, 2), { headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": `attachment; filename="rr-operations-backup-${new Date().toISOString().slice(0,10)}.json"`,
+      "Cache-Control": "no-store, private",
+      "X-Content-Type-Options": "nosniff"
+    } });
+  } catch (error) { return NextResponse.json({ error: safeDatabaseError(error) }, { status: 503 }); }
 }
 
 export async function POST(request: Request) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "Administrator sign-in is required." }, { status: 401 });
   let backup: unknown;
-  try {
-    const raw = await request.text();
-    if (new TextEncoder().encode(raw).byteLength > 12 * 1024 * 1024) return NextResponse.json({ error: "Backup exceeds the 12 MB restore limit." }, { status: 413 });
-    backup = JSON.parse(raw);
-  } catch {
-    return NextResponse.json({ error: "The backup file could not be read as JSON." }, { status: 400 });
+  try { backup = await request.json(); }
+  catch { return NextResponse.json({ error: "Upload a valid JSON backup file." }, { status: 400 }); }
+  if (!backup || typeof backup !== "object" || (backup as { format?: unknown }).format !== "rr-operations-backup" || (backup as { schemaVersion?: unknown }).schemaVersion !== 1) {
+    return NextResponse.json({ valid: false, error: "Backup format or schema version is unsupported." }, { status: 400 });
   }
-  if (!isObject(backup) || backup.format !== "rr-creative-interiors-full-backup" || backup.schemaVersion !== 1 ||
-      !isWorkspace(backup.crmWorkspace) || !isObject(backup.operations)) {
-    return NextResponse.json({ error: "This is not a supported RR full backup file." }, { status: 400 });
-  }
-
-  const operations = normalizeOperationsData(backup.operations);
-  const errors = validateOperationsData(operations);
-  if (errors.length) return NextResponse.json({ error: errors.slice(0, 10).join("\n") }, { status: 422 });
-
-  try {
-    const [currentCrm, currentOperations] = await Promise.all([loadOperationsWorkspace(), loadProjectOperations()]);
-    let operationsAfterWrite: { revision: number } | null = null;
-    try {
-      operationsAfterWrite = await saveProjectOperations({ ...operations, revision: currentOperations.revision }, currentOperations.revision);
-      await saveOperationsWorkspace(backup.crmWorkspace);
-    } catch (error) {
-      // Best-effort rollback so a cross-store restore failure does not intentionally leave the two stores at different points.
-      try {
-        await saveOperationsWorkspace(currentCrm);
-        if (operationsAfterWrite) await saveProjectOperations(currentOperations, operationsAfterWrite.revision);
-      } catch {
-        return NextResponse.json({ error: "Restore partially failed and automatic rollback could not be confirmed. Stop editing; use the exported pre-restore backup and contact the project owner." }, { status: 503 });
-      }
-      throw error;
-    }
-    return NextResponse.json({
-      restored: true,
-      projects: operations.projects.length,
-      leads: backup.crmWorkspace.leads.length,
-      message: "RR CRM and Project Passport data restored. Private signed files are retained in the current private Blob store and are not deleted by restore.",
-    }, { headers: { "Cache-Control": "no-store" } });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not restore this backup.";
-    return NextResponse.json({ error: message }, { status: 503 });
-  }
+  const tableData = (backup as { tables?: unknown }).tables;
+  if (!tableData || typeof tableData !== "object" || Array.isArray(tableData)) return NextResponse.json({ valid: false, error: "Backup is missing the tables object." }, { status: 400 });
+  const missing = tables.filter((table) => !Array.isArray((tableData as Record<string, unknown>)[table]));
+  if (missing.length) return NextResponse.json({ valid: false, error: "Backup is missing required tables.", missing }, { status: 400 });
+  const counts = Object.fromEntries(tables.map((table) => [table, ((tableData as Record<string, unknown>)[table] as unknown[]).length]));
+  // Deliberately validate-only. Destructive restore is never triggered by an upload request.
+  return NextResponse.json({ valid: true, restoreApplied: false, schemaVersion: 1, counts, message: "Backup structure passed validation. This endpoint does not overwrite live records. Restore must be rehearsed against a separate database and reviewed before cutover." });
 }
