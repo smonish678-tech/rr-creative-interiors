@@ -2,7 +2,7 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/cron/operations-backup",
+      "path": "/api/cron/operations",
       "schedule": "30 19 * * *"
     }
   ]
