@@ -225,25 +225,29 @@ export function projectGateBlockers(project: ProjectRecord, data: OperationsData
   const verifiedMoney = data.transactions.filter((item) => item.projectId === project.id && item.status === "verified" && item.kind !== "refund").reduce((sum, item) => sum + item.amount, 0);
   const requiredChecklist = (gate: OperationsChecklist["gate"]) => data.checklists.filter((item) => item.projectId === project.id && item.gate === gate && item.required);
   const gateChecklistReady = (gate: OperationsChecklist["gate"]) => requiredChecklist(gate).every((item) => item.status === "passed" || item.status === "not_applicable" && Boolean(item.notApplicableReason.trim()));
-  if (["booking", "design", "final_approval", "production", "execution", "handover", "warranty", "closed"].includes(target)) {
-    if (!acceptedInitialQuote && target !== "booking") blockers.push("An initial quote must be accepted.");
+  if (["booking", "design", "final_approval", "production", "execution", "handover", "warranty", "closed"].includes(target) && !acceptedInitialQuote) {
+    blockers.push("An accepted initial quote is missing.");
   }
   if (["design", "final_approval", "production", "execution", "handover", "warranty", "closed"].includes(target)) {
     if (!signedBooking) blockers.push("Signed booking form is missing.");
     const bookingMilestone = data.milestones.find((item) => item.projectId === project.id && /booking|order booking/i.test(item.name));
-    if (bookingMilestone && bookingMilestone.amount !== null && verifiedMoney + 0.009 < bookingMilestone.amount) blockers.push("Verified booking payment is outstanding.");
-    if (!bookingMilestone && data.policy.paymentMilestones.length) blockers.push("Project payment milestones have not been initialized.");
+    if (bookingMilestone && bookingMilestone.amount !== null && bookingMilestone.paidAmount + 0.009 < bookingMilestone.amount) blockers.push("Verified booking payment is outstanding.");
+    if (!bookingMilestone) blockers.push("Project booking milestone has not been initialized from an approved payment policy.");
   }
   if (["final_approval", "production", "execution", "handover", "warranty", "closed"].includes(target)) {
-    if (!designApproval) blockers.push("A design approval for a specific version is missing.");
-    if (!acceptedFinalQuote) blockers.push("An accepted final quote with a passed preflight is missing.");
-    if (!signedContract) blockers.push("The works contract is not signed.");
+    if (!designApproval) blockers.push("A design approval linked to a specific design version is missing.");
+    const finalQuotePrepared = quotes.some((item) => item.kind === "final" && ["issued", "accepted"].includes(item.status));
+    if (!finalQuotePrepared) blockers.push("A final quote must be prepared and issued for approval.");
   }
   if (["production", "execution", "handover", "warranty", "closed"].includes(target)) {
-    if (!data.policy.approved) blockers.push("Phase 0 business policy is not approved.");
-    if (data.policy.paymentMilestones.length && !data.milestones.some((item) => item.projectId === project.id)) blockers.push("Project payment milestones are missing.");
-    const remainingDue = data.milestones.filter((item) => item.projectId === project.id && item.status !== "waived").reduce((sum, milestone) => sum + Math.max(0, (milestone.amount || 0) - milestone.paidAmount), 0);
-    if (remainingDue > 0.009 && data.policy.paymentMilestones.length) blockers.push(`Project has ${remainingDue.toFixed(2)} INR in unpaid/partially paid milestone obligations.`);
+    if (!acceptedFinalQuote) blockers.push("The final quote has not been accepted or its quote preflight is incomplete.");
+    if (!signedContract) blockers.push("The works contract is not signed against the approved final scope.");
+    if (!data.policy.approved) blockers.push("Phase 0 business policy is not approved; financial/production gates remain locked.");
+    if (!data.milestones.some((item) => item.projectId === project.id)) blockers.push("Project payment milestones are missing.");
+    const dueBeforeProduction = data.milestones.filter((item) => item.projectId === project.id && /booking|advance|production release|before production/i.test(`${item.name} ${item.trigger}`) && item.status !== "waived");
+    for (const milestone of dueBeforeProduction) {
+      if (milestone.status !== "paid" && (milestone.amount === null || milestone.paidAmount + 0.009 < milestone.amount)) blockers.push(`Payment milestone “${milestone.name}” must be verified before production.`);
+    }
   }
   if (["execution", "handover", "warranty", "closed"].includes(target) && !gateChecklistReady("production_release")) blockers.push("Production-release checklist is incomplete.");
   if (["handover", "warranty", "closed"].includes(target)) {
