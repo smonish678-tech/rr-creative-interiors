@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
+import InstagramGallery from "@/components/instagram-gallery";
 
 const RR_LOGO = "/rr-media/logo/rr%205.png";
 
@@ -490,6 +491,8 @@ export default function Page() {
             </div>
           </div>
         </section>
+
+        <InstagramGallery />
 
         <section id="eye" className="relative overflow-hidden bg-[#f1ebe1] text-[#29211b]">
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-[.56fr_1.44fr]">
