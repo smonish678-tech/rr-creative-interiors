@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
+import Script from "next/script";
 
 const RR_LOGO = "/rr-media/logo/rr%205.png";
 
@@ -487,6 +488,28 @@ export default function Page() {
             <div className="mt-12 flex items-center justify-between border-t border-[#2b211a]/15 pt-5">
               <span className="text-[8px] uppercase tracking-[.18em] text-[#956c3d]">{hasPublishedPortfolio ? "RR project photography · updated as new work is published" : "Visual references · real RR work appears here when published"}</span>
               <a href="#contact" className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[.18em] text-[#1d1713] hover:text-[#9d1714]">Discuss your space <ArrowUpRight size={14} /></a>
+            </div>
+          </div>
+        </section>
+
+        <section id="instagram" aria-labelledby="rr-instagram-title" className="relative overflow-hidden bg-[#eee7dd] text-[#29211b]">
+          <div className="mx-auto max-w-[1380px] px-6 py-24 md:px-10 md:py-32">
+            <Reveal>
+              <div className="flex flex-col gap-7 border-t border-[#2b211a]/15 pt-10 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Around the studio · Instagram</p>
+                  <h2 id="rr-instagram-title" className="mt-5 max-w-3xl font-serif text-5xl leading-[.95] tracking-[-.04em] md:text-7xl">
+                    Rooms in real life.<br /><em className="text-[#a13b2e]">Stories in motion.</em>
+                  </h2>
+                </div>
+                <p className="max-w-sm text-sm leading-7 text-[#6f6054]">
+                  New photos, project moments and video walkthroughs from RR Creative Interiors.
+                </p>
+              </div>
+            </Reveal>
+            <div className="mt-12 min-h-[240px]" aria-label="RR Creative Interiors Instagram photos and videos">
+              <Script id="rr-elfsight-platform" src="https://elfsightcdn.com/platform.js" strategy="afterInteractive" />
+              <div className="elfsight-app-da71ff40-6110-4d62-89c7-5ef05f8a32cd" data-elfsight-app-lazy="" />
             </div>
           </div>
         </section>
