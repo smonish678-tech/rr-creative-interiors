@@ -789,3 +789,9 @@ html,body{background:#f7f3ec;color:#29211b}
   .rr-header,.rr-nav-link,.rr-nav-cta,.rr-mobile-toggle,.rr-footer-cta-orbit,.rr-footer-cta-orbit:before,.rr-footer-cta-orbit svg,.rr-float,.rr-form-submit,.rr-field,.rr-budget-chip,.rr-contact-action,.rr-contact-icon{transition:none!important}
   .rr-glaze-line::after,.rr-spark{animation:none!important}
 }
+
+/* Elfsight's owner-only editing toolbar is not website content.
+   Per Elfsight's official guidance, hide it without covering the media feed. */
+.eapps-widget-toolbar {
+  display: none !important;
+}
