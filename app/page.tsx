@@ -9,7 +9,7 @@ import SmoothScroll from "@/components/smooth-scroll";
 import ProjectLocationMap from "@/components/project-location-map";
 import Script from "next/script";
 
-const RR_LOGO = "/rr-media/logo/rr%205.png";
+const RR_LOGO = "/rr-media/logo/rr-official-emblem.webp";
 
 type PortfolioCard = { name: string; src: string; kind?: "image" | "video"; title?: string; project?: string; location?: string; category?: string; description?: string; id?: string };
 
@@ -72,6 +72,21 @@ function Reveal({ children, delay = 0, className = "" }: { children: React.React
   );
 }
 
+function BrandMark({ logoUrl, footer = false }: { logoUrl: string; footer?: boolean }) {
+  if (logoUrl !== RR_LOGO) {
+    return <img src={logoUrl} alt="RR Creative Interiors" className={footer ? "h-14 w-auto object-contain" : undefined} />;
+  }
+  return (
+    <span className={`rr-brand-lockup${footer ? " rr-footer-brand" : ""}`}>
+      <img src={RR_LOGO} alt="" aria-hidden="true" className="rr-brand-emblem" width={44} height={48} />
+      <span className="rr-brand-wordmark" aria-label="RR Creative Interiors">
+        RR CREATIVE
+        <small>INTERIORS</small>
+      </span>
+    </span>
+  );
+}
+
 function Nav({ logoUrl }: { logoUrl: string }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("Home");
@@ -119,10 +134,7 @@ function Nav({ logoUrl }: { logoUrl: string }) {
     <motion.header className="rr-header fixed inset-x-0 top-0 z-50">
       <div className="rr-header-inner">
         <a href="#top" className="rr-brand" aria-label="RR Creative Interiors home" onClick={() => setActive("Home")}>
-          <img
-            src={logoUrl}
-            alt="RR Creative Interiors"
-          />
+          <BrandMark logoUrl={logoUrl} />
         </a>
 
         <div className="rr-desktop-nav">
@@ -744,11 +756,7 @@ export default function Page() {
 
         <div className="mx-auto grid max-w-[1380px] gap-12 px-6 py-16 md:px-10 md:grid-cols-[1.2fr_.8fr_.8fr]">
           <div>
-            <img
-              src={siteAssets.logo || RR_LOGO}
-              alt="RR Creative Interiors"
-              className="h-14 w-auto object-contain"
-            />
+            <BrandMark logoUrl={siteAssets.logo || RR_LOGO} footer />
             <p className="mt-6 max-w-md text-sm leading-7 text-[#6f6054]">
               Fully customised residential and commercial interiors, planned around your brief, your priorities and an agreed scope.
             </p>

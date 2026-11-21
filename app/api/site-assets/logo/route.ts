@@ -4,7 +4,7 @@ import { publicWebsiteAssetMap, loadWebsiteAssetConfig } from "@/lib/website-ass
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const FALLBACK_LOGO = "/rr-media/logo/Glossy%20Red%20and%20Gold%20Split%20Emblem.png";
+const FALLBACK_LOGO = "/rr-media/logo/rr-official-emblem.webp";
 
 export async function GET(request: Request) {
   try {
