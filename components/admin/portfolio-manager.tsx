@@ -16,19 +16,22 @@ type PortfolioAsset = {
   kind: "image" | "video";
   title: string;
   project: string;
+  location?: string;
   description: string;
   category: string;
   published: boolean;
   createdAt: string;
 };
 
-const categories = ["Residential", "Kitchen & wardrobes", "Commercial", "Office", "Details & materials", "Other"];
+const categories = ["Residential", "Kitchen & wardrobes", "Commercial", "Office", "Details & materials", "Factory process", "Other"];
 
 export default function PortfolioManager() {
   const [items, setItems] = useState<PortfolioAsset[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [title, setTitle] = useState("");
   const [project, setProject] = useState("");
+  const [location, setLocation] = useState("");
+  const [locationBusy, setLocationBusy] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Residential");
   const [published, setPublished] = useState(true);
@@ -133,6 +136,7 @@ export default function PortfolioManager() {
             contentType: blob.contentType || file.type,
             title: mediaTitle,
             project: project.trim(),
+            location: location.trim(),
             description: description.trim(),
             category,
             published,
@@ -176,6 +180,27 @@ export default function PortfolioManager() {
     }
   }
 
+  async function saveLocation(item: PortfolioAsset, area: string) {
+    setError("");
+    setNotice("");
+    setLocationBusy(item.id);
+    try {
+      const response = await fetch("/api/admin/portfolio", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, location: area.trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not update the project area.");
+      setItems((previous) => previous.map((entry) => entry.id === item.id ? data.item : entry));
+      setNotice("The project neighbourhood has been updated.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not update the project area.");
+    } finally {
+      setLocationBusy("");
+    }
+  }
+
   async function removeItem(item: PortfolioAsset) {
     if (!window.confirm(`Remove “${item.title}” from the portfolio? This also deletes the uploaded file.`)) return;
     setError("");
@@ -197,7 +222,7 @@ export default function PortfolioManager() {
         <div>
           <span className="rr-eyebrow">THE WORK, PRESENTED WITH INTENTION</span>
           <h1>Portfolio library</h1>
-          <p>Upload completed projects, control what visitors see, and keep the gallery current.</p>
+          <p>Upload completed projects, control what visitors see, and keep the gallery current. Add a verified Bengaluru neighbourhood to show a project on the shareable map; never enter a customer\u0027s street address.</p>
         </div>
         <button className="rr-primary" type="button" onClick={() => inputRef.current?.click()}>
           <Plus size={17} /> Add media
@@ -252,6 +277,7 @@ export default function PortfolioManager() {
           )}
           <div className="rr-portfolio-form-grid">
             <label>Project name <span>*</span><input value={project} onChange={(e) => setProject(e.target.value)} placeholder="e.g. Indiranagar residence" maxLength={140} required disabled={busy} /></label>
+            <label>Project area <small>Optional · neighbourhood only</small><input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Jayanagar (not a full address)" maxLength={100} disabled={busy} /></label>
             <label>Media title <small>Optional</small><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Warm oak living room" maxLength={140} disabled={busy} /></label>
             <label>Category<select value={category} onChange={(e) => setCategory(e.target.value)} disabled={busy}>{categories.map((value) => <option key={value}>{value}</option>)}</select></label>
             <label className="rr-publish-check"><input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} disabled={busy} /><span><b>Publish when uploaded</b><small>Published assets appear in the public website gallery.</small></span></label>
@@ -295,6 +321,10 @@ export default function PortfolioManager() {
                 <span className="rr-portfolio-category">{item.category}</span>
                 <h3>{item.title}</h3>
                 <p className="rr-portfolio-project">{item.project}</p>
+                <form className="mt-3 flex flex-wrap gap-2" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); void saveLocation(item, String(data.get("location") || "")); }}>
+                  <input key={`${item.id}-${item.location || ""}`} type="text" name="location" defaultValue={item.location || ""} maxLength={100} aria-label={`Project neighbourhood for ${item.title}`} placeholder="Bengaluru neighbourhood" className="min-w-0 flex-1 rounded border border-[#d5cec1] bg-white px-3 py-2 text-xs" />
+                  <button type="submit" disabled={locationBusy === item.id} className="rounded border border-[#c8b7a4] px-3 py-2 text-xs">Save area</button>
+                </form>
                 {item.description && <p className="rr-portfolio-caption">{item.description}</p>}
                 <div className="rr-portfolio-card-actions">
                   <button className="rr-secondary" type="button" onClick={() => void updatePublished(item)}>{item.published ? <EyeOff size={14} /> : <Eye size={14} />}{item.published ? "Unpublish" : "Publish"}</button>
