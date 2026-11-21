@@ -9,6 +9,8 @@ export type PortfolioAsset = {
   kind: "image" | "video";
   title: string;
   project: string;
+  /** Public-facing neighbourhood only; never publish a customer street address. */
+  location?: string;
   description: string;
   category: string;
   published: boolean;

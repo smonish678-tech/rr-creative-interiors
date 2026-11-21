@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       kind,
       title: typeof body.title === "string" && body.title.trim() ? body.title.trim().slice(0, 140) : pathname.split("/").pop() || "Untitled project",
       project: typeof body.project === "string" ? body.project.trim().slice(0, 140) : "",
+      location: typeof body.location === "string" ? body.location.trim().slice(0, 100) : "",
       description: typeof body.description === "string" ? body.description.trim().slice(0, 600) : "",
       category: typeof body.category === "string" ? body.category.trim().slice(0, 60) : "Residential",
       published: body.published === true,
@@ -67,14 +68,18 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   if (!isAdminRequest(request)) return unauthorized();
   try {
-    const body = (await request.json()) as { id?: unknown; published?: unknown };
-    if (typeof body.id !== "string" || typeof body.published !== "boolean") {
-      return NextResponse.json({ error: "A portfolio item and publish state are required." }, { status: 400 });
+    const body = (await request.json()) as { id?: unknown; published?: unknown; location?: unknown };
+    if (typeof body.id !== "string" || (typeof body.published !== "boolean" && typeof body.location !== "string") || (body.location !== undefined && (typeof body.location !== "string" || body.location.length > 120))) {
+      return NextResponse.json({ error: "A portfolio item and valid changes are required." }, { status: 400 });
     }
     const items = await loadPortfolio();
     const index = items.findIndex((item) => item.id === body.id);
     if (index < 0) return NextResponse.json({ error: "Portfolio item not found." }, { status: 404 });
-    items[index] = { ...items[index], published: body.published };
+    items[index] = {
+      ...items[index],
+      ...(typeof body.published === "boolean" ? { published: body.published } : {}),
+      ...(typeof body.location === "string" ? { location: body.location.trim().slice(0, 100) } : {}),
+    };
     await savePortfolio(items);
     return NextResponse.json({ item: items[index] });
   } catch (error) {
