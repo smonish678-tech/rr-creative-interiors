@@ -6,11 +6,12 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import MorphScrollHero from "@/components/morph-scroll-hero";
 import { SquigglyUnderline } from "@/components/ui/squiggly-underline";
 import SmoothScroll from "@/components/smooth-scroll";
+import ProjectLocationMap from "@/components/project-location-map";
 import Script from "next/script";
 
 const RR_LOGO = "/rr-media/logo/rr%205.png";
 
-type PortfolioCard = { name: string; src: string; kind?: "image" | "video"; title?: string; project?: string; description?: string; id?: string };
+type PortfolioCard = { name: string; src: string; kind?: "image" | "video"; title?: string; project?: string; location?: string; category?: string; description?: string; id?: string };
 
 const PORTFOLIO: PortfolioCard[] = [
   "p1.png","p2.png","p3.png","p4.png","p5.png","p6.png","p7.png","p8.png","p9.png",
@@ -359,13 +360,15 @@ export default function Page() {
         if (!active || !Array.isArray(data?.items) || data.items.length === 0) return;
         const uploaded: PortfolioCard[] = data.items
           .filter((item: { url?: unknown; kind?: unknown }) => typeof item.url === "string" && (item.kind === "image" || item.kind === "video"))
-          .map((item: { id?: string; url: string; kind: "image" | "video"; title?: string; project?: string; description?: string }) => ({
+          .map((item: { id?: string; url: string; kind: "image" | "video"; title?: string; project?: string; location?: string; category?: string; description?: string }) => ({
             id: item.id,
             name: item.title || item.project || "RR project",
             src: item.url,
             kind: item.kind,
             title: item.title,
             project: item.project,
+            location: item.location,
+            category: item.category,
             description: item.description,
           }));
         setHasPublishedPortfolio(uploaded.length > 0);
@@ -374,6 +377,8 @@ export default function Page() {
       .catch(() => {});
     return () => { active = false; };
   }, []);
+
+  const factoryVideo = hasPublishedPortfolio ? portfolioItems.find((item) => item.kind === "video" && (item.category === "Factory process" || /factory|workshop/i.test(item.project || ""))) : undefined;
 
   return (
     <>
@@ -491,6 +496,8 @@ export default function Page() {
             </div>
           </div>
         </section>
+
+        <ProjectLocationMap items={hasPublishedPortfolio ? portfolioItems : []} />
 
         <section id="instagram" aria-labelledby="rr-instagram-title" className="relative overflow-hidden bg-[#eee7dd] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-24 md:px-10 md:py-32">
@@ -625,6 +632,49 @@ export default function Page() {
           </div>
         </section>
 
+        <section id="factory" className="bg-[#eee7dd] text-[#29211b]" aria-labelledby="rr-factory-title">
+          <div className="mx-auto max-w-[1380px] px-6 py-24 md:px-10 md:py-36">
+            <Reveal>
+              <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[.25em] text-[#956c3d]">Behind the finish · Craft & process</p>
+                  <h2 id="rr-factory-title" className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-[-.04em] md:text-7xl">
+                    See how a space<br /><em className="text-[#a13b2e]">comes together.</em>
+                  </h2>
+                </div>
+                <p className="max-w-sm text-sm leading-7 text-[#6f6054]">A good interior is more than a final photograph. Explore the journey from careful measurements and material choices to finishing and installation.</p>
+              </div>
+            </Reveal>
+            <div className="mt-12 grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
+              <div className="overflow-hidden bg-[#ded2c5]">
+                {factoryVideo ? (
+                  <video src={factoryVideo.src} aria-label={factoryVideo.title || "RR Creative Interiors factory process"} controls playsInline preload="metadata" className="aspect-video h-full min-h-[320px] w-full object-cover" />
+                ) : (
+                  <div className="flex aspect-video min-h-[320px] flex-col items-start justify-end bg-gradient-to-br from-[#c9b8a1] via-[#eee4d8] to-[#a68b70] p-10">
+                    <span className="text-[10px] uppercase tracking-[.25em] text-[#67513c]">The making of an interior</span>
+                    <p className="mt-5 max-w-xl font-serif text-3xl leading-tight text-[#35291f] md:text-5xl">Thought through.<br />Made with care.</p>
+                    <p className="mt-4 max-w-md text-sm leading-7 text-[#66564b]">Our factory walkthrough will be featured here alongside the projects it helps bring to life.</p>
+                  </div>
+                )}
+              </div>
+              <div className="grid gap-0 border-t border-[#2b211a]/15">
+                {[
+                  ["01", "Measure & plan", "Confirm dimensions and the approved design before production."],
+                  ["02", "Prepare materials", "Review the selected boards, finishes and hardware against the brief."],
+                  ["03", "Make & finish", "Follow the fabrication, assembly and finishing process."],
+                  ["04", "Fit & hand over", "Install, check the details and close the final items."]
+                ].map(([n, heading, description]) => (
+                  <div key={n} className="grid grid-cols-[40px_1fr] gap-4 border-b border-[#2b211a]/15 py-5">
+                    <span className="text-[10px] tracking-[.15em] text-[#956c3d]">{n}</span>
+                    <div><h3 className="font-serif text-2xl">{heading}</h3><p className="mt-2 text-sm leading-6 text-[#6f6054]">{description}</p></div>
+                  </div>
+                ))}
+                <a href="#contact" className="mt-5 inline-flex items-center gap-2 text-xs uppercase tracking-[.12em] text-[#a13b2e]">Discuss your project <ArrowUpRight size={15} /></a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="journal" className="bg-[#fbf8f2] text-[#29211b]">
           <div className="mx-auto max-w-[1380px] px-6 py-28 md:px-10 md:py-36">
             <Reveal>
@@ -710,6 +760,8 @@ export default function Page() {
               <a href="#eye">The Eye</a>
               <a href="#services">Services</a>
               <a href="#process">Process</a>
+              <a href="#factory">Craft</a>
+              <a href="#project-map">Bengaluru projects</a>
               <a href="#journal">Notes</a>
             </div>
           </div>
