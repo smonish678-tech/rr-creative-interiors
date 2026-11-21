@@ -795,3 +795,12 @@ html,body{background:#f7f3ec;color:#29211b}
 .eapps-widget-toolbar {
   display: none !important;
 }
+
+/* Official metallic split-R brand supplied by RR Creative Interiors. */
+.rr-brand-lockup{display:inline-flex;align-items:center;gap:9px;max-width:100%;white-space:nowrap}
+.rr-brand .rr-brand-emblem{width:43px;height:48px;max-height:none;object-fit:contain;filter:none;transition:transform .35s ease}
+.rr-brand:hover .rr-brand-emblem{transform:translateY(-1px)}
+.rr-brand-wordmark{display:flex;flex-direction:column;align-items:center;gap:5px;color:#e4bc72;font-family:Georgia,serif;font-size:15px;font-weight:500;line-height:1;letter-spacing:.075em;text-shadow:0 1px 14px rgba(0,0,0,.32)}
+.rr-brand-wordmark small{display:block;color:#ddb56e;font-family:var(--sans);font-size:8px;letter-spacing:.47em;font-weight:500;line-height:1.2}
+.rr-footer-brand{gap:14px}.rr-footer-brand .rr-brand-emblem{width:60px;height:66px;object-fit:contain}.rr-footer-brand .rr-brand-wordmark{font-size:19px}.rr-footer-brand .rr-brand-wordmark small{font-size:9px}
+@media(max-width:560px){.rr-brand .rr-brand-emblem{width:34px;height:39px}.rr-brand-wordmark{font-size:12px;letter-spacing:.06em}.rr-brand-wordmark small{font-size:7px;letter-spacing:.35em}.rr-brand-lockup{gap:6px}}
