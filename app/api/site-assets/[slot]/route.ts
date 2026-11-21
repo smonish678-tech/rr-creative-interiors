@@ -9,9 +9,9 @@ export async function GET(request: Request, context: { params: Promise<{ slot: s
   if (slot !== "logo") return NextResponse.json({ error: "Website asset slot not found." }, { status: 404 });
   try {
     const assets = publicWebsiteAssetMap(await loadWebsiteAssetConfig());
-    const target = assets.logo || new URL("/rr-media/logo/rr%205.png", request.url).toString();
+    const target = assets.logo || new URL("/rr-media/logo/rr-official-emblem.webp", request.url).toString();
     return NextResponse.redirect(target, { status: 307, headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } });
   } catch {
-    return NextResponse.redirect(new URL("/rr-media/logo/rr%205.png", request.url), { status: 307 });
+    return NextResponse.redirect(new URL("/rr-media/logo/rr-official-emblem.webp", request.url), { status: 307 });
   }
 }
