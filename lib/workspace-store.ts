@@ -9,10 +9,28 @@ export type OperationsWorkspace = {
   leads: WorkspaceRecord[];
   invoices: WorkspaceRecord[];
   clients: WorkspaceRecord[];
+  properties: WorkspaceRecord[];
+  projects: WorkspaceRecord[];
+  documents: WorkspaceRecord[];
+  auditEvents: WorkspaceRecord[];
+  commercialPolicies: WorkspaceRecord[];
   studioName: string;
   studioEmail: string;
   pipelineStages: SalesPipelineStage[];
 };
+
+export type OperationsWorkspaceSnapshot = {
+  workspace: OperationsWorkspace;
+  revision: string | null;
+};
+
+/** A conditional write failed because another session committed first. */
+export class WorkspaceConflictError extends Error {
+  constructor(message = "The operations workspace changed in another session. Refresh the workspace and review the latest records before saving again.") {
+    super(message);
+    this.name = "WorkspaceConflictError";
+  }
+}
 
 const WORKSPACE_PATH = "rr-creative-interiors/workspace/operations.enc";
 const PUBLIC_ENQUIRY_PREFIX = "rr-creative-interiors/public-enquiries/";
@@ -74,6 +92,11 @@ function decryptWorkspace(serialized: string, token: string): OperationsWorkspac
     leads: Array.isArray(data.leads) ? data.leads.filter(isRecord) : [],
     invoices: Array.isArray(data.invoices) ? data.invoices.filter(isRecord) : [],
     clients: Array.isArray(data.clients) ? data.clients.filter(isRecord) : [],
+    properties: Array.isArray(data.properties) ? data.properties.filter(isRecord) : [],
+    projects: Array.isArray(data.projects) ? data.projects.filter(isRecord) : [],
+    documents: Array.isArray(data.documents) ? data.documents.filter(isRecord) : [],
+    auditEvents: Array.isArray(data.auditEvents) ? data.auditEvents.filter(isRecord) : [],
+    commercialPolicies: Array.isArray(data.commercialPolicies) ? data.commercialPolicies.filter(isRecord) : [],
     studioName: typeof data.studioName === "string" ? data.studioName : "RR Creative Interiors",
     studioEmail: typeof data.studioEmail === "string" ? data.studioEmail : "accounts@rrcreativeinteriors.in",
     pipelineStages: normalizeSalesPipeline(data.pipelineStages),
@@ -207,22 +230,32 @@ function appendPublicEnquiryLeads(workspace: OperationsWorkspace, records: Publi
   return { ...workspace, leads, clients: customers };
 }
 
-export async function loadOperationsWorkspace(options: { includePublicEnquiries?: boolean } = {}): Promise<OperationsWorkspace> {
-  const token = storageToken();
+async function loadStoredWorkspace(token: string): Promise<OperationsWorkspaceSnapshot> {
   const result = await list({ prefix: WORKSPACE_PATH, token });
   const blob = result.blobs.find((item) => item.pathname === WORKSPACE_PATH);
-  let workspace: OperationsWorkspace;
   if (!blob) {
-    workspace = {
-      leads: [], invoices: [], clients: [], studioName: "RR Creative Interiors", studioEmail: "accounts@rrcreativeinteriors.in",
-      pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields], automationTriggers: [...stage.automationTriggers] })),
+    return {
+      revision: null,
+      workspace: {
+        leads: [], invoices: [], clients: [], properties: [], projects: [], documents: [], auditEvents: [], commercialPolicies: [],
+        studioName: "RR Creative Interiors", studioEmail: "accounts@rrcreativeinteriors.in",
+        pipelineStages: DEFAULT_SALES_PIPELINE.map((stage) => ({ ...stage, requiredFields: [...stage.requiredFields], automationTriggers: [...stage.automationTriggers] })),
+      },
     };
-  } else {
-    const response = await get(blob.url, { access: "public", token, useCache: false });
-    if (!response || response.statusCode !== 200) throw new Error("Could not load the encrypted operations workspace.");
-    workspace = decryptWorkspace(await new Response(response.stream).text(), token);
   }
-  if (!options.includePublicEnquiries) return workspace;
+  if (typeof blob.etag !== "string" || !blob.etag) {
+    throw new Error("Workspace storage did not return a revision token. Refusing to save without concurrency protection.");
+  }
+  const response = await get(blob.url, { access: "public", token, useCache: false });
+  if (!response || response.statusCode !== 200) throw new Error("Could not load the encrypted operations workspace.");
+  return { workspace: decryptWorkspace(await new Response(response.stream).text(), token), revision: blob.etag };
+}
+
+export async function loadOperationsWorkspaceSnapshot(options: { includePublicEnquiries?: boolean } = {}): Promise<OperationsWorkspaceSnapshot> {
+  const token = storageToken();
+  const snapshot = await loadStoredWorkspace(token);
+  let workspace = snapshot.workspace;
+  if (!options.includePublicEnquiries) return snapshot;
 
   const allInboxBlobs = await listAllBlobs(PUBLIC_ENQUIRY_PREFIX, token);
   const known = new Set(workspace.leads.map((lead) => typeof lead.publicSubmissionId === "string" ? lead.publicSubmissionId : "").filter(Boolean));
@@ -230,18 +263,51 @@ export async function loadOperationsWorkspace(options: { includePublicEnquiries?
     const filename = blobItem.pathname.slice(PUBLIC_ENQUIRY_PREFIX.length).replace(/\.enc$/, "");
     return blobItem.pathname.endsWith(".enc") && /^[0-9a-f-]{36}$/i.test(filename) && !known.has(filename);
   });
-  if (!pendingBlobs.length) return workspace;
-  const inboxRecords = (await Promise.all(pendingBlobs.map((item) => readPublicEnquiry(item, token)))).filter((item): item is PublicEnquiryInboxRecord => item !== null);
-  return appendPublicEnquiryLeads(workspace, inboxRecords);
+  if (pendingBlobs.length) {
+    const inboxRecords = (await Promise.all(pendingBlobs.map((item) => readPublicEnquiry(item, token)))).filter((item): item is PublicEnquiryInboxRecord => item !== null);
+    workspace = appendPublicEnquiryLeads(workspace, inboxRecords);
+  }
+  return { workspace, revision: snapshot.revision };
 }
 
-export async function saveOperationsWorkspace(workspace: OperationsWorkspace): Promise<void> {
+export async function loadOperationsWorkspace(options: { includePublicEnquiries?: boolean } = {}): Promise<OperationsWorkspace> {
+  return (await loadOperationsWorkspaceSnapshot(options)).workspace;
+}
+
+/**
+ * Compare-and-swap save for the single encrypted workspace object.
+ *
+ * A missing revision means the caller observed an empty store; an existing
+ * revision must match exactly. The Blob-side ifMatch precondition protects
+ * the short interval between reading and writing. Conflicts are surfaced to
+ * the UI and are never converted into a successful save.
+ */
+export async function saveOperationsWorkspace(workspace: OperationsWorkspace, expectedRevision: string | null): Promise<string> {
   const token = storageToken();
-  await put(WORKSPACE_PATH, encryptWorkspace(workspace, token), {
-    access: "public",
-    token,
-    contentType: "application/octet-stream",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+  const current = await loadStoredWorkspace(token);
+  if (current.revision !== expectedRevision) throw new WorkspaceConflictError();
+
+  try {
+    const saved = await put(WORKSPACE_PATH, encryptWorkspace(workspace, token), {
+      access: "public",
+      token,
+      contentType: "application/octet-stream",
+      addRandomSuffix: false,
+      allowOverwrite: Boolean(current.revision),
+      ...(current.revision ? { ifMatch: current.revision } : {}),
+    });
+    if (typeof saved.etag !== "string" || !saved.etag) {
+      throw new Error("Workspace write completed without a verifiable revision. Refresh the workspace before making further changes.");
+    }
+    return saved.etag;
+  } catch (error) {
+    if (error instanceof WorkspaceConflictError) throw error;
+    const maybe = error as { status?: number; statusCode?: number; code?: string; name?: string; message?: string };
+    if (maybe.status === 412 || maybe.statusCode === 412 || maybe.status === 409 || maybe.statusCode === 409 ||
+      maybe.code === "BLOB_PRECONDITION_FAILED" || maybe.code === "BLOB_ALREADY_EXISTS" ||
+      maybe.name === "BlobPreconditionFailedError" || maybe.name === "BlobAlreadyExistsError") {
+      throw new WorkspaceConflictError();
+    }
+    throw error;
+  }
 }

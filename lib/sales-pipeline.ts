@@ -16,7 +16,9 @@ export type PipelineField =
   | "notes"
   | "lostReason"
   | "agreementSigned"
-  | "advanceConfirmed";
+  | "advanceConfirmed"
+  | "signedContractEvidence"
+  | "verifiedAdvanceEvidence";
 
 export type SalesPipelineStage = {
   id: string;
@@ -46,7 +48,9 @@ export const PIPELINE_FIELD_OPTIONS: Array<{ key: PipelineField; label: string; 
   { key: "notes", label: "Conversation / meeting notes", help: "The key outcome or context is recorded." },
   { key: "lostReason", label: "Lost / disqualification reason", help: "Why the opportunity will not proceed." },
   { key: "agreementSigned", label: "Agreement signed", help: "Manually confirm the signed agreement is stored." },
-  { key: "advanceConfirmed", label: "Initial payment confirmed", help: "Manually confirm receipt or a documented authorised exception." },
+  { key: "advanceConfirmed", label: "Initial payment confirmed", help: "A payment status alone is not evidence that funds settled." },
+  { key: "signedContractEvidence", label: "Signed contract evidence", help: "Link the exact signed, versioned works contract and the signature/audit evidence." },
+  { key: "verifiedAdvanceEvidence", label: "Verified advance receipt", help: "Link a cash receipt verified against bank/gateway evidence, with reference and verification time." },
 ];
 
 export const DEFAULT_SALES_PIPELINE: SalesPipelineStage[] = [

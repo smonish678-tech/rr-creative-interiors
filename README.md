@@ -29,6 +29,23 @@ Also set these server-side environment variables for both Preview and Production
 
 Never use `NEXT_PUBLIC_` prefixes for credentials or session secrets. Do not commit actual secrets. Redeploy after changing environment variables so the new deployment receives them.
 
+### Private operations documents
+
+Create a **separate private Vercel Blob store** for contracts, signed approvals, quotations, production evidence and warranty documents. Do not reuse the public media store for customer documents. Configure the private store token as the server-only environment variable `OPERATIONS_PRIVATE_BLOB_READ_WRITE_TOKEN` in both Preview and Production. Never expose it with a `NEXT_PUBLIC_` prefix.
+
+The Operations & documents area stores uploaded PDFs in private Blob storage and versioned metadata in the encrypted workspace. Downloads pass through the authenticated server route. Uploads are limited to PDFs up to 4 MB through the server-upload path (to remain below typical serverless request limits). If the private store token is missing, uploads fail closed rather than falling back to public storage.
+
+### Operations control area
+
+The admin navigation includes Operations & documents, with:
+- Versioned commercial payment-policy drafts and percentage reconciliation before review.
+- Sequential RR → CA → Legal review stages using uploaded signed approval PDFs and audit references. The application records submitted evidence; it does not independently validate the external signer's identity or digital signature, and all three reviews should be completed by the real authorised parties.
+- Versioned private PDF evidence attached to leads, projects and policy records.
+- Site-address confirmation and project milestone transitions guarded by linked evidence.
+- Blocked project preflight by default; the control area does not manufacture missing approvals or resolve the open workbook, tax, legal or warranty decisions in the issue register.
+
+**Storage limitation:** business metadata still lives in one encrypted Blob object. Revision checks and ETag conditional writes reduce stale overwrites, but this is not a relational database or an ACID accounting ledger. Treat this release as an operations foundation until a transactional database migration and concurrent-write/load tests are completed.
+
 
 ## Website Studio — logos and section photography
 

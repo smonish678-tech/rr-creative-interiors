@@ -1,0 +1,24 @@
+name: Operations invariant tests
+
+on:
+  push:
+    branches:
+      - main
+      - "ops/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  operations-tests:
+    name: Operations invariants (Node 24)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run operations invariants
+        run: npm test
